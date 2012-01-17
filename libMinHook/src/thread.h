@@ -29,7 +29,6 @@
 #pragma once
 
 #include <vector>
-#include <boost/utility.hpp>
 #include <windows.h>
 
 #include "trampoline.h"
@@ -37,11 +36,15 @@
 namespace MinHook
 {
 	// ScopedLock 付きクリティカルセクション
-	class CriticalSection : boost::noncopyable
+	class CriticalSection
 	{
+		CriticalSection(const CriticalSection&);
+		void operator=(const CriticalSection&);
 	public:
-		class ScopedLock : boost::noncopyable
+		class ScopedLock
 		{
+			ScopedLock(const ScopedLock&);
+			void operator=(const ScopedLock&);
 		private:
 			CriticalSection& cs_;
 		public:

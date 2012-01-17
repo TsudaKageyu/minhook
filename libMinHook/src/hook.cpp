@@ -30,8 +30,6 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
-#include <boost/scope_exit.hpp>
-#include <boost/foreach.hpp>
 #include <Windows.h>
 #include "pstdint.h"
 
@@ -116,8 +114,9 @@ namespace MinHook
 		}
 
 		// すべてのフックを解除
-		BOOST_FOREACH (const HOOK_ENTRY& hook, gHooks)
+		for (size_t i = 0, count = gHooks.size(); i < count; ++i)
 		{
+			const HOOK_ENTRY& hook = gHooks[i];
 			if (!hook.isEnabled)
 			{
 				continue;
@@ -139,6 +138,22 @@ namespace MinHook
 		gIsInitialized = false;
 		return MH_OK;
 	}
+
+	struct RollbackIfNotCommitted
+	{
+		bool* committed_;
+		RollbackIfNotCommitted(bool* committed)
+		 : committed_(committed)
+		{
+		}
+		~RollbackIfNotCommitted()
+		{
+			if (!*committed_)
+			{
+				RollbackBuffer();
+			}
+		}
+	};
 
 	MH_STATUS CreateHook(void* pTarget, void* const pDetour, void** ppOriginal)
 	{
@@ -163,14 +178,7 @@ namespace MinHook
 		if (pHook == NULL)
 		{
 			bool committed = false;
-			BOOST_SCOPE_EXIT((&committed))
-			{
-				if (!committed)
-				{
-					RollbackBuffer();
-				}
-			}
-			BOOST_SCOPE_EXIT_END;
+			RollbackIfNotCommitted scopedRollback(&committed);
 
 			// トランポリン関数を作成する
 			CREATE_TREMPOLINE_T ct = { 0 };

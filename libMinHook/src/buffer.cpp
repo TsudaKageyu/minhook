@@ -29,7 +29,6 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
-#include <boost/foreach.hpp>
 #include <Windows.h>
 
 #include "buffer.h"
@@ -77,8 +76,9 @@ namespace MinHook
 
 	void UninitializeBuffer()
 	{
-		BOOST_FOREACH (MEMORY_BLOCK& block, gMemoryBlocks)
+		for (size_t i = 0, count = gMemoryBlocks.size(); i < count; ++i)
 		{
+			MEMORY_BLOCK& block = gMemoryBlocks[i];
 			VirtualFree(block.pAddress, 0, MEM_RELEASE);
 		}
 
@@ -102,16 +102,18 @@ namespace MinHook
 
 	void RollbackBuffer()
 	{
-		BOOST_FOREACH (MEMORY_BLOCK& block, gMemoryBlocks)
+		for (size_t i = 0, count = gMemoryBlocks.size(); i < count; ++i)
 		{
+			MEMORY_BLOCK& block = gMemoryBlocks[i];
 			block.usedSize = block.fixedSize;
 		}
 	}
 
 	void CommitBuffer()
 	{
-		BOOST_FOREACH (MEMORY_BLOCK& block, gMemoryBlocks)
+		for (size_t i = 0, count = gMemoryBlocks.size(); i < count; ++i)
 		{
+			MEMORY_BLOCK& block = gMemoryBlocks[i];
 			if (block.usedSize == block.fixedSize)
 			{
 				continue;

@@ -28,7 +28,6 @@
 
 #include <cassert>
 #include <vector>
-#include <boost/foreach.hpp>
 #include "pstdint.h"
 
 #if defined _M_X64
@@ -229,8 +228,9 @@ namespace MinHook
 #if defined _M_X64
 		uintptr_t* pt = reinterpret_cast<uintptr_t*>(ct.pTable); 
 #endif
-		BOOST_FOREACH (const TEMP_ADDR& ta, ct.tempAddr)
+		for (size_t i = 0, count = ct.tempAddr.size(); i < count; ++i)
 		{
+			const TEMP_ADDR& ta = ct.tempAddr[i];
 			if (ta.position > ct.trampoline.size() - sizeof(uint32_t))
 			{
 				return false;

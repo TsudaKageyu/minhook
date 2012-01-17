@@ -29,7 +29,6 @@
 #include <cassert>
 #include <vector>
 #include <algorithm>
-#include <boost/foreach.hpp>
 #include <windows.h>
 #include <TlHelp32.h>
 
@@ -38,8 +37,10 @@
 namespace MinHook { namespace
 {
 	// Ž©“®“I‚ÉCloseHandle‚³‚ê‚éWindowsƒnƒ“ƒhƒ‹
-	class ScopedHandle : boost::noncopyable
+	class ScopedHandle
 	{
+		ScopedHandle(const ScopedHandle&);
+		void operator=(const ScopedHandle&);
 	private:
 		HANDLE handle_;
 	public:
@@ -143,8 +144,9 @@ namespace MinHook
 		static const DWORD ThreadAccess 
 			= THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT;
 		
-		BOOST_FOREACH (const DWORD& tid, threads)
+		for (size_t i = 0, count = threads.size(); i < count; ++i)
 		{
+			DWORD tid = threads[i];
 			ScopedHandle hThread = OpenThread(ThreadAccess, FALSE, tid);
 			SuspendThread(hThread);
 
@@ -176,8 +178,9 @@ namespace MinHook
 
 	void ScopedThreadExclusive::Unfreeze(const std::vector<DWORD>& threads)
 	{
-		BOOST_FOREACH (const DWORD& tid, threads)
+		for (size_t i = 0, count = threads.size(); i < count; ++i)
 		{
+			DWORD tid = threads[i];
 			ScopedHandle hThread = OpenThread(THREAD_SUSPEND_RESUME, FALSE, tid);
 			ResumeThread(hThread);
 		}
