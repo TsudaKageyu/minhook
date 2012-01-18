@@ -27,7 +27,7 @@
  */
 
 #include <Windows.h>
-#include "../MinHook.h"
+#include "MinHook.h"
 #include "hook.h"
 
 using namespace MinHook;

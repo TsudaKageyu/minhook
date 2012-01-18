@@ -33,7 +33,7 @@
 #include <Windows.h>
 #include "pstdint.h"
 
-#include "../MinHook.h"
+#include "MinHook.h"
 #include "hook.h"
 #include "buffer.h"
 #include "trampoline.h"

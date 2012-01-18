@@ -28,7 +28,7 @@
 
 #pragma once
 
-#include "../MinHook.h"
+#include "MinHook.h"
 
 namespace MinHook
 {

@@ -65,7 +65,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x86.dll"
 				LinkIncremental="2"
-				ModuleDefinitionFile="MinHook.def"
+				ModuleDefinitionFile="..\dll_resources\MinHook.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				BaseAddress="0x68000000"
@@ -140,7 +140,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x86.dll"
 				LinkIncremental="1"
-				ModuleDefinitionFile="MinHook.def"
+				ModuleDefinitionFile="..\dll_resources\MinHook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -217,7 +217,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x64.dll"
 				LinkIncremental="2"
-				ModuleDefinitionFile="MinHook.def"
+				ModuleDefinitionFile="..\dll_resources\MinHook.def"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="17"
@@ -292,7 +292,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x64.dll"
 				LinkIncremental="1"
-				ModuleDefinitionFile="MinHook.def"
+				ModuleDefinitionFile="..\dll_resources\MinHook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -327,7 +327,7 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\dllmain.cpp"
+			RelativePath="..\dll_resources\dllmain.cpp"
 			>
 			<FileConfiguration
 				Name="Debug|Win32"
@@ -367,15 +367,15 @@
 			</FileConfiguration>
 		</File>
 		<File
-			RelativePath=".\MinHook.def"
+			RelativePath="..\dll_resources\MinHook.def"
 			>
 		</File>
 		<File
-			RelativePath=".\MinHook.rc"
+			RelativePath="..\dll_resources\MinHook.rc"
 			>
 		</File>
 		<File
-			RelativePath=".\resource.h"
+			RelativePath="..\dll_resources\resource.h"
 			>
 		</File>
 	</Files>

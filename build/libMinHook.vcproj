@@ -44,6 +44,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -107,6 +108,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -171,6 +173,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -235,6 +238,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
+				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -282,15 +286,15 @@
 				Name="HDE32"
 				>
 				<File
-					RelativePath=".\src\HDE32\hde32.c"
+					RelativePath="..\src\HDE32\hde32.c"
 					>
 				</File>
 				<File
-					RelativePath=".\src\HDE32\hde32.h"
+					RelativePath="..\src\HDE32\hde32.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\HDE32\table32.h"
+					RelativePath="..\src\HDE32\table32.h"
 					>
 				</File>
 			</Filter>
@@ -298,15 +302,15 @@
 				Name="HDE64"
 				>
 				<File
-					RelativePath=".\src\HDE64\src\hde64.c"
+					RelativePath="..\src\HDE64\src\hde64.c"
 					>
 				</File>
 				<File
-					RelativePath=".\src\HDE64\include\hde64.h"
+					RelativePath="..\src\HDE64\include\hde64.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\HDE64\src\table64.h"
+					RelativePath="..\src\HDE64\src\table64.h"
 					>
 				</File>
 			</Filter>
@@ -314,23 +318,23 @@
 				Name="Source Files"
 				>
 				<File
-					RelativePath=".\src\buffer.cpp"
+					RelativePath="..\src\buffer.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\export.cpp"
+					RelativePath="..\src\export.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\hook.cpp"
+					RelativePath="..\src\hook.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\thread.cpp"
+					RelativePath="..\src\thread.cpp"
 					>
 				</File>
 				<File
-					RelativePath=".\src\trampoline.cpp"
+					RelativePath="..\src\trampoline.cpp"
 					>
 				</File>
 			</Filter>
@@ -338,33 +342,33 @@
 				Name="Header Files"
 				>
 				<File
-					RelativePath=".\src\buffer.h"
+					RelativePath="..\src\buffer.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\hook.h"
+					RelativePath="..\src\hook.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\pstdint.h"
+					RelativePath="..\src\pstdint.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\thread.h"
+					RelativePath="..\src\thread.h"
 					>
 				</File>
 				<File
-					RelativePath=".\src\trampoline.h"
+					RelativePath="..\src\trampoline.h"
 					>
 				</File>
 			</Filter>
 		</Filter>
 		<File
-			RelativePath=".\COPYING.txt"
+			RelativePath="..\COPYING.txt"
 			>
 		</File>
 		<File
-			RelativePath=".\MinHook.h"
+			RelativePath="..\include\MinHook.h"
 			>
 		</File>
 	</Files>
