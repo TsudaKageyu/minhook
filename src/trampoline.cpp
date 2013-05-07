@@ -76,7 +76,7 @@ namespace MinHook { namespace
 	};
 #pragma pack(pop)
 
-	uintptr_t	GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs);
+	uintptr_t	GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs, bool isshort);
 	inline bool	IsInternalJump(void* pTarget, uintptr_t dest);
 	template <typename T>
 	void		AppendTempAddress(uintptr_t address, size_t pos, const T& inst, CREATE_TREMPOLINE_T& ct);
@@ -147,14 +147,14 @@ namespace MinHook
 			// 相対直接CALL
 			else if (hs.opcode == 0xE8)
 			{
-				AppendTempAddress(GetRelativeBranchDestination(pInst, hs), newPos, call, ct);
+				AppendTempAddress(GetRelativeBranchDestination(pInst, hs, false), newPos, call, ct);
 				pCopySrc = &call;
 				copySize = sizeof(call);
 			}
 			// 相対直接JMP (EB or E9)
 			else if ((hs.opcode & 0xFD) == 0xE9)
 			{
-				uintptr_t dest = GetRelativeBranchDestination(pInst, hs);
+				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, hs.opcode == 0xEB);
 
 				// 関数内へのジャンプはそのままコピー（ジャンプ中は命令長が変わるような操作は不可）
 				if (IsInternalJump(ct.pTarget, dest))
@@ -174,7 +174,7 @@ namespace MinHook
 			// 相対直接Jcc
 			else if ((hs.opcode & 0xF0) == 0x70 || hs.opcode == 0xE3 || (hs.opcode2 & 0xF0) == 0x80)
 			{
-				uintptr_t dest = GetRelativeBranchDestination(pInst, hs);
+				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, (hs.opcode & 0xF0) == 0x70 || (hs.opcode == 0xE3));
 
 				// 関数内へのジャンプはそのままコピー（分岐中は命令長が変わるような操作は不可）
 				if (IsInternalJump(ct.pTarget, dest))
@@ -264,9 +264,10 @@ namespace MinHook
 
 namespace MinHook { namespace
 {
-	inline uintptr_t GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs)
+	inline uintptr_t GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs, bool isshort)
 	{
-		return reinterpret_cast<uintptr_t>(pInst) + hs.len + static_cast<int32_t>(hs.imm.imm32);
+		int32_t imm = isshort ? (int32_t)(int8_t)hs.imm.imm8 : (int32_t)hs.imm.imm32;
+		return reinterpret_cast<uintptr_t>(pInst) + hs.len + static_cast<int32_t>(imm);
 	}
 	
 	inline bool IsInternalJump(void* pTarget, uintptr_t dest)
