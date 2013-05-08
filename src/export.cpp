@@ -47,6 +47,11 @@ MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* const pDetour, void** ppOrig
 	return CreateHook(pTarget, pDetour, ppOriginal);
 }
 
+MH_STATUS WINAPI MH_RemoveHook(void* pTarget)
+{
+	return RemoveHook(pTarget);
+}
+
 MH_STATUS WINAPI MH_EnableHook(void* pTarget)
 {
 	return EnableHook(pTarget);

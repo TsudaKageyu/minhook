@@ -3,6 +3,7 @@ EXPORTS
 	MH_Uninitialize
 	
 	MH_CreateHook
+	MH_RemoveHook
 	MH_EnableHook
 	MH_DisableHook
 	

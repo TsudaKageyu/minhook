@@ -89,6 +89,11 @@ extern "C" {
 	//   ppOriginal [out] A pointer to the trampoline function, which will be used to call the original target function.  
 	MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* const pDetour, void** ppOriginal);
 
+	// Removes the already created hook.
+	// Parameters:
+	//   pTarget [in] A pointer to the target function.
+	MH_STATUS WINAPI MH_RemoveHook(void* pTarget);
+
 	// Enables the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.

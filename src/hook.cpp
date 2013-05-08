@@ -265,6 +265,36 @@ namespace MinHook
 		return MH_OK;
 	}
 
+	MH_STATUS RemoveHook(void* pTarget)
+	{
+		CriticalSection::ScopedLock lock(gCS);
+
+		if (!gIsInitialized)
+		{
+			return MH_ERROR_NOT_INITIALIZED;
+		}
+
+		std::vector<HOOK_ENTRY>::iterator i 
+			= std::lower_bound(gHooks.begin(), gHooks.end(), pTarget);
+		if (i == gHooks.end() || i->pTarget != pTarget)
+			return MH_ERROR_NOT_CREATED;
+
+		HOOK_ENTRY *pHook = &(*i);
+
+		if (pHook->isEnabled)
+		{
+			MH_STATUS status = DisableHook(pTarget);
+			if (status != MH_OK)
+			{
+				return status;
+			}
+		}
+
+		gHooks.erase(i);
+
+		return MH_OK;
+	}
+
 	MH_STATUS EnableHook(void* pTarget)
 	{
 		CriticalSection::ScopedLock lock(gCS);

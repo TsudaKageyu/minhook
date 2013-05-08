@@ -35,6 +35,7 @@ namespace MinHook
 	MH_STATUS Initialize();
 	MH_STATUS Uninitialize();
 	MH_STATUS CreateHook(void* pTarget, void* const pDetour, void** ppOriginal);
+	MH_STATUS RemoveHook(void* pTarget);
 	MH_STATUS EnableHook(void* pTarget);
 	MH_STATUS DisableHook(void* pTarget);
 }
