@@ -71,3 +71,13 @@ MH_STATUS WINAPI MH_DisableAllHooks()
 {
 	return DisableAllHooks();
 }
+
+MH_STATUS WINAPI MH_EnableMultipleHooks(void** const ppTargets, size_t nTargetsCount)
+{
+	return EnableMultipleHooks(ppTargets, nTargetsCount);
+}
+
+MH_STATUS WINAPI MH_DisableMultipleHooks(void** const ppTargets, size_t nTargetsCount)
+{
+	return DisableMultipleHooks(ppTargets, nTargetsCount);
+}

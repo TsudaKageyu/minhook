@@ -40,4 +40,6 @@ namespace MinHook
 	MH_STATUS DisableHook(void* pTarget);
 	MH_STATUS EnableAllHooks();
 	MH_STATUS DisableAllHooks();
+	MH_STATUS EnableMultipleHooks(void** const ppTargets, size_t nTargetsCount);
+	MH_STATUS DisableMultipleHooks(void** const ppTargets, size_t nTargetsCount);
 }

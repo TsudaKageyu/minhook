@@ -110,6 +110,18 @@ extern "C" {
 	// Disables all created hooks in one go.
 	MH_STATUS WINAPI MH_DisableAllHooks();
 
+	// Enables multiple hooks in one go. Hooks which are already enabled are ignored.
+	// Parameters:
+	//   ppTargets     [in] An array of pointers to the target function.
+	//   nTargetsCount [in] The number of pointers in the array pointed to by ppTargets.
+	MH_STATUS WINAPI MH_EnableMultipleHooks(void** const ppTargets, size_t nTargetsCount);
+
+	// Disables multiple hooks in one go. Hooks which are already disabled are ignored.
+	// Parameters:
+	//   ppTargets     [in] An array of pointers to the target function.
+	//   nTargetsCount [in] The number of pointers in the array pointed to by ppTargets.
+	MH_STATUS WINAPI MH_DisableMultipleHooks(void** const ppTargets, size_t nTargetsCount);
+
 #if defined __cplusplus
 }
 #endif

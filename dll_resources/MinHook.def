@@ -8,3 +8,5 @@ EXPORTS
 	MH_DisableHook
 	MH_EnableAllHooks
 	MH_DisableAllHooks
+	MH_EnableMultipleHooks
+	MH_DisableMultipleHooks
