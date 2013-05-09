@@ -168,11 +168,10 @@ namespace MinHook
 				if (ip == oldIPs[ i ])
 				{
 					ip = newIPs[ i ];
+					SetThreadContext(hThread, &c);
 					break;
 				}
 			}
-
-			SetThreadContext(hThread, &c);
 		}
 	}
 
