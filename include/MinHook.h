@@ -104,6 +104,12 @@ extern "C" {
 	//   pTarget [in] A pointer to the target function.
 	MH_STATUS WINAPI MH_DisableHook(void* pTarget);
 
+	// Enables all created hooks in one go.
+	MH_STATUS WINAPI MH_EnableAllHooks();
+
+	// Disables all created hooks in one go.
+	MH_STATUS WINAPI MH_DisableAllHooks();
+
 #if defined __cplusplus
 }
 #endif

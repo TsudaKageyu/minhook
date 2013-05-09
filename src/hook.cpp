@@ -359,6 +359,30 @@ namespace MinHook
 
 		return MH_OK;
 	}
+
+	MH_STATUS EnableAllHooks()
+	{
+		CriticalSection::ScopedLock lock(gCS);
+
+		if (!gIsInitialized)
+		{
+			return MH_ERROR_NOT_INITIALIZED;
+		}
+
+		return EnableAllHooksLL();
+	}
+
+	MH_STATUS DisableAllHooks()
+	{
+		CriticalSection::ScopedLock lock(gCS);
+
+		if (!gIsInitialized)
+		{
+			return MH_ERROR_NOT_INITIALIZED;
+		}
+
+		return DisableAllHooksLL();
+	}
 }
 namespace MinHook { namespace
 {

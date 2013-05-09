@@ -38,4 +38,6 @@ namespace MinHook
 	MH_STATUS RemoveHook(void* pTarget);
 	MH_STATUS EnableHook(void* pTarget);
 	MH_STATUS DisableHook(void* pTarget);
+	MH_STATUS EnableAllHooks();
+	MH_STATUS DisableAllHooks();
 }

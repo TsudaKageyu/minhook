@@ -61,3 +61,13 @@ MH_STATUS WINAPI MH_DisableHook(void* pTarget)
 {
 	return DisableHook(pTarget);
 }
+
+MH_STATUS WINAPI MH_EnableAllHooks()
+{
+	return EnableAllHooks();
+}
+
+MH_STATUS WINAPI MH_DisableAllHooks()
+{
+	return DisableAllHooks();
+}
