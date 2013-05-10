@@ -464,7 +464,7 @@ namespace MinHook { namespace
 			}
 		}
 
-		if(oldIPs.size() > 0)
+		if (oldIPs.size() > 0)
 		{
 			ScopedThreadExclusive tex(oldIPs, newIPs);
 
@@ -500,7 +500,7 @@ namespace MinHook { namespace
 			}
 		}
 
-		if(oldIPs.size() > 0)
+		if (oldIPs.size() > 0)
 		{
 			ScopedThreadExclusive tex(oldIPs, newIPs);
 
@@ -541,7 +541,7 @@ namespace MinHook { namespace
 			}
 		}
 
-		if(oldIPs.size() > 0)
+		if (oldIPs.size() > 0)
 		{
 			ScopedThreadExclusive tex(oldIPs, newIPs);
 
@@ -582,7 +582,7 @@ namespace MinHook { namespace
 			}
 		}
 
-		if(oldIPs.size() > 0)
+		if (oldIPs.size() > 0)
 		{
 			ScopedThreadExclusive tex(oldIPs, newIPs);
 
