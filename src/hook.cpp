@@ -71,12 +71,12 @@ namespace MinHook { namespace
 	};
 #pragma pack(pop)
 
-	MH_STATUS EnableHookLL(HOOK_ENTRY *pHook);
-	MH_STATUS DisableHookLL(HOOK_ENTRY *pHook);
-	MH_STATUS EnableAllHooksLL();
-	MH_STATUS DisableAllHooksLL();
-	MH_STATUS EnableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
-	MH_STATUS DisableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
+	MH_STATUS	EnableHookLL(HOOK_ENTRY *pHook);
+	MH_STATUS	DisableHookLL(HOOK_ENTRY *pHook);
+	MH_STATUS	EnableAllHooksLL();
+	MH_STATUS	DisableAllHooksLL();
+	MH_STATUS	EnableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
+	MH_STATUS	DisableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
 	HOOK_ENTRY* FindHook(void* const pTarget);
 	bool		IsExecutableAddress(void* pAddress);
 	void		WriteRelativeJump(void* pFrom, void* const pTo);
