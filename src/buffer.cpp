@@ -123,6 +123,8 @@ namespace MinHook
 			size_t size = block.usedSize - block.fixedSize;
 			DWORD op;
 			VirtualProtect(pBuffer, size, block.protect, &op);
+
+			block.fixedSize = block.usedSize;
 		}
 	}
 }
