@@ -240,7 +240,7 @@ namespace MinHook { namespace
 #if defined _M_X64
 			mb_iter i = std::lower_bound(gMemoryBlocks.begin(), gMemoryBlocks.end(), pAlloc);
 #elif defined _M_IX86
-			mb_iter i = gMemoryBlocks.begin();
+			mb_iter i = gMemoryBlocks.end();
 #endif
 			i = gMemoryBlocks.insert(i, block);
 
