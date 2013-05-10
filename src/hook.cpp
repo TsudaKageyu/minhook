@@ -172,7 +172,6 @@ namespace MinHook
 			return MH_ERROR_NOT_EXECUTABLE;
 		}
 
-		if (pHook == NULL)
 		{
 			bool committed = false;
 			RollbackIfNotCommitted scopedRollback(&committed);
