@@ -46,6 +46,7 @@ namespace MinHook { namespace
 		void*	pTarget;
 		void*	pDetour;
 #if defined _M_X64
+		void*   pTable;
 		void*	pRelay;
 #endif
 		void*	pTrampoline;
@@ -241,6 +242,7 @@ namespace MinHook
 			hook.pTarget = pTarget;
 			hook.pDetour = pDetour;
 #if defined _M_X64
+			hook.pTable  = pTable;
 			hook.pRelay  = pRelay;
 #endif
 			hook.pTrampoline = pTrampoline;
@@ -287,6 +289,18 @@ namespace MinHook
 				return status;
 			}
 		}
+
+		FreeBuffer(pHook->pTrampoline);
+
+#if defined _M_X64
+		FreeBuffer(pHook->pTable);
+#endif
+
+		FreeBuffer(pHook->pBackup);
+
+#if defined _M_X64
+		FreeBuffer(pHook->pRelay);
+#endif
 
 		gHooks.erase(i);
 

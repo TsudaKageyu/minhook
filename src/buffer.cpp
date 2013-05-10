@@ -39,8 +39,10 @@ namespace MinHook { namespace
 	{
 		void*	pAddress;
 		DWORD	protect;
-		size_t	usedSize;
+		size_t	uncommittedSize;
+		size_t	uncommittedCount;
 		size_t	fixedSize;
+		size_t	fixedCount;
 	};
 
 	template <typename T>
@@ -100,12 +102,52 @@ namespace MinHook
 		return AllocateBuffer(pOrigin, PAGE_READONLY, size);
 	}
 
+	void FreeBuffer(void* const pBuffer)
+	{
+		for (size_t i = 0, count = gMemoryBlocks.size(); i < count; ++i)
+		{
+			MEMORY_BLOCK& block = gMemoryBlocks[i];
+			void* pBlockEnd = reinterpret_cast<char*>(block.pAddress) + block.fixedSize;
+
+			if (pBuffer >= block.pAddress && pBuffer < pBlockEnd)
+			{
+				assert(("FreeBuffer", (block.uncommittedSize == 0 && block.uncommittedCount == 0)));
+
+				block.fixedCount--;
+
+				if (block.fixedCount == 0)
+				{
+					VirtualFree(block.pAddress, 0, MEM_RELEASE);
+					gMemoryBlocks.erase(gMemoryBlocks.begin()+i);
+				}
+
+				return;
+			}
+		}
+
+		assert(("FreeBuffer", 0));
+	}
+
 	void RollbackBuffer()
 	{
 		for (size_t i = 0, count = gMemoryBlocks.size(); i < count; ++i)
 		{
 			MEMORY_BLOCK& block = gMemoryBlocks[i];
-			block.usedSize = block.fixedSize;
+			if (block.uncommittedSize == 0)
+			{
+				continue;
+			}
+
+			block.uncommittedSize = 0;
+			block.uncommittedCount = 0;
+
+			if (block.fixedCount == 0)
+			{
+				VirtualFree(block.pAddress, 0, MEM_RELEASE);
+				gMemoryBlocks.erase(gMemoryBlocks.begin()+i);
+				i--;
+				count--;
+			}
 		}
 	}
 
@@ -114,17 +156,21 @@ namespace MinHook
 		for (size_t i = 0, count = gMemoryBlocks.size(); i < count; ++i)
 		{
 			MEMORY_BLOCK& block = gMemoryBlocks[i];
-			if (block.usedSize == block.fixedSize)
+			if (block.uncommittedSize == 0)
 			{
 				continue;
 			}
 
 			void* pBuffer = reinterpret_cast<char*>(block.pAddress) + block.fixedSize;
-			size_t size = block.usedSize - block.fixedSize;
+			size_t size = block.uncommittedSize;
 			DWORD op;
 			VirtualProtect(pBuffer, size, block.protect, &op);
 
-			block.fixedSize = block.usedSize;
+			block.fixedSize += size;
+			block.uncommittedSize = 0;
+
+			block.fixedCount += block.uncommittedCount;
+			block.uncommittedCount = 0;
 		}
 	}
 }
@@ -145,7 +191,7 @@ namespace MinHook { namespace
 			return NULL;
 		}
 
-		void* pBuffer = reinterpret_cast<char*>(pBlock->pAddress) + pBlock->usedSize;
+		void* pBuffer = reinterpret_cast<char*>(pBlock->pAddress) + pBlock->fixedSize + pBlock->uncommittedSize;
 		if (VirtualAlloc(pBuffer, size, MEM_COMMIT, pBlock->protect) == NULL)
 		{
 			return NULL;
@@ -158,7 +204,8 @@ namespace MinHook { namespace
 			return NULL;
 		}
 
-		pBlock->usedSize += size;
+		pBlock->uncommittedSize += size;
+		pBlock->uncommittedCount++;
 		return pBuffer;
 	}
 
@@ -195,7 +242,7 @@ namespace MinHook { namespace
 #endif
 			for (mb_iter i = ib; i != ie; ++i)
 			{
-				if (i->protect == protect && i->usedSize + capacity <= BlockSize)
+				if (i->protect == protect && i->fixedSize + i->uncommittedSize + capacity <= BlockSize)
 				{
 					return &(*i);
 				}
