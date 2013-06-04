@@ -76,7 +76,7 @@ namespace MinHook { namespace
 	};
 #pragma pack(pop)
 
-	uintptr_t	GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs, bool isshort);
+	uintptr_t	GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs, bool isShort);
 	inline bool	IsInternalJump(void* pTarget, uintptr_t dest);
 	template <typename T>
 	void		AppendTempAddress(uintptr_t address, size_t pos, const T& inst, CREATE_TREMPOLINE_T& ct);
@@ -273,10 +273,10 @@ namespace MinHook
 
 namespace MinHook { namespace
 {
-	inline uintptr_t GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs, bool isshort)
+	inline uintptr_t GetRelativeBranchDestination(uint8_t* pInst, const hde_t& hs, bool isShort)
 	{
-		int32_t imm = isshort ? (int32_t)(int8_t)hs.imm.imm8 : (int32_t)hs.imm.imm32;
-		return reinterpret_cast<uintptr_t>(pInst) + hs.len + static_cast<int32_t>(imm);
+		int32_t imm = isShort ? static_cast<int8_t>(hs.imm.imm8) : static_cast<int32_t>(hs.imm.imm32);
+		return reinterpret_cast<uintptr_t>(pInst) + hs.len + imm;
 	}
 
 	inline bool IsInternalJump(void* pTarget, uintptr_t dest)
