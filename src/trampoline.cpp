@@ -172,16 +172,16 @@ namespace MinHook
 				}
 			}
 			// 相対直接Jcc
-			else if ((hs.opcode & 0xF0) == 0x70 || hs.opcode == 0xE3 || (hs.opcode2 & 0xF0) == 0x80)
+			else if ((hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0 || (hs.opcode2 & 0xF0) == 0x80)
 			{
-				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, (hs.opcode & 0xF0) == 0x70 || (hs.opcode == 0xE3));
+				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, (hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0);
 
 				// 関数内へのジャンプはそのままコピー（分岐中は命令長が変わるような操作は不可）
 				if (IsInternalJump(ct.pTarget, dest))
 				{
 					jmpDest = std::max<uintptr_t>(jmpDest, dest);
 				}
-				else if (hs.opcode == 0xE3) // 関数外へのJCXZ, JECXZ には対応しない 
+				else if ((hs.opcode & 0xFC) == 0xE0) // 関数外へのJCXZ, JECXZ には対応しない 
 				{
 					return false;
 				}
