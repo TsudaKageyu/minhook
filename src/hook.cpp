@@ -46,7 +46,7 @@ namespace MinHook { namespace
 		void*	pTarget;
 		void*	pDetour;
 #if defined _M_X64
-		void*   pTable;
+		void*	pTable;
 		void*	pRelay;
 #endif
 		void*	pTrampoline;
@@ -79,7 +79,7 @@ namespace MinHook { namespace
 	MH_STATUS	DisableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
 	HOOK_ENTRY* FindHook(void* const pTarget);
 	bool		IsExecutableAddress(void* pAddress);
-	void*       FollowJump(void* const pTarget);
+	void*		FollowJump(void* const pTarget);
 	void		WriteRelativeJump(void* pFrom, void* const pTo);
 	void		WriteAbsoluteJump(void* pFrom, void* const pTo, void* pTable);
 

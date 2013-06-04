@@ -85,7 +85,7 @@ namespace MinHook { namespace
 #endif
 	inline void	SetJccOpcode(const hde_t& hs, JCC_REL& inst);
 	inline void	SetJccOpcode(const hde_t& hs, JCC_ABS& inst);
-	bool        IsCodePadding(uint8_t* pInst, size_t size);
+	bool		IsCodePadding(uint8_t* pInst, size_t size);
 }}
 
 namespace MinHook
