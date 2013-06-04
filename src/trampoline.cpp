@@ -85,6 +85,7 @@ namespace MinHook { namespace
 #endif
 	inline void	SetJccOpcode(const hde_t& hs, JCC_REL& inst);
 	inline void	SetJccOpcode(const hde_t& hs, JCC_ABS& inst);
+	bool        IsCodePadding(uint8_t* pInst, size_t size);
 }}
 
 namespace MinHook
@@ -215,6 +216,14 @@ namespace MinHook
 			newPos += copySize;
 		}
 
+		if (oldPos < sizeof(JMP_REL))
+		{
+			if (!IsCodePadding(reinterpret_cast<uint8_t*>(ct.pTarget) + oldPos, sizeof(JMP_REL) - oldPos))
+			{
+				return false;
+			}
+		}
+
 		return true;
 	}
 
@@ -314,6 +323,28 @@ namespace MinHook { namespace
 	{
 		uint8_t n = ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
 		inst.opcode = 0x70 | n;
+	}
+
+	bool IsCodePadding(uint8_t* pInst, size_t size)
+	{
+		uint8_t padding_byte = pInst[0];
+		switch (padding_byte)
+		{
+		case 0x00:
+		case 0x90: // NOP
+		case 0xCC: // INT3
+			for (size_t i = 1; i < size; ++i)
+			{
+				if (pInst[i] != padding_byte)
+				{
+					return false;
+				}
+			}
+			return true;
+
+		default:
+			return false;
+		}
 	}
 }}
 
