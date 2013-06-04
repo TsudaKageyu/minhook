@@ -72,7 +72,7 @@ typedef struct {
     uint8_t rex_w;
     uint8_t rex_r;
     uint8_t rex_x;
-    uint8_t rex_b; 
+    uint8_t rex_b;
     uint8_t opcode;
     uint8_t opcode2;
     uint8_t modrm;

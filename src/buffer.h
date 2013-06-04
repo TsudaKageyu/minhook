@@ -29,7 +29,7 @@
 #pragma once
 
 namespace MinHook
-{	
+{
 	void    InitializeBuffer();
 	void    UninitializeBuffer();
 	void*	AllocateCodeBuffer(void* const pOrigin, size_t size);

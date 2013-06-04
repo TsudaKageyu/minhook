@@ -67,7 +67,7 @@ namespace MinHook { namespace
 	// 間接絶対NEAR Jccに相当するロジック
 	struct JCC_ABS
 	{
-		uint8_t		opcode;		// 7* 02			J** +4		
+		uint8_t		opcode;		// 7* 02			J** +4
 		uint8_t		dummy0;
 		uint8_t		dummy1;		// EB 06			JMP +8
 		uint8_t		dummy2;
@@ -139,7 +139,7 @@ namespace MinHook
 				AppendRipRelativeAddress(pInst, newPos, hs, ct);
 
 				// JMP (FF /4)なら関数を終了
-				if (hs.opcode == 0xFF && hs.modrm_reg == 4)	
+				if (hs.opcode == 0xFF && hs.modrm_reg == 4)
 				{
 					finished = true;
 				}
@@ -182,7 +182,7 @@ namespace MinHook
 				{
 					jmpDest = std::max<uintptr_t>(jmpDest, dest);
 				}
-				else if ((hs.opcode & 0xFC) == 0xE0) // 関数外へのJCXZ, JECXZ には対応しない 
+				else if ((hs.opcode & 0xFC) == 0xE0) // 関数外へのJCXZ, JECXZ には対応しない
 				{
 					return false;
 				}
@@ -235,7 +235,7 @@ namespace MinHook
 #endif
 
 #if defined _M_X64
-		uintptr_t* pt = reinterpret_cast<uintptr_t*>(ct.pTable); 
+		uintptr_t* pt = reinterpret_cast<uintptr_t*>(ct.pTable);
 #endif
 		for (size_t i = 0, count = ct.tempAddr.size(); i < count; ++i)
 		{
@@ -278,7 +278,7 @@ namespace MinHook { namespace
 		int32_t imm = isshort ? (int32_t)(int8_t)hs.imm.imm8 : (int32_t)hs.imm.imm32;
 		return reinterpret_cast<uintptr_t>(pInst) + hs.len + static_cast<int32_t>(imm);
 	}
-	
+
 	inline bool IsInternalJump(void* pTarget, uintptr_t dest)
 	{
 		uintptr_t pt = reinterpret_cast<uintptr_t>(pTarget);

@@ -259,7 +259,7 @@ namespace MinHook
 
 		// OUT引数の処理
 		*ppOriginal = pHook->pTrampoline;
-		
+
 		return MH_OK;
 	}
 
@@ -632,7 +632,7 @@ namespace MinHook { namespace
 	bool IsExecutableAddress(void* pAddress)
 	{
 		static const DWORD PageExecuteMask 
-			= (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY); 
+			= (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
 
 		// 未割り当てや実行不可能な領域をチェック
 		MEMORY_BASIC_INFORMATION mi = { 0 };
@@ -661,19 +661,19 @@ namespace MinHook { namespace
 	}
 
 	template <typename T>
-	bool operator <(const HOOK_ENTRY& lhs, const T& rhs) 
-	{ 
-		return lhs.pTarget < reinterpret_cast<void*>(rhs); 
+	bool operator <(const HOOK_ENTRY& lhs, const T& rhs)
+	{
+		return lhs.pTarget < reinterpret_cast<void*>(rhs);
 	}
 
 	template <typename T>
-	bool operator <(const T& lhs, const HOOK_ENTRY& rhs) 
-	{ 
-		return reinterpret_cast<void*>(lhs) < rhs.pTarget; 
+	bool operator <(const T& lhs, const HOOK_ENTRY& rhs)
+	{
+		return reinterpret_cast<void*>(lhs) < rhs.pTarget;
 	}
 
 	bool operator <(const HOOK_ENTRY& lhs, const HOOK_ENTRY& rhs)
-	{ 
+	{
 		return lhs.pTarget < rhs.pTarget;
 	}
 }}

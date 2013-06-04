@@ -63,14 +63,14 @@ namespace MinHook { namespace
 	std::vector<MEMORY_BLOCK> gMemoryBlocks;
 }}
 
-namespace MinHook 
+namespace MinHook
 {
 	void InitializeBuffer()
 	{
 #if defined _M_X64
 		SYSTEM_INFO si;
 		GetSystemInfo(&si);
-		
+
 		gMinAddress = reinterpret_cast<intptr_t>(si.lpMinimumApplicationAddress);
 		gMaxAddress = reinterpret_cast<intptr_t>(si.lpMaximumApplicationAddress);
 #endif
@@ -218,10 +218,10 @@ namespace MinHook { namespace
 
 #if defined _M_X64
 		intptr_t minAddr = gMinAddress;
-		intptr_t maxAddr = gMaxAddress; 
+		intptr_t maxAddr = gMaxAddress;
 		if (pOrigin != NULL)
 		{
-			// pOrigin Å} 512MB ÇÃîÕàÕ 
+			// pOrigin Å} 512MB ÇÃîÕàÕ
 			minAddr = std::max<intptr_t>(minAddr, reinterpret_cast<intptr_t>(pOrigin) - 0x20000000);
 			maxAddr = std::min<intptr_t>(maxAddr, reinterpret_cast<intptr_t>(pOrigin) + 0x20000000);
 		}
@@ -300,19 +300,19 @@ namespace MinHook { namespace
 	}
 
 	template <typename T>
-	bool operator <(const MEMORY_BLOCK& lhs, const T& rhs) 
-	{ 
-		return lhs.pAddress < reinterpret_cast<void*>(rhs); 
+	bool operator <(const MEMORY_BLOCK& lhs, const T& rhs)
+	{
+		return lhs.pAddress < reinterpret_cast<void*>(rhs);
 	}
 
 	template <typename T>
-	bool operator <(const T& lhs, const MEMORY_BLOCK& rhs) 
-	{ 
-		return reinterpret_cast<void*>(lhs) < rhs.pAddress; 
+	bool operator <(const T& lhs, const MEMORY_BLOCK& rhs)
+	{
+		return reinterpret_cast<void*>(lhs) < rhs.pAddress;
 	}
 
 	bool operator <(const MEMORY_BLOCK& lhs, const MEMORY_BLOCK& rhs)
-	{ 
+	{
 		return lhs.pAddress < rhs.pAddress;
 	}
 }}

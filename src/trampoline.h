@@ -41,8 +41,8 @@ namespace MinHook
 
 	struct CREATE_TREMPOLINE_T
 	{
-		void*					pTarget; 
-		void*					pTrampoline; 
+		void*					pTarget;
+		void*					pTrampoline;
 		std::vector<char>		trampoline;
 		std::vector<TEMP_ADDR>	tempAddr;
 #if defined _M_X64
