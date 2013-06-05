@@ -51,6 +51,7 @@ namespace MinHook { namespace
 #endif
 		void*	pTrampoline;
 		void*	pBackup;
+		bool	patchAbove;
 		bool	isEnabled;
 		std::vector<uintptr_t>	oldIPs;
 		std::vector<uintptr_t>	newIPs;
@@ -58,6 +59,12 @@ namespace MinHook { namespace
 
 	// 命令書き込み用構造体
 #pragma pack(push, 1)
+	struct JMP_REL_SHORT
+	{
+		uint8_t		opcode;
+		uint8_t		operand;
+	};
+
 	struct JMP_REL
 	{
 		uint8_t		opcode;
@@ -216,13 +223,21 @@ namespace MinHook
 #endif
 
 			// ターゲット関数のバックアップをとる
-			void* pBackup = AllocateDataBuffer(NULL, sizeof(JMP_REL));
-			if (pBackup == NULL)
+			void *pBackupSrc = pTarget;
+			size_t backupSize = sizeof(JMP_REL);
+			if(ct.patchAbove)
+			{
+				pBackupSrc = reinterpret_cast<char*>(pBackupSrc) - sizeof(JMP_REL);
+				backupSize += sizeof(JMP_REL_SHORT);
+			}
+
+			void* pBackupDest = AllocateDataBuffer(NULL, backupSize);
+			if (pBackupDest == NULL)
 			{
 				return MH_ERROR_MEMORY_ALLOC;
 			}
 
-			memcpy(pBackup, pTarget, sizeof(JMP_REL));
+			memcpy(pBackupDest, pBackupSrc, backupSize);
 
 			// 中継関数を作成する
 #if defined _M_X64
@@ -246,7 +261,8 @@ namespace MinHook
 			hook.pRelay  = pRelay;
 #endif
 			hook.pTrampoline = pTrampoline;
-			hook.pBackup = pBackup;
+			hook.pBackup = pBackupDest;
+			hook.patchAbove = ct.patchAbove;
 			hook.isEnabled = false;
 			hook.oldIPs = ct.oldIPs;
 			hook.newIPs = ct.newIPs;
@@ -254,7 +270,6 @@ namespace MinHook
 			std::vector<HOOK_ENTRY>::iterator i	= std::lower_bound(gHooks.begin(), gHooks.end(), hook);
 			i = gHooks.insert(i, hook);
 			pHook = &(*i);
-
 		}
 
 		// OUT引数の処理
@@ -428,18 +443,36 @@ namespace MinHook { namespace
 {
 	MH_STATUS EnableHookLL(HOOK_ENTRY *pHook)
 	{
+		void *pPatchTarget = pHook->pTarget;
+		size_t patchSize = sizeof(JMP_REL);
+		if (pHook->patchAbove)
+		{
+			pPatchTarget = reinterpret_cast<char*>(pPatchTarget) - sizeof(JMP_REL);
+			patchSize += sizeof(JMP_REL_SHORT);
+		}
+
 		DWORD oldProtect;
-		if (!VirtualProtect(pHook->pTarget, sizeof(JMP_REL), PAGE_EXECUTE_READWRITE, &oldProtect))
+		if (!VirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect))
 		{
 			return MH_ERROR_MEMORY_PROTECT;
 		}
 
 #if defined _M_X64
-		WriteRelativeJump(pHook->pTarget, pHook->pRelay);
+		WriteRelativeJump(pPatchTarget, pHook->pRelay);
 #elif defined _M_IX86
-		WriteRelativeJump(pHook->pTarget, pHook->pDetour);
+		WriteRelativeJump(pPatchTarget, pHook->pDetour);
 #endif
-		VirtualProtect(pHook->pTarget, sizeof(JMP_REL), oldProtect, &oldProtect);
+
+		if (pHook->patchAbove)
+		{
+			JMP_REL_SHORT jmpAbove;
+			jmpAbove.opcode  = 0xEB;
+			jmpAbove.operand = 0 - static_cast<uint8_t>(sizeof(JMP_REL_SHORT) + sizeof(JMP_REL));
+
+			memcpy(pHook->pTarget, &jmpAbove, sizeof(jmpAbove));
+		}
+
+		VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
 		pHook->isEnabled = true;
 
@@ -448,15 +481,23 @@ namespace MinHook { namespace
 
 	MH_STATUS DisableHookLL(HOOK_ENTRY *pHook)
 	{
+		void *pPatchTarget = pHook->pTarget;
+		size_t patchSize = sizeof(JMP_REL);
+		if (pHook->patchAbove)
+		{
+			pPatchTarget = reinterpret_cast<char*>(pPatchTarget) - sizeof(JMP_REL);
+			patchSize += sizeof(JMP_REL_SHORT);
+		}
+
 		DWORD oldProtect;
-		if (!VirtualProtect(pHook->pTarget, sizeof(JMP_REL), PAGE_EXECUTE_READWRITE, &oldProtect))
+		if (!VirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect))
 		{
 			return MH_ERROR_MEMORY_PROTECT;
 		}
 
-		memcpy(pHook->pTarget, pHook->pBackup, sizeof(JMP_REL));
+		memcpy(pPatchTarget, pHook->pBackup, patchSize);
 
-		VirtualProtect(pHook->pTarget, sizeof(JMP_REL), oldProtect, &oldProtect);
+		VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
 		pHook->isEnabled = false;
 

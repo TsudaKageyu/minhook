@@ -28,6 +28,7 @@
 
 #include <cassert>
 #include <vector>
+#include <Windows.h>
 #include "pstdint.h"
 
 #if defined _M_X64
@@ -50,6 +51,12 @@ namespace MinHook { namespace
 
 	// 命令書き込み用構造体
 #pragma pack(push, 1)
+	struct JMP_REL_SHORT
+	{
+		uint8_t		opcode;
+		uint8_t		operand;
+	};
+
 	struct JMP_REL
 	{
 		uint8_t		opcode;
@@ -86,6 +93,7 @@ namespace MinHook { namespace
 	inline void	SetJccOpcode(const hde_t& hs, JCC_REL& inst);
 	inline void	SetJccOpcode(const hde_t& hs, JCC_ABS& inst);
 	bool		IsCodePadding(uint8_t* pInst, size_t size);
+	bool		IsExecutableAddress(void* pAddress);
 }}
 
 namespace MinHook
@@ -216,12 +224,27 @@ namespace MinHook
 			newPos += copySize;
 		}
 
-		if (oldPos < sizeof(JMP_REL))
+		// Is there enough place for a long jump?
+		if (oldPos < sizeof(JMP_REL) && !IsCodePadding(reinterpret_cast<uint8_t*>(ct.pTarget) + oldPos, sizeof(JMP_REL) - oldPos))
 		{
-			if (!IsCodePadding(reinterpret_cast<uint8_t*>(ct.pTarget) + oldPos, sizeof(JMP_REL) - oldPos))
+			// Is there enough place for a short jump?
+			if (oldPos < sizeof(JMP_REL_SHORT) && !IsCodePadding(reinterpret_cast<uint8_t*>(ct.pTarget) + oldPos, sizeof(JMP_REL_SHORT) - oldPos))
 			{
 				return false;
 			}
+
+			// Can we place the long jump above the function?
+			if (!IsExecutableAddress(reinterpret_cast<uint8_t*>(ct.pTarget) - sizeof(JMP_REL)))
+			{
+				return false;
+			}
+
+			if (!IsCodePadding(reinterpret_cast<uint8_t*>(ct.pTarget) - sizeof(JMP_REL), sizeof(JMP_REL)))
+			{
+				return false;
+			}
+
+			ct.patchAbove = true;
 		}
 
 		return true;
@@ -327,15 +350,15 @@ namespace MinHook { namespace
 
 	bool IsCodePadding(uint8_t* pInst, size_t size)
 	{
-		uint8_t padding_byte = pInst[0];
-		switch (padding_byte)
+		uint8_t paddingByte = pInst[0];
+		switch (paddingByte)
 		{
 		case 0x00:
 		case 0x90: // NOP
 		case 0xCC: // INT3
 			for (size_t i = 1; i < size; ++i)
 			{
-				if (pInst[i] != padding_byte)
+				if (pInst[i] != paddingByte)
 				{
 					return false;
 				}
@@ -345,6 +368,18 @@ namespace MinHook { namespace
 		default:
 			return false;
 		}
+	}
+
+	bool IsExecutableAddress(void* pAddress)
+	{
+		static const DWORD PageExecuteMask 
+			= (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
+
+		// 未割り当てや実行不可能な領域をチェック
+		MEMORY_BASIC_INFORMATION mi = { 0 };
+		VirtualQuery(pAddress, &mi, sizeof(mi));
+
+		return ((mi.Protect & PageExecuteMask) != 0);
 	}
 }}
 

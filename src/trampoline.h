@@ -43,6 +43,7 @@ namespace MinHook
 	{
 		void*					pTarget;
 		void*					pTrampoline;
+		bool					patchAbove;
 		std::vector<char>		trampoline;
 		std::vector<TEMP_ADDR>	tempAddr;
 #if defined _M_X64
