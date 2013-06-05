@@ -176,7 +176,7 @@
     <ClInclude Include="..\src\pstdint.h" />
     <ClInclude Include="..\src\thread.h" />
     <ClInclude Include="..\src\trampoline.h" />
-    <ClInclude Include="..\include\minhook\MinHook.h" />
+    <ClInclude Include="..\include\MinHook.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\COPYING.txt" />
