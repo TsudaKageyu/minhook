@@ -79,7 +79,6 @@ namespace MinHook { namespace
 	MH_STATUS	DisableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
 	HOOK_ENTRY* FindHook(void* const pTarget);
 	bool		IsExecutableAddress(void* pAddress);
-	void*		FollowJump(void* const pTarget);
 	void		WriteRelativeJump(void* pFrom, void* const pTo);
 	void		WriteAbsoluteJump(void* pFrom, void* const pTo, void* pTable);
 
@@ -163,16 +162,15 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		if (!IsExecutableAddress(pTarget) || !IsExecutableAddress(pDetour))
-		{
-			return MH_ERROR_NOT_EXECUTABLE;
-		}
-
-		pTarget = FollowJump(pTarget);
 		HOOK_ENTRY *pHook = FindHook(pTarget);
 		if (pHook != NULL)
 		{
 			return MH_ERROR_ALREADY_CREATED;
+		}
+
+		if (!IsExecutableAddress(pTarget) || !IsExecutableAddress(pDetour))
+		{
+			return MH_ERROR_NOT_EXECUTABLE;
 		}
 
 		{
@@ -256,6 +254,7 @@ namespace MinHook
 			std::vector<HOOK_ENTRY>::iterator i	= std::lower_bound(gHooks.begin(), gHooks.end(), hook);
 			i = gHooks.insert(i, hook);
 			pHook = &(*i);
+
 		}
 
 		// OUTà¯êîÇÃèàóù
@@ -273,7 +272,6 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		pTarget = FollowJump(pTarget);
 		std::vector<HOOK_ENTRY>::iterator i 
 			= std::lower_bound(gHooks.begin(), gHooks.end(), pTarget);
 		if (i == gHooks.end() || i->pTarget != pTarget)
@@ -318,7 +316,6 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		pTarget = FollowJump(pTarget);
 		HOOK_ENTRY *pHook = FindHook(pTarget);
 		if (pHook == NULL)
 		{
@@ -353,7 +350,6 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		pTarget = FollowJump(pTarget);
 		HOOK_ENTRY *pHook = FindHook(pTarget);
 		if (pHook == NULL)
 		{
@@ -546,8 +542,7 @@ namespace MinHook { namespace
 
 		for (size_t i = 0; i < nTargetsCount; ++i)
 		{
-			void* pTarget = FollowJump(ppTargets[i]);
-			HOOK_ENTRY *pHook = FindHook(pTarget);
+			HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
 			if (pHook == NULL)
 			{
 				return MH_ERROR_NOT_CREATED;
@@ -566,8 +561,7 @@ namespace MinHook { namespace
 
 			for (size_t i = 0; i < nTargetsCount; ++i)
 			{
-				void* pTarget = FollowJump(ppTargets[i]);
-				HOOK_ENTRY *pHook = FindHook(pTarget);
+				HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
 				if (!pHook->isEnabled)
 				{
 					MH_STATUS status = EnableHookLL(pHook);
@@ -589,8 +583,7 @@ namespace MinHook { namespace
 
 		for (size_t i = 0; i < nTargetsCount; ++i)
 		{
-			void* pTarget = FollowJump(ppTargets[i]);
-			HOOK_ENTRY *pHook = FindHook(pTarget);
+			HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
 			if (pHook == NULL)
 			{
 				return MH_ERROR_NOT_CREATED;
@@ -609,8 +602,7 @@ namespace MinHook { namespace
 
 			for (size_t i = 0; i < nTargetsCount; ++i)
 			{
-				void* pTarget = FollowJump(ppTargets[i]);
-				HOOK_ENTRY *pHook = FindHook(pTarget);
+				HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
 				if (pHook->isEnabled)
 				{
 					MH_STATUS status = DisableHookLL(pHook);
@@ -647,19 +639,6 @@ namespace MinHook { namespace
 		VirtualQuery(pAddress, &mi, sizeof(mi));
 
 		return ((mi.Protect & PageExecuteMask) != 0);
-	}
-
-	void* FollowJump(void* const pTarget)
-	{
-		uint8_t* pInst = reinterpret_cast<uint8_t*>(pTarget);
-		if (pInst[0] == 0xEB)
-		{
-			// Follow 2 byte jump, so any instructions below are not trampled over
-			int8_t delta = static_cast<int8_t>(pInst[1]);
-			pInst += delta + 2;
-		}
-
-		return pInst;
 	}
 
 	void WriteRelativeJump(void* pFrom, void* const pTo)
