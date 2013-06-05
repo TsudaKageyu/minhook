@@ -39,17 +39,16 @@ typedef enum MH_STATUS
 	// Successful.
 	MH_OK = 0,
 
-	
-	// MinHook is already initialized. 
+	// MinHook is already initialized.
 	MH_ERROR_ALREADY_INITIALIZED,
 
 	// MinHook is not initialized yet, or already uninitialized.
 	MH_ERROR_NOT_INITIALIZED,
 
-	// The hook for the specified target function is already created. 
+	// The hook for the specified target function is already created.
 	MH_ERROR_ALREADY_CREATED,
 
-	// The hook for the specified target function is not created yet. 
+	// The hook for the specified target function is not created yet.
 	MH_ERROR_NOT_CREATED,
 
 	// The hook for the specified target function is already enabled.
@@ -57,13 +56,13 @@ typedef enum MH_STATUS
 
 	// The hook for the specified target function is not enabled yet, or already disabled.
 	MH_ERROR_DISABLED,
-	
+
 	// The specified pointer is invalid. It points the address of non-allocated and/or non-executable region.
 	MH_ERROR_NOT_EXECUTABLE,
 
-	// The specified target function cannot be hooked.  
+	// The specified target function cannot be hooked.
 	MH_ERROR_UNSUPPORTED_FUNCTION,
-	
+
 	// Failed to allocate memory.
 	MH_ERROR_MEMORY_ALLOC,
 
@@ -86,7 +85,7 @@ extern "C" {
 	// Parameters:
 	//   pTarget    [in]  A pointer to the target function, which will be overridden by the detour function.
 	//   pDetour    [in]  A pointer to the detour function, which will override the target function.
-	//   ppOriginal [out] A pointer to the trampoline function, which will be used to call the original target function.  
+	//   ppOriginal [out] A pointer to the trampoline function, which will be used to call the original target function.
 	MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* const pDetour, void** ppOriginal);
 
 	// Removes the already created hook.
