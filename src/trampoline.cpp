@@ -290,6 +290,12 @@ namespace MinHook
 			ct.newIPs[ i ] += reinterpret_cast<uintptr_t>(ct.pTrampoline);
 		}
 
+		if (ct.patchAbove)
+		{
+			ct.oldIPs.push_back(reinterpret_cast<uintptr_t>(ct.pTarget));
+			ct.newIPs.push_back(reinterpret_cast<uintptr_t>(ct.pTarget) - sizeof(JMP_REL));
+		}
+
 		return true;
 	}
 }
