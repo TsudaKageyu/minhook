@@ -296,7 +296,7 @@ namespace MinHook
 
 		if (pHook->isEnabled)
 		{
-			ScopedThreadExclusive tex(pHook->oldIPs, pHook->newIPs);
+			ScopedThreadExclusive tex(pHook->newIPs, pHook->oldIPs);
 
 			MH_STATUS status = DisableHookLL(pHook);
 			if (status != MH_OK)
@@ -378,7 +378,7 @@ namespace MinHook
 
 		// ターゲット関数の冒頭を書き戻すだけ。他は再利用のため残しておく
 		{
-			ScopedThreadExclusive tex(pHook->oldIPs, pHook->newIPs);
+			ScopedThreadExclusive tex(pHook->newIPs, pHook->oldIPs);
 
 			MH_STATUS status = DisableHookLL(pHook);
 			if (status != MH_OK)
@@ -557,7 +557,7 @@ namespace MinHook { namespace
 
 		if (oldIPs.size() > 0)
 		{
-			ScopedThreadExclusive tex(oldIPs, newIPs);
+			ScopedThreadExclusive tex(newIPs, oldIPs);
 
 			for (size_t i = 0, count = gHooks.size(); i < count; ++i)
 			{
@@ -639,7 +639,7 @@ namespace MinHook { namespace
 
 		if (oldIPs.size() > 0)
 		{
-			ScopedThreadExclusive tex(oldIPs, newIPs);
+			ScopedThreadExclusive tex(newIPs, oldIPs);
 
 			for (size_t i = 0; i < nTargetsCount; ++i)
 			{
