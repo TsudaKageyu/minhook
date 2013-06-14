@@ -223,9 +223,9 @@ namespace MinHook
 #endif
 
 			// ターゲット関数のバックアップをとる
-			void *pBackupSrc = pTarget;
+			void* pBackupSrc = pTarget;
 			size_t backupSize = sizeof(JMP_REL);
-			if(ct.patchAbove)
+			if (ct.patchAbove)
 			{
 				pBackupSrc = reinterpret_cast<char*>(pBackupSrc) - sizeof(JMP_REL);
 				backupSize += sizeof(JMP_REL_SHORT);
@@ -443,7 +443,7 @@ namespace MinHook { namespace
 {
 	MH_STATUS EnableHookLL(HOOK_ENTRY *pHook)
 	{
-		void *pPatchTarget = pHook->pTarget;
+		void* pPatchTarget = pHook->pTarget;
 		size_t patchSize = sizeof(JMP_REL);
 		if (pHook->patchAbove)
 		{
@@ -481,7 +481,7 @@ namespace MinHook { namespace
 
 	MH_STATUS DisableHookLL(HOOK_ENTRY *pHook)
 	{
-		void *pPatchTarget = pHook->pTarget;
+		void* pPatchTarget = pHook->pTarget;
 		size_t patchSize = sizeof(JMP_REL);
 		if (pHook->patchAbove)
 		{
