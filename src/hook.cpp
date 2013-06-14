@@ -192,7 +192,13 @@ namespace MinHook
 				return MH_ERROR_UNSUPPORTED_FUNCTION;
 			}
 
-			void* pTrampoline = AllocateCodeBuffer(pTarget, ct.trampoline.size());
+			void* pJmpPtr = pTarget;
+			if (ct.patchAbove)
+			{
+				pJmpPtr = reinterpret_cast<char*>(pJmpPtr) - sizeof(JMP_REL);
+			}
+
+			void* pTrampoline = AllocateCodeBuffer(pJmpPtr, ct.trampoline.size());
 			if (pTrampoline == NULL)
 			{
 				return MH_ERROR_MEMORY_ALLOC;
@@ -223,25 +229,23 @@ namespace MinHook
 #endif
 
 			// ターゲット関数のバックアップをとる
-			void* pBackupSrc = pTarget;
 			size_t backupSize = sizeof(JMP_REL);
 			if (ct.patchAbove)
 			{
-				pBackupSrc = reinterpret_cast<char*>(pBackupSrc) - sizeof(JMP_REL);
 				backupSize += sizeof(JMP_REL_SHORT);
 			}
 
-			void* pBackupDest = AllocateDataBuffer(NULL, backupSize);
-			if (pBackupDest == NULL)
+			void* pBackup = AllocateDataBuffer(NULL, backupSize);
+			if (pBackup == NULL)
 			{
 				return MH_ERROR_MEMORY_ALLOC;
 			}
 
-			memcpy(pBackupDest, pBackupSrc, backupSize);
+			memcpy(pBackup, pJmpPtr, backupSize);
 
 			// 中継関数を作成する
 #if defined _M_X64
-			void* pRelay = AllocateCodeBuffer(pTarget, sizeof(JMP_ABS));
+			void* pRelay = AllocateCodeBuffer(pJmpPtr, sizeof(JMP_ABS));
 			if (pRelay == NULL)
 			{
 				return MH_ERROR_MEMORY_ALLOC;
@@ -261,7 +265,7 @@ namespace MinHook
 			hook.pRelay  = pRelay;
 #endif
 			hook.pTrampoline = pTrampoline;
-			hook.pBackup = pBackupDest;
+			hook.pBackup = pBackup;
 			hook.patchAbove = ct.patchAbove;
 			hook.isEnabled = false;
 			hook.oldIPs = ct.oldIPs;
