@@ -62,22 +62,17 @@ MH_STATUS WINAPI MH_DisableHook(void* pTarget)
 	return DisableHook(pTarget);
 }
 
-MH_STATUS WINAPI MH_EnableAllHooks()
+MH_STATUS WINAPI MH_QueueEnableHook(void* pTarget)
 {
-	return EnableAllHooks();
+	return QueueEnableHook(pTarget);
 }
 
-MH_STATUS WINAPI MH_DisableAllHooks()
+MH_STATUS WINAPI MH_QueueDisableHook(void* pTarget)
 {
-	return DisableAllHooks();
+	return QueueDisableHook(pTarget);
 }
 
-MH_STATUS WINAPI MH_EnableMultipleHooks(void** const ppTargets, size_t nTargetsCount)
+MH_STATUS WINAPI MH_ApplyQueued()
 {
-	return EnableMultipleHooks(ppTargets, nTargetsCount);
-}
-
-MH_STATUS WINAPI MH_DisableMultipleHooks(void** const ppTargets, size_t nTargetsCount)
-{
-	return DisableMultipleHooks(ppTargets, nTargetsCount);
+	return ApplyQueued();
 }

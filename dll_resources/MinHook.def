@@ -6,7 +6,6 @@ EXPORTS
 	MH_RemoveHook
 	MH_EnableHook
 	MH_DisableHook
-	MH_EnableAllHooks
-	MH_DisableAllHooks
-	MH_EnableMultipleHooks
-	MH_DisableMultipleHooks
+	MH_QueueEnableHook
+	MH_QueueDisableHook
+	MH_ApplyQueued

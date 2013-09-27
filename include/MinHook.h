@@ -95,31 +95,26 @@ extern "C" {
 
 	// Enables the already created hook.
 	// Parameters:
-	//   pTarget [in] A pointer to the target function.
+	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are enabled in one go.
 	MH_STATUS WINAPI MH_EnableHook(void* pTarget);
 
 	// Disables the already created hook.
 	// Parameters:
-	//   pTarget [in] A pointer to the target function.
+	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are disabled in one go.
 	MH_STATUS WINAPI MH_DisableHook(void* pTarget);
 
-	// Enables all created hooks in one go.
-	MH_STATUS WINAPI MH_EnableAllHooks();
-
-	// Disables all created hooks in one go.
-	MH_STATUS WINAPI MH_DisableAllHooks();
-
-	// Enables multiple hooks in one go. Hooks which are already enabled are ignored.
+	// Queues to enable the already created hook.
 	// Parameters:
-	//   ppTargets     [in] An array of pointers to the target function.
-	//   nTargetsCount [in] The number of pointers in the array pointed to by ppTargets.
-	MH_STATUS WINAPI MH_EnableMultipleHooks(void** const ppTargets, size_t nTargetsCount);
+	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are queued to be enabled.
+	MH_STATUS WINAPI MH_QueueEnableHook(void* pTarget);
 
-	// Disables multiple hooks in one go. Hooks which are already disabled are ignored.
+	// Queues to disable the already created hook.
 	// Parameters:
-	//   ppTargets     [in] An array of pointers to the target function.
-	//   nTargetsCount [in] The number of pointers in the array pointed to by ppTargets.
-	MH_STATUS WINAPI MH_DisableMultipleHooks(void** const ppTargets, size_t nTargetsCount);
+	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are queued to be disabled.
+	MH_STATUS WINAPI MH_QueueDisableHook(void* pTarget);
+
+	// Applies all queued changes in one go.
+	MH_STATUS WINAPI MH_ApplyQueued();
 
 #if defined __cplusplus
 }

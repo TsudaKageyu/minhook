@@ -53,6 +53,7 @@ namespace MinHook { namespace
 		void*	pBackup;
 		bool	patchAbove;
 		bool	isEnabled;
+		bool	queueEnable;
 		std::vector<uintptr_t>	oldIPs;
 		std::vector<uintptr_t>	newIPs;
 	};
@@ -82,8 +83,6 @@ namespace MinHook { namespace
 	MH_STATUS	DisableHookLL(HOOK_ENTRY *pHook);
 	MH_STATUS	EnableAllHooksLL();
 	MH_STATUS	DisableAllHooksLL();
-	MH_STATUS	EnableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
-	MH_STATUS	DisableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount);
 	HOOK_ENTRY* FindHook(void* const pTarget);
 	bool		IsExecutableAddress(void* pAddress);
 	void		WriteRelativeJump(void* pFrom, void* const pTo);
@@ -268,6 +267,7 @@ namespace MinHook
 			hook.pBackup = pBackup;
 			hook.patchAbove = ct.patchAbove;
 			hook.isEnabled = false;
+			hook.queueEnable = false;
 			hook.oldIPs = ct.oldIPs;
 			hook.newIPs = ct.newIPs;
 
@@ -335,6 +335,11 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
+		if (pTarget == NULL)
+		{
+			return EnableAllHooksLL();
+		}
+
 		HOOK_ENTRY *pHook = FindHook(pTarget);
 		if (pHook == NULL)
 		{
@@ -369,6 +374,11 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
+		if (pTarget == NULL)
+		{
+			return DisableAllHooksLL();
+		}
+
 		HOOK_ENTRY *pHook = FindHook(pTarget);
 		if (pHook == NULL)
 		{
@@ -394,7 +404,7 @@ namespace MinHook
 		return MH_OK;
 	}
 
-	MH_STATUS EnableAllHooks()
+	MH_STATUS QueueEnableHook(void* pTarget)
 	{
 		CriticalSection::ScopedLock lock(gCS);
 
@@ -403,10 +413,29 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		return EnableAllHooksLL();
+		if (pTarget == NULL)
+		{
+			for (size_t i = 0, count = gHooks.size(); i < count; ++i)
+			{
+				HOOK_ENTRY& hook = gHooks[i];
+				hook.queueEnable = true;
+			}
+
+			return MH_OK;
+		}
+
+		HOOK_ENTRY *pHook = FindHook(pTarget);
+		if (pHook == NULL)
+		{
+			return MH_ERROR_NOT_CREATED;
+		}
+
+		pHook->queueEnable = true;
+
+		return MH_OK;
 	}
 
-	MH_STATUS DisableAllHooks()
+	MH_STATUS QueueDisableHook(void* pTarget)
 	{
 		CriticalSection::ScopedLock lock(gCS);
 
@@ -415,10 +444,29 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		return DisableAllHooksLL();
+		if (pTarget == NULL)
+		{
+			for (size_t i = 0, count = gHooks.size(); i < count; ++i)
+			{
+				HOOK_ENTRY& hook = gHooks[i];
+				hook.queueEnable = false;
+			}
+
+			return MH_OK;
+		}
+
+		HOOK_ENTRY *pHook = FindHook(pTarget);
+		if (pHook == NULL)
+		{
+			return MH_ERROR_NOT_CREATED;
+		}
+
+		pHook->queueEnable = false;
+
+		return MH_OK;
 	}
 
-	MH_STATUS EnableMultipleHooks(void** const ppTargets, size_t nTargetsCount)
+	MH_STATUS ApplyQueued()
 	{
 		CriticalSection::ScopedLock lock(gCS);
 
@@ -427,19 +475,55 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		return EnableMultipleHooksLL(ppTargets, nTargetsCount);
-	}
+		std::vector<uintptr_t> oldIPs;
+		std::vector<uintptr_t> newIPs;
 
-	MH_STATUS DisableMultipleHooks(void** const ppTargets, size_t nTargetsCount)
-	{
-		CriticalSection::ScopedLock lock(gCS);
-
-		if (!gIsInitialized)
+		for (size_t i = 0, count = gHooks.size(); i < count; ++i)
 		{
-			return MH_ERROR_NOT_INITIALIZED;
+			HOOK_ENTRY& hook = gHooks[i];
+			if (hook.isEnabled != hook.queueEnable)
+			{
+				if (hook.queueEnable)
+				{
+					oldIPs.insert(oldIPs.end(), hook.oldIPs.begin(), hook.oldIPs.end());
+					newIPs.insert(newIPs.end(), hook.newIPs.begin(), hook.newIPs.end());
+				}
+				else
+				{
+					oldIPs.insert(oldIPs.end(), hook.newIPs.begin(), hook.newIPs.end());
+					newIPs.insert(newIPs.end(), hook.oldIPs.begin(), hook.oldIPs.end());
+				}
+			}
 		}
 
-		return DisableMultipleHooksLL(ppTargets, nTargetsCount);
+		if (oldIPs.size() > 0)
+		{
+			ScopedThreadExclusive tex(oldIPs, newIPs);
+
+			for (size_t i = 0, count = gHooks.size(); i < count; ++i)
+			{
+				HOOK_ENTRY& hook = gHooks[i];
+				if (hook.isEnabled != hook.queueEnable)
+				{
+					MH_STATUS status;
+					if (hook.queueEnable)
+					{
+						status = EnableHookLL(&hook);
+					}
+					else
+					{
+						status = DisableHookLL(&hook);
+					}
+
+					if (status != MH_OK)
+					{
+						return status;
+					}
+				}
+			}
+		}
+
+		return MH_OK;
 	}
 
 }
@@ -479,6 +563,7 @@ namespace MinHook { namespace
 		VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
 		pHook->isEnabled = true;
+		pHook->queueEnable = true;
 
 		return MH_OK;
 	}
@@ -504,6 +589,7 @@ namespace MinHook { namespace
 		VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
 		pHook->isEnabled = false;
+		pHook->queueEnable = false;
 
 		return MH_OK;
 	}
@@ -569,88 +655,6 @@ namespace MinHook { namespace
 				if (hook.isEnabled)
 				{
 					MH_STATUS status = DisableHookLL(&hook);
-					if (status != MH_OK)
-					{
-						return status;
-					}
-				}
-			}
-		}
-
-		return MH_OK;
-	}
-
-	MH_STATUS EnableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount)
-	{
-		std::vector<uintptr_t> oldIPs;
-		std::vector<uintptr_t> newIPs;
-
-		for (size_t i = 0; i < nTargetsCount; ++i)
-		{
-			HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
-			if (pHook == NULL)
-			{
-				return MH_ERROR_NOT_CREATED;
-			}
-
-			if (!pHook->isEnabled)
-			{
-				oldIPs.insert(oldIPs.end(), pHook->oldIPs.begin(), pHook->oldIPs.end());
-				newIPs.insert(newIPs.end(), pHook->newIPs.begin(), pHook->newIPs.end());
-			}
-		}
-
-		if (oldIPs.size() > 0)
-		{
-			ScopedThreadExclusive tex(oldIPs, newIPs);
-
-			for (size_t i = 0; i < nTargetsCount; ++i)
-			{
-				HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
-				if (!pHook->isEnabled)
-				{
-					MH_STATUS status = EnableHookLL(pHook);
-					if (status != MH_OK)
-					{
-						return status;
-					}
-				}
-			}
-		}
-
-		return MH_OK;
-	}
-
-	MH_STATUS DisableMultipleHooksLL(void** const ppTargets, size_t nTargetsCount)
-	{
-		std::vector<uintptr_t> oldIPs;
-		std::vector<uintptr_t> newIPs;
-
-		for (size_t i = 0; i < nTargetsCount; ++i)
-		{
-			HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
-			if (pHook == NULL)
-			{
-				return MH_ERROR_NOT_CREATED;
-			}
-
-			if (pHook->isEnabled)
-			{
-				oldIPs.insert(oldIPs.end(), pHook->oldIPs.begin(), pHook->oldIPs.end());
-				newIPs.insert(newIPs.end(), pHook->newIPs.begin(), pHook->newIPs.end());
-			}
-		}
-
-		if (oldIPs.size() > 0)
-		{
-			ScopedThreadExclusive tex(newIPs, oldIPs);
-
-			for (size_t i = 0; i < nTargetsCount; ++i)
-			{
-				HOOK_ENTRY *pHook = FindHook(ppTargets[i]);
-				if (pHook->isEnabled)
-				{
-					MH_STATUS status = DisableHookLL(pHook);
 					if (status != MH_OK)
 					{
 						return status;
