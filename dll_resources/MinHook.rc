@@ -53,8 +53,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,1,0,0
- PRODUCTVERSION 1,1,0,0
+ FILEVERSION 1,2,0,0
+ PRODUCTVERSION 1,2,0,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -71,12 +71,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "Tsuda Kageyu"
             VALUE "FileDescription", "MinHook - The Minimalistic API Hook Library for x64/x86"
-            VALUE "FileVersion", "1, 1, 0, 0"
+            VALUE "FileVersion", "1, 2, 0, 0"
             VALUE "InternalName", "MinHookD"
             VALUE "LegalCopyright", "Copyright (c) 2009 Tsuda Kageyu. All rights reserved."
             VALUE "LegalTrademarks", "Tsuda Kageyu"
             VALUE "ProductName", "MinHook DLL"
-            VALUE "ProductVersion", "1, 1, 0, 0"
+            VALUE "ProductVersion", "1, 2, 0, 0"
         END
     END
     BLOCK "VarFileInfo"
