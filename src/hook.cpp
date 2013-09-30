@@ -335,7 +335,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		if (pTarget == NULL)
+		if (pTarget == MH_ALL_HOOKS)
 		{
 			return EnableAllHooksLL();
 		}
@@ -374,7 +374,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		if (pTarget == NULL)
+		if (pTarget == MH_ALL_HOOKS)
 		{
 			return DisableAllHooksLL();
 		}
@@ -413,7 +413,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		if (pTarget == NULL)
+		if (pTarget == MH_ALL_HOOKS)
 		{
 			for (size_t i = 0, count = gHooks.size(); i < count; ++i)
 			{
@@ -444,7 +444,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		if (pTarget == NULL)
+		if (pTarget == MH_ALL_HOOKS)
 		{
 			for (size_t i = 0, count = gHooks.size(); i < count; ++i)
 			{

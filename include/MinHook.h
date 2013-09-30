@@ -71,6 +71,9 @@ typedef enum MH_STATUS
 }
 MH_STATUS;
 
+// Can be passed as a parameter to MH_EnableHook, MH_DisableHook, MH_QueueEnableHook or MH_QueueDisableHook.
+#define MH_ALL_HOOKS NULL
+
 #if defined __cplusplus
 extern "C" {
 #endif
@@ -95,22 +98,26 @@ extern "C" {
 
 	// Enables the already created hook.
 	// Parameters:
-	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are enabled in one go.
+	//   pTarget [in] A pointer to the target function.
+	//                If this parameter is MH_ALL_HOOKS, all created hooks are enabled in one go.
 	MH_STATUS WINAPI MH_EnableHook(void* pTarget);
 
 	// Disables the already created hook.
 	// Parameters:
-	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are disabled in one go.
+	//   pTarget [in] A pointer to the target function.
+	//                If this parameter is MH_ALL_HOOKS, all created hooks are disabled in one go.
 	MH_STATUS WINAPI MH_DisableHook(void* pTarget);
 
 	// Queues to enable the already created hook.
 	// Parameters:
-	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are queued to be enabled.
+	//   pTarget [in] A pointer to the target function.
+	//                If this parameter is MH_ALL_HOOKS, all created hooks are queued to be enabled.
 	MH_STATUS WINAPI MH_QueueEnableHook(void* pTarget);
 
 	// Queues to disable the already created hook.
 	// Parameters:
-	//   pTarget [in] A pointer to the target function. If this parameter is NULL, all created hooks are queued to be disabled.
+	//   pTarget [in] A pointer to the target function.
+	//                If this parameter is MH_ALL_HOOKS, all created hooks are queued to be disabled.
 	MH_STATUS WINAPI MH_QueueDisableHook(void* pTarget);
 
 	// Applies all queued changes in one go.
