@@ -28,6 +28,7 @@
 
 #include <cassert>
 #include <vector>
+#include <algorithm>
 #include <Windows.h>
 #include "pstdint.h"
 
