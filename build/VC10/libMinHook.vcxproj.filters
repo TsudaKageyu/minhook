@@ -18,59 +18,59 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\HDE32\hde32.c">
+    <ClCompile Include="..\..\src\HDE32\hde32.c">
       <Filter>src\HDE32</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\HDE64\src\hde64.c">
+    <ClCompile Include="..\..\src\HDE64\src\hde64.c">
       <Filter>src\HDE64</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\buffer.cpp">
+    <ClCompile Include="..\..\src\buffer.cpp">
       <Filter>src\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\export.cpp">
+    <ClCompile Include="..\..\src\export.cpp">
       <Filter>src\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\hook.cpp">
+    <ClCompile Include="..\..\src\hook.cpp">
       <Filter>src\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\thread.cpp">
+    <ClCompile Include="..\..\src\thread.cpp">
       <Filter>src\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\trampoline.cpp">
+    <ClCompile Include="..\..\src\trampoline.cpp">
       <Filter>src\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\src\HDE32\hde32.h">
+    <ClInclude Include="..\..\src\HDE32\hde32.h">
       <Filter>src\HDE32</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\HDE32\table32.h">
+    <ClInclude Include="..\..\src\HDE32\table32.h">
       <Filter>src\HDE32</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\HDE64\include\hde64.h">
+    <ClInclude Include="..\..\src\HDE64\include\hde64.h">
       <Filter>src\HDE64</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\HDE64\src\table64.h">
+    <ClInclude Include="..\..\src\HDE64\src\table64.h">
       <Filter>src\HDE64</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\buffer.h">
+    <ClInclude Include="..\..\src\buffer.h">
       <Filter>src\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\hook.h">
+    <ClInclude Include="..\..\src\hook.h">
       <Filter>src\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\pstdint.h">
+    <ClInclude Include="..\..\src\pstdint.h">
       <Filter>src\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\thread.h">
+    <ClInclude Include="..\..\src\thread.h">
       <Filter>src\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\trampoline.h">
+    <ClInclude Include="..\..\src\trampoline.h">
       <Filter>src\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\include\MinHook.h" />
+    <ClInclude Include="..\..\include\MinHook.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\COPYING.txt" />
+    <None Include="..\..\COPYING.txt" />
   </ItemGroup>
 </Project>
