@@ -1,11 +1,11 @@
-/* 
- *  MinHook - Minimalistic API Hook Library	
+ï»¿/*
+ *  MinHook - Minimalistic API Hook Library
  *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
- *  
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
  *  are met:
- *  
+ *
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
  *     documentation and/or other materials provided with the distribution.
  *  3. The name of the author may not be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- *  
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -58,7 +58,7 @@ namespace MinHook { namespace
 		std::vector<uintptr_t>	newIPs;
 	};
 
-	// –½—ß‘‚«‚İ—p\‘¢‘Ì
+	// å‘½ä»¤æ›¸ãè¾¼ã¿ç”¨æ§‹é€ ä½“
 #pragma pack(push, 1)
 	struct JMP_REL_SHORT
 	{
@@ -110,7 +110,7 @@ namespace MinHook
 			return MH_ERROR_ALREADY_INITIALIZED;
 		}
 
-		// “à•”ŠÖ”ƒoƒbƒtƒ@‚Ì‰Šú‰»
+		// å†…éƒ¨é–¢æ•°ãƒãƒƒãƒ•ã‚¡ã®åˆæœŸåŒ–
 		InitializeBuffer();
 
 		gIsInitialized = true;
@@ -126,7 +126,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		// ‚·‚×‚Ä‚ÌƒtƒbƒN‚ğ‰ğœ
+		// ã™ã¹ã¦ã®ãƒ•ãƒƒã‚¯ã‚’è§£é™¤
 		MH_STATUS status = DisableAllHooksLL();
 		if (status != MH_OK)
 		{
@@ -136,7 +136,7 @@ namespace MinHook
 		std::vector<HOOK_ENTRY> v;
 		gHooks.swap(v);
 
-		// “à•”ŠÖ”ƒoƒbƒtƒ@‚ÌŠJ•ú
+		// å†…éƒ¨é–¢æ•°ãƒãƒƒãƒ•ã‚¡ã®é–‹æ”¾
 		UninitializeBuffer();
 
 		gIsInitialized = false;
@@ -183,7 +183,7 @@ namespace MinHook
 			bool committed = false;
 			RollbackIfNotCommitted scopedRollback(&committed);
 
-			// ƒgƒ‰ƒ“ƒ|ƒŠƒ“ŠÖ”‚ğì¬‚·‚é
+			// ãƒˆãƒ©ãƒ³ãƒãƒªãƒ³é–¢æ•°ã‚’ä½œæˆã™ã‚‹
 			CREATE_TREMPOLINE_T ct = { 0 };
 			ct.pTarget = pTarget;
 			if (!CreateTrampolineFunction(ct))
@@ -227,7 +227,7 @@ namespace MinHook
 			}
 #endif
 
-			// ƒ^[ƒQƒbƒgŠÖ”‚ÌƒoƒbƒNƒAƒbƒv‚ğ‚Æ‚é
+			// ã‚¿ãƒ¼ã‚²ãƒƒãƒˆé–¢æ•°ã®ãƒãƒƒã‚¯ã‚¢ãƒƒãƒ—ã‚’ã¨ã‚‹
 			size_t backupSize = sizeof(JMP_REL);
 			if (ct.patchAbove)
 			{
@@ -242,7 +242,7 @@ namespace MinHook
 
 			memcpy(pBackup, pJmpPtr, backupSize);
 
-			// ’†ŒpŠÖ”‚ğì¬‚·‚é
+			// ä¸­ç¶™é–¢æ•°ã‚’ä½œæˆã™ã‚‹
 #if defined _M_X64
 			void* pRelay = AllocateCodeBuffer(pJmpPtr, sizeof(JMP_ABS));
 			if (pRelay == NULL)
@@ -255,7 +255,7 @@ namespace MinHook
 			CommitBuffer();
 			committed = true;
 
-			// ƒtƒbƒNî•ñ‚Ì“o˜^
+			// ãƒ•ãƒƒã‚¯æƒ…å ±ã®ç™»éŒ²
 			HOOK_ENTRY hook = { 0 };
 			hook.pTarget = pTarget;
 			hook.pDetour = pDetour;
@@ -276,7 +276,7 @@ namespace MinHook
 			pHook = &(*i);
 		}
 
-		// OUTˆø”‚Ìˆ—
+		// OUTå¼•æ•°ã®å‡¦ç†
 		*ppOriginal = pHook->pTrampoline;
 
 		return MH_OK;
@@ -291,7 +291,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		std::vector<HOOK_ENTRY>::iterator i 
+		std::vector<HOOK_ENTRY>::iterator i
 			= std::lower_bound(gHooks.begin(), gHooks.end(), pTarget);
 		if (i == gHooks.end() || i->pTarget != pTarget)
 			return MH_ERROR_NOT_CREATED;
@@ -351,7 +351,7 @@ namespace MinHook
 			return MH_ERROR_ENABLED;
 		}
 
-		// ƒ^[ƒQƒbƒgŠÖ”‚Ì–`“ª‚ÉA’†ŒpŠÖ”‚Ü‚½‚ÍƒtƒbƒNŠÖ”‚Ö‚ÌƒWƒƒƒ“ƒv‚ğ‘‚«‚Ş
+		// ã‚¿ãƒ¼ã‚²ãƒƒãƒˆé–¢æ•°ã®å†’é ­ã«ã€ä¸­ç¶™é–¢æ•°ã¾ãŸã¯ãƒ•ãƒƒã‚¯é–¢æ•°ã¸ã®ã‚¸ãƒ£ãƒ³ãƒ—ã‚’æ›¸ãè¾¼ã‚€
 		{
 			ScopedThreadExclusive tex(pHook->oldIPs, pHook->newIPs);
 
@@ -390,7 +390,7 @@ namespace MinHook
 			return MH_ERROR_DISABLED;
 		}
 
-		// ƒ^[ƒQƒbƒgŠÖ”‚Ì–`“ª‚ğ‘‚«–ß‚·‚¾‚¯B‘¼‚ÍÄ—˜—p‚Ì‚½‚ßc‚µ‚Ä‚¨‚­
+		// ã‚¿ãƒ¼ã‚²ãƒƒãƒˆé–¢æ•°ã®å†’é ­ã‚’æ›¸ãæˆ»ã™ã ã‘ã€‚ä»–ã¯å†åˆ©ç”¨ã®ãŸã‚æ®‹ã—ã¦ãŠã
 		{
 			ScopedThreadExclusive tex(pHook->newIPs, pHook->oldIPs);
 
@@ -668,7 +668,7 @@ namespace MinHook { namespace
 
 	HOOK_ENTRY* FindHook(void* const pTarget)
 	{
-		std::vector<HOOK_ENTRY>::iterator i 
+		std::vector<HOOK_ENTRY>::iterator i
 			= std::lower_bound(gHooks.begin(), gHooks.end(), pTarget);
 		if (i != gHooks.end() && i->pTarget == pTarget)
 		{
@@ -680,10 +680,10 @@ namespace MinHook { namespace
 
 	bool IsExecutableAddress(void* pAddress)
 	{
-		static const DWORD PageExecuteMask 
+		static const DWORD PageExecuteMask
 			= (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
 
-		// –¢Š„‚è“–‚Ä‚âÀs•s‰Â”\‚È—Ìˆæ‚ğƒ`ƒFƒbƒN
+		// æœªå‰²ã‚Šå½“ã¦ã‚„å®Ÿè¡Œä¸å¯èƒ½ãªé ˜åŸŸã‚’ãƒã‚§ãƒƒã‚¯
 		MEMORY_BASIC_INFORMATION mi = { 0 };
 		VirtualQuery(pAddress, &mi, sizeof(mi));
 

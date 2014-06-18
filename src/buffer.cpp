@@ -1,11 +1,11 @@
-/* 
- *  MinHook - Minimalistic API Hook Library	
+ï»¿/*
+ *  MinHook - Minimalistic API Hook Library
  *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
- *  
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
  *  are met:
- *  
+ *
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
  *     documentation and/or other materials provided with the distribution.
  *  3. The name of the author may not be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- *  
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -182,7 +182,7 @@ namespace MinHook { namespace
 		assert(("AllocateBuffer", (protect == PAGE_EXECUTE_READ || protect == PAGE_READONLY)));
 		assert(("AllocateBuffer", (size > 0)));
 
-		// ƒAƒ‰ƒCƒƒ“ƒg‹«ŠE‚ÉØ‚èã‚°
+		// ã‚¢ãƒ©ã‚¤ãƒ¡ãƒ³ãƒˆå¢ƒç•Œã«åˆ‡ã‚Šä¸Šã’
 		size = (size + TYPE_ALIGNMENT(void*) - 1) & ~(TYPE_ALIGNMENT(void*) - 1);
 
 		MEMORY_BLOCK* pBlock = GetMemoryBlock(pOrigin, protect, size);
@@ -221,13 +221,13 @@ namespace MinHook { namespace
 		intptr_t maxAddr = gMaxAddress;
 		if (pOrigin != NULL)
 		{
-			// pOrigin } 512MB ‚Ì”ÍˆÍ
+			// pOrigin Â± 512MB ã®ç¯„å›²
 			minAddr = std::max<intptr_t>(minAddr, reinterpret_cast<intptr_t>(pOrigin) - 0x20000000);
 			maxAddr = std::min<intptr_t>(maxAddr, reinterpret_cast<intptr_t>(pOrigin) + 0x20000000);
 		}
 #endif
 
-		// ‚·‚Å‚É“o˜^Ï‚İ‚Ì—Ìˆæ‚Ì’†‚©‚çg—p‰Â”\‚È‚à‚Ì‚ªŒ©‚Â‚©‚ê‚ÎA‚»‚ê‚ğ•Ô‚·
+		// ã™ã§ã«ç™»éŒ²æ¸ˆã¿ã®é ˜åŸŸã®ä¸­ã‹ã‚‰ä½¿ç”¨å¯èƒ½ãªã‚‚ã®ãŒè¦‹ã¤ã‹ã‚Œã°ã€ãã‚Œã‚’è¿”ã™
 		MEMORY_BLOCK* pBlock = NULL;
 		{
 			mb_iter ib = gMemoryBlocks.begin();
@@ -235,7 +235,7 @@ namespace MinHook { namespace
 #if defined _M_X64
 			if (pOrigin != NULL)
 			{
-				// ŒŸõ‘O‚ÉƒAƒhƒŒƒX”ÍˆÍ‚Åi‚è‚İ
+				// æ¤œç´¢å‰ã«ã‚¢ãƒ‰ãƒ¬ã‚¹ç¯„å›²ã§çµã‚Šè¾¼ã¿
 				ib = std::lower_bound(ib, ie, minAddr);
 				ie = std::lower_bound(ib, ie, maxAddr);
 			}
@@ -249,12 +249,12 @@ namespace MinHook { namespace
 			}
 		}
 
-		// Œ©‚Â‚©‚ç‚È‚¯‚ê‚ÎAV‚½‚ÈƒAƒhƒŒƒX—Ìˆæ‚ğŠm•Û
+		// è¦‹ã¤ã‹ã‚‰ãªã‘ã‚Œã°ã€æ–°ãŸãªã‚¢ãƒ‰ãƒ¬ã‚¹é ˜åŸŸã‚’ç¢ºä¿
 		void* pAlloc = NULL;
 #if defined _M_X64
 		if (pOrigin != NULL)
 		{
-			// ŒŸõ”ÍˆÍ‚Ì’†S‚©‚çŠO‘¤‚Ö‹ó‚«—Ìˆæ‚ğ’T‚µ‚Ä‚¢‚­
+			// æ¤œç´¢ç¯„å›²ã®ä¸­å¿ƒã‹ã‚‰å¤–å´ã¸ç©ºãé ˜åŸŸã‚’æ¢ã—ã¦ã„ã
 			intptr_t min = minAddr / BlockSize;
 			intptr_t max = maxAddr / BlockSize;
 			int rel = 0;
@@ -275,7 +275,7 @@ namespace MinHook { namespace
 			}
 		}
 		else
-#endif		// X86ƒ‚[ƒh‚Å‚ÍAƒAƒhƒŒƒX‚Í–â‘è‚É‚È‚ç‚È‚¢
+#endif		// X86ãƒ¢ãƒ¼ãƒ‰ã§ã¯ã€ã‚¢ãƒ‰ãƒ¬ã‚¹ã¯å•é¡Œã«ãªã‚‰ãªã„
 		{
 			pAlloc = VirtualAlloc(NULL, BlockSize, MEM_RESERVE, protect);
 		}

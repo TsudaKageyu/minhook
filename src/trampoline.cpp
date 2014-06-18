@@ -1,11 +1,11 @@
-/* 
- *  MinHook - Minimalistic API Hook Library	
+ï»¿/*
+ *  MinHook - Minimalistic API Hook Library
  *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
- *  
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
  *  are met:
- *  
+ *
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
  *     documentation and/or other materials provided with the distribution.
  *  3. The name of the author may not be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- *  
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -50,7 +50,7 @@ namespace MinHook { namespace
 	inline unsigned int hde_disasm(const void* code, hde_t* hs) { return hde32_disasm(code, hs); }
 #endif
 
-	// –½—ß‘‚«‚İ—p\‘¢‘Ì
+	// å‘½ä»¤æ›¸ãè¾¼ã¿ç”¨æ§‹é€ ä½“
 #pragma pack(push, 1)
 	struct JMP_REL_SHORT
 	{
@@ -72,7 +72,7 @@ namespace MinHook { namespace
 	};
 	typedef JMP_ABS CALL_ABS, JCC_REL;
 
-	// ŠÔÚâ‘ÎNEAR Jcc‚É‘Š“–‚·‚éƒƒWƒbƒN
+	// é–“æ¥çµ¶å¯¾NEAR Jccã«ç›¸å½“ã™ã‚‹ãƒ­ã‚¸ãƒƒã‚¯
 	struct JCC_ABS
 	{
 		uint8_t		opcode;		// 7* 02			J** +4
@@ -115,8 +115,8 @@ namespace MinHook
 
 		size_t    oldPos = 0;
 		size_t    newPos = 0;
-		uintptr_t jmpDest = 0;		// ŠÖ”“àƒWƒƒƒ“ƒv‚Ì”ò‚ÑæƒAƒhƒŒƒXi•ªŠò’†”»’è‚Ég—pj
-		bool      finished = false;	// ŠÖ”I—¹ƒtƒ‰ƒO
+		uintptr_t jmpDest = 0;		// é–¢æ•°å†…ã‚¸ãƒ£ãƒ³ãƒ—ã®é£›ã³å…ˆã‚¢ãƒ‰ãƒ¬ã‚¹ï¼ˆåˆ†å²ä¸­åˆ¤å®šã«ä½¿ç”¨ï¼‰
+		bool      finished = false;	// é–¢æ•°çµ‚äº†ãƒ•ãƒ©ã‚°
 		while (!finished)
 		{
 			uint8_t *pInst = reinterpret_cast<uint8_t*>(ct.pTarget) + oldPos;
@@ -132,7 +132,7 @@ namespace MinHook
 
 			if (pInst - reinterpret_cast<uint8_t*>(ct.pTarget) >= sizeof(JMP_REL))
 			{
-				// ƒ^[ƒQƒbƒgŠÖ”‚Ö‚ÌƒWƒƒƒ“ƒv‚ğ‘‚«‚İAŠÖ”‚ğI—¹
+				// ã‚¿ãƒ¼ã‚²ãƒƒãƒˆé–¢æ•°ã¸ã®ã‚¸ãƒ£ãƒ³ãƒ—ã‚’æ›¸ãè¾¼ã¿ã€é–¢æ•°ã‚’çµ‚äº†
 				AppendTempAddress(reinterpret_cast<uintptr_t>(pInst), newPos, jmp, ct);
 
 				pCopySrc = &jmp;
@@ -141,32 +141,32 @@ namespace MinHook
 				finished = true;
 			}
 #if defined _M_X64
-			// RIP‘Š‘ÎƒAƒhƒŒƒbƒVƒ“ƒO‚ğg—p‚µ‚Ä‚¢‚é–½—ß (ModR/M = 00???101B)
+			// RIPç›¸å¯¾ã‚¢ãƒ‰ãƒ¬ãƒƒã‚·ãƒ³ã‚°ã‚’ä½¿ç”¨ã—ã¦ã„ã‚‹å‘½ä»¤ (ModR/M = 00???101B)
 			else if ((hs.modrm & 0xC7) == 0x05)
 			{
-				// RIP‘Š‘ÎƒAƒhƒŒƒX‚Ì‚İ‘‚«Š·‚¦
+				// RIPç›¸å¯¾ã‚¢ãƒ‰ãƒ¬ã‚¹ã®ã¿æ›¸ãæ›ãˆ
 				AppendRipRelativeAddress(pInst, newPos, hs, ct);
 
-				// JMP (FF /4)‚È‚çŠÖ”‚ğI—¹
+				// JMP (FF /4)ãªã‚‰é–¢æ•°ã‚’çµ‚äº†
 				if (hs.opcode == 0xFF && hs.modrm_reg == 4)
 				{
 					finished = true;
 				}
 			}
 #endif
-			// ‘Š‘Î’¼ÚCALL
+			// ç›¸å¯¾ç›´æ¥CALL
 			else if (hs.opcode == 0xE8)
 			{
 				AppendTempAddress(GetRelativeBranchDestination(pInst, hs, false), newPos, call, ct);
 				pCopySrc = &call;
 				copySize = sizeof(call);
 			}
-			// ‘Š‘Î’¼ÚJMP (EB or E9)
+			// ç›¸å¯¾ç›´æ¥JMP (EB or E9)
 			else if ((hs.opcode & 0xFD) == 0xE9)
 			{
 				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, hs.opcode == 0xEB);
 
-				// ŠÖ”“à‚Ö‚ÌƒWƒƒƒ“ƒv‚Í‚»‚Ì‚Ü‚ÜƒRƒs[iƒWƒƒƒ“ƒv’†‚Í–½—ß’·‚ª•Ï‚í‚é‚æ‚¤‚È‘€ì‚Í•s‰Âj
+				// é–¢æ•°å†…ã¸ã®ã‚¸ãƒ£ãƒ³ãƒ—ã¯ãã®ã¾ã¾ã‚³ãƒ”ãƒ¼ï¼ˆã‚¸ãƒ£ãƒ³ãƒ—ä¸­ã¯å‘½ä»¤é•·ãŒå¤‰ã‚ã‚‹ã‚ˆã†ãªæ“ä½œã¯ä¸å¯ï¼‰
 				if (IsInternalJump(ct.pTarget, dest))
 				{
 					jmpDest = std::max<uintptr_t>(jmpDest, dest);
@@ -177,21 +177,21 @@ namespace MinHook
 					pCopySrc = &jmp;
 					copySize = sizeof(jmp);
 
-					// •ªŠò’†‚Å‚È‚¯‚ê‚ÎŠÖ”‚ğI—¹
+					// åˆ†å²ä¸­ã§ãªã‘ã‚Œã°é–¢æ•°ã‚’çµ‚äº†
 					finished = (reinterpret_cast<uintptr_t>(pInst) >= jmpDest);
 				}
 			}
-			// ‘Š‘Î’¼ÚJcc
+			// ç›¸å¯¾ç›´æ¥Jcc
 			else if ((hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0 || (hs.opcode2 & 0xF0) == 0x80)
 			{
 				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, (hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0);
 
-				// ŠÖ”“à‚Ö‚ÌƒWƒƒƒ“ƒv‚Í‚»‚Ì‚Ü‚ÜƒRƒs[i•ªŠò’†‚Í–½—ß’·‚ª•Ï‚í‚é‚æ‚¤‚È‘€ì‚Í•s‰Âj
+				// é–¢æ•°å†…ã¸ã®ã‚¸ãƒ£ãƒ³ãƒ—ã¯ãã®ã¾ã¾ã‚³ãƒ”ãƒ¼ï¼ˆåˆ†å²ä¸­ã¯å‘½ä»¤é•·ãŒå¤‰ã‚ã‚‹ã‚ˆã†ãªæ“ä½œã¯ä¸å¯ï¼‰
 				if (IsInternalJump(ct.pTarget, dest))
 				{
 					jmpDest = std::max<uintptr_t>(jmpDest, dest);
 				}
-				else if ((hs.opcode & 0xFC) == 0xE0) // ŠÖ”ŠO‚Ö‚ÌJCXZ, JECXZ ‚É‚Í‘Î‰‚µ‚È‚¢
+				else if ((hs.opcode & 0xFC) == 0xE0) // é–¢æ•°å¤–ã¸ã®JCXZ, JECXZ ã«ã¯å¯¾å¿œã—ãªã„
 				{
 					return false;
 				}
@@ -206,11 +206,11 @@ namespace MinHook
 			// RET (C2 or C3)
 			else if ((hs.opcode & 0xFE) == 0xC2)
 			{
-				// •ªŠò’†‚Å‚È‚¯‚ê‚Îƒgƒ‰ƒ“ƒ|ƒŠƒ“ŠÖ”‚ğI—¹
+				// åˆ†å²ä¸­ã§ãªã‘ã‚Œã°ãƒˆãƒ©ãƒ³ãƒãƒªãƒ³é–¢æ•°ã‚’çµ‚äº†
 				finished = (reinterpret_cast<uintptr_t>(pInst) >= jmpDest);
 			}
 
-			// •ªŠò’†‚Í–½—ß’·‚ª•Ï‚í‚é‚æ‚¤‚È‘€ì‚Í•s‰Â
+			// åˆ†å²ä¸­ã¯å‘½ä»¤é•·ãŒå¤‰ã‚ã‚‹ã‚ˆã†ãªæ“ä½œã¯ä¸å¯
 			if (reinterpret_cast<uintptr_t>(pInst) < jmpDest && copySize != hs.len)
 			{
 				return false;
@@ -271,7 +271,7 @@ namespace MinHook
 
 			uintptr_t addr;
 #if defined _M_X64
-			if (ta.address < 0x10000)	// 0x10000–¢–‚Íƒe[ƒuƒ‹‚ÌƒCƒ“ƒfƒbƒNƒXA0x10000ˆÈã‚ÍRIP‘Š‘ÎƒAƒhƒŒƒX
+			if (ta.address < 0x10000)	// 0x10000æœªæº€ã¯ãƒ†ãƒ¼ãƒ–ãƒ«ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã€0x10000ä»¥ä¸Šã¯RIPç›¸å¯¾ã‚¢ãƒ‰ãƒ¬ã‚¹
 			{
 				addr = reinterpret_cast<uintptr_t>(pt++);
 			}
@@ -281,7 +281,7 @@ namespace MinHook
 				addr = ta.address;
 			}
 
-			*reinterpret_cast<uint32_t*>(&ct.trampoline[ ta.position ]) 
+			*reinterpret_cast<uint32_t*>(&ct.trampoline[ ta.position ])
 				= static_cast<uint32_t>(addr - (reinterpret_cast<uintptr_t>(ct.pTrampoline) + ta.pc));
 		}
 
@@ -336,7 +336,7 @@ namespace MinHook { namespace
 	{
 		TEMP_ADDR ta;
 		ta.address  = reinterpret_cast<uintptr_t>(pInst) + hs.len + static_cast<int32_t>(hs.disp.disp32);
-		ta.position = pos + hs.len - ((hs.flags & 0x3C) >> 2) - 4; // pos + –½—ß’· - ‘¦’lƒTƒCƒY - 4
+		ta.position = pos + hs.len - ((hs.flags & 0x3C) >> 2) - 4; // pos + å‘½ä»¤é•· - å³å€¤ã‚µã‚¤ã‚º - 4
 		ta.pc       = pos + hs.len;
 
 		ct.tempAddr.push_back(ta);
@@ -379,10 +379,10 @@ namespace MinHook { namespace
 
 	bool IsExecutableAddress(void* pAddress)
 	{
-		static const DWORD PageExecuteMask 
+		static const DWORD PageExecuteMask
 			= (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
 
-		// –¢Š„‚è“–‚Ä‚âÀs•s‰Â”\‚È—Ìˆæ‚ğƒ`ƒFƒbƒN
+		// æœªå‰²ã‚Šå½“ã¦ã‚„å®Ÿè¡Œä¸å¯èƒ½ãªé ˜åŸŸã‚’ãƒã‚§ãƒƒã‚¯
 		MEMORY_BASIC_INFORMATION mi = { 0 };
 		VirtualQuery(pAddress, &mi, sizeof(mi));
 
