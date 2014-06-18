@@ -182,7 +182,7 @@ namespace MinHook { namespace
 		assert(("AllocateBuffer", (protect == PAGE_EXECUTE_READ || protect == PAGE_READONLY)));
 		assert(("AllocateBuffer", (size > 0)));
 
-		// アライメント境界に切り上げ
+		// Round up to the alignment.
 		size = (size + TYPE_ALIGNMENT(void*) - 1) & ~(TYPE_ALIGNMENT(void*) - 1);
 
 		MEMORY_BLOCK* pBlock = GetMemoryBlock(pOrigin, protect, size);
@@ -221,13 +221,13 @@ namespace MinHook { namespace
 		intptr_t maxAddr = gMaxAddress;
 		if (pOrigin != NULL)
 		{
-			// pOrigin ± 512MB の範囲
+			// pOrigin ± 512MB
 			minAddr = std::max<intptr_t>(minAddr, reinterpret_cast<intptr_t>(pOrigin) - 0x20000000);
 			maxAddr = std::min<intptr_t>(maxAddr, reinterpret_cast<intptr_t>(pOrigin) + 0x20000000);
 		}
 #endif
 
-		// すでに登録済みの領域の中から使用可能なものが見つかれば、それを返す
+		// Look the registered blocks for a reachable one.
 		MEMORY_BLOCK* pBlock = NULL;
 		{
 			mb_iter ib = gMemoryBlocks.begin();
@@ -235,7 +235,7 @@ namespace MinHook { namespace
 #if defined _M_X64
 			if (pOrigin != NULL)
 			{
-				// 検索前にアドレス範囲で絞り込み
+				// Ignore the blocks too far.
 				ib = std::lower_bound(ib, ie, minAddr);
 				ie = std::lower_bound(ib, ie, maxAddr);
 			}
@@ -249,12 +249,12 @@ namespace MinHook { namespace
 			}
 		}
 
-		// 見つからなければ、新たなアドレス領域を確保
+		// Alloc a new block if not found.
 		void* pAlloc = NULL;
 #if defined _M_X64
 		if (pOrigin != NULL)
 		{
-			// 検索範囲の中心から外側へ空き領域を探していく
+			// Seek a unallocated area from the center to the outside.
 			intptr_t min = minAddr / BlockSize;
 			intptr_t max = maxAddr / BlockSize;
 			int rel = 0;
@@ -275,7 +275,7 @@ namespace MinHook { namespace
 			}
 		}
 		else
-#endif		// X86モードでは、アドレスは問題にならない
+#endif		// The address doesn't matter in x86 mode.
 		{
 			pAlloc = VirtualAlloc(NULL, BlockSize, MEM_RESERVE, protect);
 		}

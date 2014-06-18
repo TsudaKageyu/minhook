@@ -36,7 +36,7 @@
 
 namespace MinHook { namespace
 {
-	// 自動的にCloseHandleされるWindowsハンドル
+	// Windows handle will automatically closed.
 	class ScopedHandle
 	{
 		ScopedHandle(const ScopedHandle&);
@@ -62,7 +62,7 @@ namespace MinHook { namespace
 
 }}
 
-// CriticalSection, CriticalSection::ScopedLock の実装
+// Implementation of CriticalSection, CriticalSection::ScopedLock
 namespace MinHook
 {
 	CriticalSection::CriticalSection()
@@ -97,7 +97,7 @@ namespace MinHook
 	}
 }
 
-// ScopedThreadExclusive の実装
+// Implementation of ScopedThreadExclusive
 namespace MinHook
 {
 	ScopedThreadExclusive::ScopedThreadExclusive(const std::vector<uintptr_t>& oldIPs, const std::vector<uintptr_t>& newIPs)
@@ -150,7 +150,7 @@ namespace MinHook
 			ScopedHandle hThread = OpenThread(ThreadAccess, FALSE, tid);
 			SuspendThread(hThread);
 
-			// 書き換え範囲内でスレッドが停止した場合は、トランポリン関数に制御を移す
+			// If the thread halted in the overwritten area, move IP to the trampoline function.
 			CONTEXT c = { 0 };
 			c.ContextFlags = CONTEXT_CONTROL;
 			if (!GetThreadContext(hThread, &c))

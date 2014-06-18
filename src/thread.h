@@ -35,7 +35,7 @@
 
 namespace MinHook
 {
-	// ScopedLock 付きクリティカルセクション
+	// CriticalSection with scoped lock feature.
 	class CriticalSection
 	{
 		CriticalSection(const CriticalSection&);
@@ -61,7 +61,7 @@ namespace MinHook
 		void leave();
 	};
 
-	// 同一プロセス内の他のスレッドをすべて停止
+	// Halt all other threads in the running process.
 	class ScopedThreadExclusive
 	{
 	private:
