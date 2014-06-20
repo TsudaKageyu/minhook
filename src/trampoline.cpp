@@ -1,11 +1,11 @@
-/* 
- *  MinHook - Minimalistic API Hook Library	
+ï»¿/*
+ *  MinHook - Minimalistic API Hook Library
  *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
- *  
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
  *  are met:
- *  
+ *
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
  *     documentation and/or other materials provided with the distribution.
  *  3. The name of the author may not be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- *  
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -50,7 +50,7 @@ namespace MinHook { namespace
 	inline unsigned int hde_disasm(const void* code, hde_t* hs) { return hde32_disasm(code, hs); }
 #endif
 
-	// –½—ß‘‚«‚İ—p\‘¢‘Ì
+	// Structs for writing x86/x64 instcutions.
 #pragma pack(push, 1)
 	struct JMP_REL_SHORT
 	{
@@ -72,7 +72,7 @@ namespace MinHook { namespace
 	};
 	typedef JMP_ABS CALL_ABS, JCC_REL;
 
-	// ŠÔÚâ‘ÎNEAR Jcc‚É‘Š“–‚·‚éƒƒWƒbƒN
+	// 32/64bit indirect absolute conditional jump that x86/x64 lacks.
 	struct JCC_ABS
 	{
 		uint8_t		opcode;		// 7* 02			J** +4
@@ -115,8 +115,8 @@ namespace MinHook
 
 		size_t    oldPos = 0;
 		size_t    newPos = 0;
-		uintptr_t jmpDest = 0;		// ŠÖ”“àƒWƒƒƒ“ƒv‚Ì”ò‚ÑæƒAƒhƒŒƒXi•ªŠò’†”»’è‚Ég—pj
-		bool      finished = false;	// ŠÖ”I—¹ƒtƒ‰ƒO
+		uintptr_t jmpDest = 0;		// Destination address of an internal jump.
+		bool      finished = false;	// Is the function completed?
 		while (!finished)
 		{
 			uint8_t *pInst = reinterpret_cast<uint8_t*>(ct.pTarget) + oldPos;
@@ -132,7 +132,8 @@ namespace MinHook
 
 			if (pInst - reinterpret_cast<uint8_t*>(ct.pTarget) >= sizeof(JMP_REL))
 			{
-				// ƒ^[ƒQƒbƒgŠÖ”‚Ö‚ÌƒWƒƒƒ“ƒv‚ğ‘‚«‚İAŠÖ”‚ğI—¹
+				// The trampoline function is long enough.
+				// Complete the function with the jump to the target function.
 				AppendTempAddress(reinterpret_cast<uintptr_t>(pInst), newPos, jmp, ct);
 
 				pCopySrc = &jmp;
@@ -141,32 +142,35 @@ namespace MinHook
 				finished = true;
 			}
 #if defined _M_X64
-			// RIP‘Š‘ÎƒAƒhƒŒƒbƒVƒ“ƒO‚ğg—p‚µ‚Ä‚¢‚é–½—ß (ModR/M = 00???101B)
 			else if ((hs.modrm & 0xC7) == 0x05)
 			{
-				// RIP‘Š‘ÎƒAƒhƒŒƒX‚Ì‚İ‘‚«Š·‚¦
+				// Instructions using RIP relative addressing. (ModR/M = 00???101B)
+
+				// Modify only RIP relative address.
 				AppendRipRelativeAddress(pInst, newPos, hs, ct);
 
-				// JMP (FF /4)‚È‚çŠÖ”‚ğI—¹
+				// Complete the function if JMP (FF /4).
 				if (hs.opcode == 0xFF && hs.modrm_reg == 4)
 				{
 					finished = true;
 				}
 			}
 #endif
-			// ‘Š‘Î’¼ÚCALL
 			else if (hs.opcode == 0xE8)
 			{
+				// Direct relative CALL
+
 				AppendTempAddress(GetRelativeBranchDestination(pInst, hs, false), newPos, call, ct);
 				pCopySrc = &call;
 				copySize = sizeof(call);
 			}
-			// ‘Š‘Î’¼ÚJMP (EB or E9)
 			else if ((hs.opcode & 0xFD) == 0xE9)
 			{
+				// Direct relative JMP (EB or E9)
+
 				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, hs.opcode == 0xEB);
 
-				// ŠÖ”“à‚Ö‚ÌƒWƒƒƒ“ƒv‚Í‚»‚Ì‚Ü‚ÜƒRƒs[iƒWƒƒƒ“ƒv’†‚Í–½—ß’·‚ª•Ï‚í‚é‚æ‚¤‚È‘€ì‚Í•s‰Âj
+				// Simply copy an internal jump.
 				if (IsInternalJump(ct.pTarget, dest))
 				{
 					jmpDest = std::max<uintptr_t>(jmpDest, dest);
@@ -177,21 +181,22 @@ namespace MinHook
 					pCopySrc = &jmp;
 					copySize = sizeof(jmp);
 
-					// •ªŠò’†‚Å‚È‚¯‚ê‚ÎŠÖ”‚ğI—¹
+					// åˆ†å²ä¸­ã§ãªã‘ã‚Œã°é–¢æ•°ã‚’çµ‚äº†
 					finished = (reinterpret_cast<uintptr_t>(pInst) >= jmpDest);
 				}
 			}
-			// ‘Š‘Î’¼ÚJcc
 			else if ((hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0 || (hs.opcode2 & 0xF0) == 0x80)
 			{
+				// Direct relative Jcc
+
 				uintptr_t dest = GetRelativeBranchDestination(pInst, hs, (hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0);
 
-				// ŠÖ”“à‚Ö‚ÌƒWƒƒƒ“ƒv‚Í‚»‚Ì‚Ü‚ÜƒRƒs[i•ªŠò’†‚Í–½—ß’·‚ª•Ï‚í‚é‚æ‚¤‚È‘€ì‚Í•s‰Âj
+				// Simply copy an internal jump.
 				if (IsInternalJump(ct.pTarget, dest))
 				{
 					jmpDest = std::max<uintptr_t>(jmpDest, dest);
 				}
-				else if ((hs.opcode & 0xFC) == 0xE0) // ŠÖ”ŠO‚Ö‚ÌJCXZ, JECXZ ‚É‚Í‘Î‰‚µ‚È‚¢
+				else if ((hs.opcode & 0xFC) == 0xE0) // JCXZ/JECXZ to the outside are not supported.
 				{
 					return false;
 				}
@@ -203,14 +208,15 @@ namespace MinHook
 					copySize = sizeof(jcc);
 				}
 			}
-			// RET (C2 or C3)
 			else if ((hs.opcode & 0xFE) == 0xC2)
 			{
-				// •ªŠò’†‚Å‚È‚¯‚ê‚Îƒgƒ‰ƒ“ƒ|ƒŠƒ“ŠÖ”‚ğI—¹
+				// RET (C2 or C3)
+
+				// Complete the function if not in a branch.
 				finished = (reinterpret_cast<uintptr_t>(pInst) >= jmpDest);
 			}
 
-			// •ªŠò’†‚Í–½—ß’·‚ª•Ï‚í‚é‚æ‚¤‚È‘€ì‚Í•s‰Â
+			// Can't alter the instruction length in a branch.
 			if (reinterpret_cast<uintptr_t>(pInst) < jmpDest && copySize != hs.len)
 			{
 				return false;
@@ -271,7 +277,7 @@ namespace MinHook
 
 			uintptr_t addr;
 #if defined _M_X64
-			if (ta.address < 0x10000)	// 0x10000–¢–‚Íƒe[ƒuƒ‹‚ÌƒCƒ“ƒfƒbƒNƒXA0x10000ˆÈã‚ÍRIP‘Š‘ÎƒAƒhƒŒƒX
+			if (ta.address < 0x10000)	// Table index when < 0x10000, otherwise RIP relative address.
 			{
 				addr = reinterpret_cast<uintptr_t>(pt++);
 			}
@@ -281,7 +287,7 @@ namespace MinHook
 				addr = ta.address;
 			}
 
-			*reinterpret_cast<uint32_t*>(&ct.trampoline[ ta.position ]) 
+			*reinterpret_cast<uint32_t*>(&ct.trampoline[ ta.position ])
 				= static_cast<uint32_t>(addr - (reinterpret_cast<uintptr_t>(ct.pTrampoline) + ta.pc));
 		}
 
@@ -336,7 +342,7 @@ namespace MinHook { namespace
 	{
 		TEMP_ADDR ta;
 		ta.address  = reinterpret_cast<uintptr_t>(pInst) + hs.len + static_cast<int32_t>(hs.disp.disp32);
-		ta.position = pos + hs.len - ((hs.flags & 0x3C) >> 2) - 4; // pos + –½—ß’· - ‘¦’lƒTƒCƒY - 4
+		ta.position = pos + hs.len - ((hs.flags & 0x3C) >> 2) - 4; // pos + instruction length - immediate value length - 4
 		ta.pc       = pos + hs.len;
 
 		ct.tempAddr.push_back(ta);
@@ -379,10 +385,10 @@ namespace MinHook { namespace
 
 	bool IsExecutableAddress(void* pAddress)
 	{
-		static const DWORD PageExecuteMask 
+		static const DWORD PageExecuteMask
 			= (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
 
-		// –¢Š„‚è“–‚Ä‚âÀs•s‰Â”\‚È—Ìˆæ‚ğƒ`ƒFƒbƒN
+		// Is the address is allocated and executable?
 		MEMORY_BASIC_INFORMATION mi = { 0 };
 		VirtualQuery(pAddress, &mi, sizeof(mi));
 

@@ -1,11 +1,11 @@
-/* 
- *  MinHook - Minimalistic API Hook Library	
+Ôªø/*
+ *  MinHook - Minimalistic API Hook Library
  *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
- *  
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
  *  are met:
- *  
+ *
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
  *     documentation and/or other materials provided with the distribution.
  *  3. The name of the author may not be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- *  
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -58,7 +58,7 @@ namespace MinHook { namespace
 		std::vector<uintptr_t>	newIPs;
 	};
 
-	// ñΩóﬂèëÇ´çûÇ›ópç\ë¢ëÃ
+	// Structs for writing x86/x64 instcutions.
 #pragma pack(push, 1)
 	struct JMP_REL_SHORT
 	{
@@ -110,7 +110,7 @@ namespace MinHook
 			return MH_ERROR_ALREADY_INITIALIZED;
 		}
 
-		// ì‡ïîä÷êîÉoÉbÉtÉ@ÇÃèâä˙âª
+		// Initialize the internal function buffer.
 		InitializeBuffer();
 
 		gIsInitialized = true;
@@ -126,7 +126,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		// Ç∑Ç◊ÇƒÇÃÉtÉbÉNÇâèú
+		// Disable all hooks.
 		MH_STATUS status = DisableAllHooksLL();
 		if (status != MH_OK)
 		{
@@ -136,7 +136,7 @@ namespace MinHook
 		std::vector<HOOK_ENTRY> v;
 		gHooks.swap(v);
 
-		// ì‡ïîä÷êîÉoÉbÉtÉ@ÇÃäJï˙
+		// Free the internal function buffer.
 		UninitializeBuffer();
 
 		gIsInitialized = false;
@@ -183,7 +183,7 @@ namespace MinHook
 			bool committed = false;
 			RollbackIfNotCommitted scopedRollback(&committed);
 
-			// ÉgÉâÉìÉ|ÉäÉìä÷êîÇçÏê¨Ç∑ÇÈ
+			// Create a trampoline function.
 			CREATE_TREMPOLINE_T ct = { 0 };
 			ct.pTarget = pTarget;
 			if (!CreateTrampolineFunction(ct))
@@ -227,7 +227,7 @@ namespace MinHook
 			}
 #endif
 
-			// É^Å[ÉQÉbÉgä÷êîÇÃÉoÉbÉNÉAÉbÉvÇÇ∆ÇÈ
+			// Back up the target function.
 			size_t backupSize = sizeof(JMP_REL);
 			if (ct.patchAbove)
 			{
@@ -242,7 +242,7 @@ namespace MinHook
 
 			memcpy(pBackup, pJmpPtr, backupSize);
 
-			// íÜåpä÷êîÇçÏê¨Ç∑ÇÈ
+			// Create a relay function.
 #if defined _M_X64
 			void* pRelay = AllocateCodeBuffer(pJmpPtr, sizeof(JMP_ABS));
 			if (pRelay == NULL)
@@ -255,7 +255,7 @@ namespace MinHook
 			CommitBuffer();
 			committed = true;
 
-			// ÉtÉbÉNèÓïÒÇÃìoò^
+			// Register the new hook entry.
 			HOOK_ENTRY hook = { 0 };
 			hook.pTarget = pTarget;
 			hook.pDetour = pDetour;
@@ -276,7 +276,6 @@ namespace MinHook
 			pHook = &(*i);
 		}
 
-		// OUTà¯êîÇÃèàóù
 		*ppOriginal = pHook->pTrampoline;
 
 		return MH_OK;
@@ -291,7 +290,7 @@ namespace MinHook
 			return MH_ERROR_NOT_INITIALIZED;
 		}
 
-		std::vector<HOOK_ENTRY>::iterator i 
+		std::vector<HOOK_ENTRY>::iterator i
 			= std::lower_bound(gHooks.begin(), gHooks.end(), pTarget);
 		if (i == gHooks.end() || i->pTarget != pTarget)
 			return MH_ERROR_NOT_CREATED;
@@ -351,7 +350,7 @@ namespace MinHook
 			return MH_ERROR_ENABLED;
 		}
 
-		// É^Å[ÉQÉbÉgä÷êîÇÃñ`ì™Ç…ÅAíÜåpä÷êîÇ‹ÇΩÇÕÉtÉbÉNä÷êîÇ÷ÇÃÉWÉÉÉìÉvÇèëÇ´çûÇﬁ
+		// Overwrite the prologue of the target function with a jump to the relay or hook function.
 		{
 			ScopedThreadExclusive tex(pHook->oldIPs, pHook->newIPs);
 
@@ -390,7 +389,7 @@ namespace MinHook
 			return MH_ERROR_DISABLED;
 		}
 
-		// É^Å[ÉQÉbÉgä÷êîÇÃñ`ì™ÇèëÇ´ñﬂÇ∑ÇæÇØÅBëºÇÕçƒóòópÇÃÇΩÇﬂécÇµÇƒÇ®Ç≠
+		// Write back the prologue of the target function. Preserve other stuff to reuse.
 		{
 			ScopedThreadExclusive tex(pHook->newIPs, pHook->oldIPs);
 
@@ -668,7 +667,7 @@ namespace MinHook { namespace
 
 	HOOK_ENTRY* FindHook(void* const pTarget)
 	{
-		std::vector<HOOK_ENTRY>::iterator i 
+		std::vector<HOOK_ENTRY>::iterator i
 			= std::lower_bound(gHooks.begin(), gHooks.end(), pTarget);
 		if (i != gHooks.end() && i->pTarget == pTarget)
 		{
@@ -680,10 +679,10 @@ namespace MinHook { namespace
 
 	bool IsExecutableAddress(void* pAddress)
 	{
-		static const DWORD PageExecuteMask 
+		static const DWORD PageExecuteMask
 			= (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
 
-		// ñ¢äÑÇËìñÇƒÇ‚é¿çsïsâ¬î\Ç»óÃàÊÇÉ`ÉFÉbÉN
+		// Is the address is allocated and executable?
 		MEMORY_BASIC_INFORMATION mi = { 0 };
 		VirtualQuery(pAddress, &mi, sizeof(mi));
 

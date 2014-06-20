@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Hacker Disassembler Engine 32
  * Copyright (c) 2006-2009, Vyacheslav Patkov.
  * All rights reserved.

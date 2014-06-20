@@ -1,11 +1,11 @@
-/* 
- *  MinHook - Minimalistic API Hook Library	
+ï»¿/*
+ *  MinHook - Minimalistic API Hook Library
  *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
- *  
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
  *  are met:
- *  
+ *
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
@@ -13,7 +13,7 @@
  *     documentation and/or other materials provided with the distribution.
  *  3. The name of the author may not be used to endorse or promote products
  *     derived from this software without specific prior written permission.
- *  
+ *
  *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -36,7 +36,7 @@
 
 namespace MinHook { namespace
 {
-	// Ž©“®“I‚ÉCloseHandle‚³‚ê‚éWindowsƒnƒ“ƒhƒ‹
+	// Windows handle will automatically closed.
 	class ScopedHandle
 	{
 		ScopedHandle(const ScopedHandle&);
@@ -62,7 +62,7 @@ namespace MinHook { namespace
 
 }}
 
-// CriticalSection, CriticalSection::ScopedLock ‚ÌŽÀ‘•
+// Implementation of CriticalSection, CriticalSection::ScopedLock
 namespace MinHook
 {
 	CriticalSection::CriticalSection()
@@ -97,7 +97,7 @@ namespace MinHook
 	}
 }
 
-// ScopedThreadExclusive ‚ÌŽÀ‘•
+// Implementation of ScopedThreadExclusive
 namespace MinHook
 {
 	ScopedThreadExclusive::ScopedThreadExclusive(const std::vector<uintptr_t>& oldIPs, const std::vector<uintptr_t>& newIPs)
@@ -141,7 +141,7 @@ namespace MinHook
 	{
 		assert(("ScopedThreadExclusive::freeze", (oldIPs.size() == newIPs.size())));
 
-		static const DWORD ThreadAccess 
+		static const DWORD ThreadAccess
 			= THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT;
 
 		for (size_t i = 0, count = threads.size(); i < count; ++i)
@@ -150,7 +150,7 @@ namespace MinHook
 			ScopedHandle hThread = OpenThread(ThreadAccess, FALSE, tid);
 			SuspendThread(hThread);
 
-			// ‘‚«Š·‚¦”ÍˆÍ“à‚ÅƒXƒŒƒbƒh‚ª’âŽ~‚µ‚½ê‡‚ÍAƒgƒ‰ƒ“ƒ|ƒŠƒ“ŠÖ”‚É§Œä‚ðˆÚ‚·
+			// If the thread halted in the overwritten area, move IP to the trampoline function.
 			CONTEXT c = { 0 };
 			c.ContextFlags = CONTEXT_CONTROL;
 			if (!GetThreadContext(hThread, &c))
