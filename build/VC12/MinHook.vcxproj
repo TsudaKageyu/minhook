@@ -211,9 +211,6 @@
     <ResourceCompile Include="..\..\dll_resources\MinHook.rc" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\dll_resources\resource.h" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="libMinHook.vcxproj">
       <Project>{65021938-d251-46fa-bc3d-85c385d4c06d}</Project>
     </ProjectReference>
