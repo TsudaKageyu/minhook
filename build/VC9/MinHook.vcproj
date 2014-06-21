@@ -374,10 +374,6 @@
 			RelativePath="..\..\dll_resources\MinHook.rc"
 			>
 		</File>
-		<File
-			RelativePath="..\..\dll_resources\resource.h"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
