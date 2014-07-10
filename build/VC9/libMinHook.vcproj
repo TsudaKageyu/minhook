@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="libMinHook"
-	ProjectGUID="{65021938-D251-46FA-BC3D-85C385D4C06D}"
+	ProjectGUID="{F142A341-5EE0-442D-A15F-98AE9B48DBAE}"
 	RootNamespace="libMinHook"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
@@ -22,7 +22,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)lib\$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			>
@@ -44,14 +44,14 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
+				AdditionalIncludeDirectories="$(SolutionDir)..\..\include\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				DebugInformationFormat="4"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -108,14 +108,15 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
+				WholeProgramOptimization="false"
+				AdditionalIncludeDirectories="$(SolutionDir)..\..\include\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
+				RuntimeLibrary="1"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -149,7 +150,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)lib\$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="4"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -171,15 +172,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
+				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
+				WholeProgramOptimization="false"
+				AdditionalIncludeDirectories="$(SolutionDir)..\..\include\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
+				AssemblerOutput="2"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -236,15 +241,19 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
+				InlineFunctionExpansion="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;$(ProjectDir)\..\..\include&quot;"
+				WholeProgramOptimization="false"
+				AdditionalIncludeDirectories="$(SolutionDir)..\..\include\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				RuntimeLibrary="2"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
+				AssemblerOutput="2"
 				WarningLevel="3"
-				DebugInformationFormat="3"
+				DebugInformationFormat="0"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -280,125 +289,125 @@
 	</References>
 	<Files>
 		<Filter
-			Name="src"
+			Name="Source Files"
+			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
+			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
-			<Filter
-				Name="HDE32"
+			<File
+				RelativePath="..\..\src\buffer.c"
 				>
-				<File
-					RelativePath="..\..\src\HDE32\hde32.c"
-					>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\..\src\HDE32\hde32.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\HDE32\table32.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="HDE64"
+			</File>
+			<File
+				RelativePath="..\..\src\export.c"
 				>
-				<File
-					RelativePath="..\..\src\HDE64\src\hde64.c"
-					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\..\src\HDE64\include\hde64.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\HDE64\src\table64.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Source Files"
+			</File>
+			<File
+				RelativePath="..\..\src\hook.c"
 				>
-				<File
-					RelativePath="..\..\src\buffer.cpp"
+				<FileConfiguration
+					Name="Release|Win32"
 					>
-				</File>
-				<File
-					RelativePath="..\..\src\export.cpp"
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
 					>
-				</File>
-				<File
-					RelativePath="..\..\src\hook.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\thread.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\trampoline.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="Header Files"
+					<Tool
+						Name="VCCLCompilerTool"
+						Optimization="2"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\trampoline.c"
 				>
-				<File
-					RelativePath="..\..\src\buffer.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\hook.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\pstdint.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\thread.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\trampoline.h"
-					>
-				</File>
-			</Filter>
+			</File>
 		</Filter>
-		<File
-			RelativePath="..\..\COPYING.txt"
+		<Filter
+			Name="Header Files"
+			Filter="h;hpp;hxx;hm;inl;inc;xsd"
+			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-		</File>
+			<File
+				RelativePath="..\..\src\buffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\hook.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\trampoline.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="HDE"
+			>
+			<File
+				RelativePath="..\..\src\HDE\hde32.c"
+				>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\HDE\hde32.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\HDE\hde64.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\..\src\HDE\hde64.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\HDE\pstdint.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\HDE\table32.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\HDE\table64.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\..\include\MinHook.h"
 			>

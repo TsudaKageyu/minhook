@@ -1,14 +1,14 @@
 ﻿/*
- * Hacker Disassembler Engine 64
- * Copyright (c) 2008-2009, Vyacheslav Patkov.
+ * Hacker Disassembler Engine 32
+ * Copyright (c) 2006-2009, Vyacheslav Patkov.
  * All rights reserved.
  *
- * hde64.h: C/C++ header file
+ * hde32.h: C/C++ header file
  *
  */
 
-#ifndef _HDE64_H_
-#define _HDE64_H_
+#ifndef _HDE32_H_
+#define _HDE32_H_
 
 /* stdint.h - C99 standard header
  * http://en.wikipedia.org/wiki/stdint.h
@@ -19,19 +19,18 @@
  * and change next line to:
  *   #include "pstdint.h"
  */
-/* #include <stdint.h> */
-#include "../../pstdint.h"
+#include "pstdint.h"
 
 #define F_MODRM         0x00000001
 #define F_SIB           0x00000002
 #define F_IMM8          0x00000004
 #define F_IMM16         0x00000008
 #define F_IMM32         0x00000010
-#define F_IMM64         0x00000020
-#define F_DISP8         0x00000040
-#define F_DISP16        0x00000080
-#define F_DISP32        0x00000100
-#define F_RELATIVE      0x00000200
+#define F_DISP8         0x00000020
+#define F_DISP16        0x00000040
+#define F_DISP32        0x00000080
+#define F_RELATIVE      0x00000100
+#define F_2IMM16        0x00000800
 #define F_ERROR         0x00001000
 #define F_ERROR_OPCODE  0x00002000
 #define F_ERROR_LENGTH  0x00004000
@@ -44,8 +43,7 @@
 #define F_PREFIX_67     0x08000000
 #define F_PREFIX_LOCK   0x10000000
 #define F_PREFIX_SEG    0x20000000
-#define F_PREFIX_REX    0x40000000
-#define F_PREFIX_ANY    0x7f000000
+#define F_PREFIX_ANY    0x3f000000
 
 #define PREFIX_SEGMENT_CS   0x2e
 #define PREFIX_SEGMENT_SS   0x36
@@ -68,11 +66,6 @@ typedef struct {
     uint8_t p_seg;
     uint8_t p_66;
     uint8_t p_67;
-    uint8_t rex;
-    uint8_t rex_w;
-    uint8_t rex_r;
-    uint8_t rex_x;
-    uint8_t rex_b;
     uint8_t opcode;
     uint8_t opcode2;
     uint8_t modrm;
@@ -87,7 +80,6 @@ typedef struct {
         uint8_t imm8;
         uint16_t imm16;
         uint32_t imm32;
-        uint64_t imm64;
     } imm;
     union {
         uint8_t disp8;
@@ -95,7 +87,7 @@ typedef struct {
         uint32_t disp32;
     } disp;
     uint32_t flags;
-} hde64s;
+} hde32s;
 
 #pragma pack(pop)
 
@@ -104,10 +96,10 @@ extern "C" {
 #endif
 
 /* __cdecl */
-unsigned int hde64_disasm(const void *code, hde64s *hs);
+unsigned int hde32_disasm(const void *code, hde32s *hs);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* _HDE64_H_ */
+#endif /* _HDE32_H_ */

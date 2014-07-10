@@ -1,6 +1,6 @@
 ﻿/*
- *  MinHook - Minimalistic API Hook Library
- *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
+ *  MinHook - The Minimalistic API Hooking Library for x64/x86
+ *  Copyright (C) 2009-2014 Tsuda Kageyu. All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -11,10 +11,8 @@
  *  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
  *
- *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -28,21 +26,14 @@
 
 #pragma once
 
-#if _MSC_VER >= 1600
+#include <Windows.h>
 
-// Use standard stdint.h if possible.
-#include <stdint.h>
-
-#else
-
-// Otherwise define required types.
-typedef signed char			int8_t;
-typedef signed short		int16_t;
-typedef signed int			int32_t;
-typedef signed long long	int64_t;
-typedef unsigned char		uint8_t;
-typedef unsigned short		uint16_t;
-typedef unsigned int		uint32_t;
-typedef unsigned long long	uint64_t;
-
-#endif
+// Integer types for HDE.
+typedef INT8   int8_t;
+typedef INT16  int16_t;
+typedef INT32  int32_t;
+typedef INT64  int64_t;
+typedef UINT8  uint8_t;
+typedef UINT16 uint16_t;
+typedef UINT32 uint32_t;
+typedef UINT64 uint64_t;

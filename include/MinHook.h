@@ -1,20 +1,18 @@
-/* 
- *  MinHook - Minimalistic API Hook Library	
- *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
- *  
+/*
+ *  MinHook - The Minimalistic API Hooking Library for x64/x86
+ *  Copyright (C) 2009-2014 Tsuda Kageyu. All rights reserved.
+ *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
  *  are met:
- *  
+ *
  *  1. Redistributions of source code must retain the above copyright
  *     notice, this list of conditions and the following disclaimer.
  *  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
- *  
- *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -89,36 +87,36 @@ extern "C" {
 	//   pTarget    [in]  A pointer to the target function, which will be overridden by the detour function.
 	//   pDetour    [in]  A pointer to the detour function, which will override the target function.
 	//   ppOriginal [out] A pointer to the trampoline function, which will be used to call the original target function.
-	MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* const pDetour, void** ppOriginal);
+	MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOriginal);
 
 	// Removes the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
-	MH_STATUS WINAPI MH_RemoveHook(void* pTarget);
+	MH_STATUS WINAPI MH_RemoveHook(void *pTarget);
 
 	// Enables the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are enabled in one go.
-	MH_STATUS WINAPI MH_EnableHook(void* pTarget);
+	MH_STATUS WINAPI MH_EnableHook(void *pTarget);
 
 	// Disables the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are disabled in one go.
-	MH_STATUS WINAPI MH_DisableHook(void* pTarget);
+	MH_STATUS WINAPI MH_DisableHook(void *pTarget);
 
 	// Queues to enable the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are queued to be enabled.
-	MH_STATUS WINAPI MH_QueueEnableHook(void* pTarget);
+	MH_STATUS WINAPI MH_QueueEnableHook(void *pTarget);
 
 	// Queues to disable the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are queued to be disabled.
-	MH_STATUS WINAPI MH_QueueDisableHook(void* pTarget);
+	MH_STATUS WINAPI MH_QueueDisableHook(void *pTarget);
 
 	// Applies all queued changes in one go.
 	MH_STATUS WINAPI MH_ApplyQueued();

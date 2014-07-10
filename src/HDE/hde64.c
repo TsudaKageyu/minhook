@@ -1,22 +1,21 @@
 ﻿/*
- * Hacker Disassembler Engine 32 C
+ * Hacker Disassembler Engine 64 C
  * Copyright (c) 2008-2009, Vyacheslav Patkov.
  * All rights reserved.
  *
  */
 
-/* #include <stdint.h> */
 #include <string.h>
+#include "hde64.h"
+#include "table64.h"
 
-#include "hde32.h"
-#include "table32.h"
-
-unsigned int hde32_disasm(const void *code, hde32s *hs)
+unsigned int hde64_disasm(const void *code, hde64s *hs)
 {
     uint8_t x, c, *p = (uint8_t *)code, cflags, opcode, pref = 0;
-    uint8_t *ht = hde32_table, m_mod, m_reg, m_rm, disp_size = 0;
+    uint8_t *ht = hde64_table, m_mod, m_reg, m_rm, disp_size = 0;
+    uint8_t op64 = 0;
 
-    memset(hs,0,sizeof(hde32s));
+    memset(hs, 0, sizeof(hde64s));
 
     for (x = 16; x; x--)
         switch (c = *p++) {
@@ -55,10 +54,24 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
     if (!pref)
         pref |= PRE_NONE;
 
+    if ((c & 0xf0) == 0x40) {
+        hs->flags |= F_PREFIX_REX;
+        if ((hs->rex_w = (c & 0xf) >> 3) && (*p & 0xf8) == 0xb8)
+            op64++;
+        hs->rex_r = (c & 7) >> 2;
+        hs->rex_x = (c & 3) >> 1;
+        hs->rex_b = c & 1;
+        if (((c = *p++) & 0xf0) == 0x40) {
+            opcode = c;
+            goto error_opcode;
+        }
+    }
+
     if ((hs->opcode = c) == 0x0f) {
         hs->opcode2 = c = *p++;
         ht += DELTA_OPCODES;
     } else if (c >= 0xa0 && c <= 0xa3) {
+        op64++;
         if (pref & PRE_67)
             pref |= PRE_66;
         else
@@ -69,6 +82,7 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
     cflags = ht[ht[opcode / 4] + (opcode % 4)];
 
     if (cflags == C_ERROR) {
+      error_opcode:
         hs->flags |= F_ERROR | F_ERROR_OPCODE;
         cflags = 0;
         if ((opcode & -3) == 0x24)
@@ -84,7 +98,7 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
     }
 
     if (hs->opcode2) {
-        ht = hde32_table + DELTA_PREFIXES;
+        ht = hde64_table + DELTA_PREFIXES;
         if (ht[ht[opcode / 4] + (opcode % 4)] & pref)
             hs->flags |= F_ERROR | F_ERROR_OPCODE;
     }
@@ -102,10 +116,10 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
         if (!hs->opcode2 && opcode >= 0xd9 && opcode <= 0xdf) {
             uint8_t t = opcode - 0xd9;
             if (m_mod == 3) {
-                ht = hde32_table + DELTA_FPU_MODRM + t*8;
+                ht = hde64_table + DELTA_FPU_MODRM + t*8;
                 t = ht[m_reg] << m_rm;
             } else {
-                ht = hde32_table + DELTA_FPU_REG;
+                ht = hde64_table + DELTA_FPU_REG;
                 t = ht[t] << m_reg;
             }
             if (t & 0x80)
@@ -118,10 +132,10 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
             } else {
                 uint8_t *table_end, op = opcode;
                 if (hs->opcode2) {
-                    ht = hde32_table + DELTA_OP2_LOCK_OK;
+                    ht = hde64_table + DELTA_OP2_LOCK_OK;
                     table_end = ht + DELTA_OP_ONLY_MEM - DELTA_OP2_LOCK_OK;
                 } else {
-                    ht = hde32_table + DELTA_OP_LOCK_OK;
+                    ht = hde64_table + DELTA_OP_LOCK_OK;
                     table_end = ht + DELTA_OP2_LOCK_OK - DELTA_OP_LOCK_OK;
                     op &= -2;
                 }
@@ -171,10 +185,10 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
         if (m_mod == 3) {
             uint8_t *table_end;
             if (hs->opcode2) {
-                ht = hde32_table + DELTA_OP2_ONLY_MEM;
-                table_end = ht + sizeof(hde32_table) - DELTA_OP2_ONLY_MEM;
+                ht = hde64_table + DELTA_OP2_ONLY_MEM;
+                table_end = ht + sizeof(hde64_table) - DELTA_OP2_ONLY_MEM;
             } else {
-                ht = hde32_table + DELTA_OP_ONLY_MEM;
+                ht = hde64_table + DELTA_OP_ONLY_MEM;
                 table_end = ht + DELTA_OP2_ONLY_MEM - DELTA_OP_ONLY_MEM;
             }
             for (; ht != table_end; ht += 2)
@@ -232,7 +246,7 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
                     disp_size <<= 1;
         }
 
-        if (m_mod != 3 && m_rm == 4 && !(pref & PRE_67)) {
+        if (m_mod != 3 && m_rm == 4) {
             hs->flags |= F_SIB;
             p++;
             hs->sib = c;
@@ -270,28 +284,23 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
             }
             goto rel32_ok;
         }
-        if (pref & PRE_66) {
-            hs->flags |= F_IMM16;
-            hs->imm.imm16 = *(uint16_t *)p;
-            p += 2;
-        } else {
+        if (op64) {
+            hs->flags |= F_IMM64;
+            hs->imm.imm64 = *(uint64_t *)p;
+            p += 8;
+        } else if (!(pref & PRE_66)) {
             hs->flags |= F_IMM32;
             hs->imm.imm32 = *(uint32_t *)p;
             p += 4;
-        }
+        } else
+            goto imm16_ok;
     }
 
+
     if (cflags & C_IMM16) {
-        if (hs->flags & F_IMM32) {
-            hs->flags |= F_IMM16;
-            hs->disp.disp16 = *(uint16_t *)p;
-        } else if (hs->flags & F_IMM16) {
-            hs->flags |= F_2IMM16;
-            hs->disp.disp16 = *(uint16_t *)p;
-        } else {
-            hs->flags |= F_IMM16;
-            hs->imm.imm16 = *(uint16_t *)p;
-        }
+      imm16_ok:
+        hs->flags |= F_IMM16;
+        hs->imm.imm16 = *(uint16_t *)p;
         p += 2;
     }
     if (cflags & C_IMM8) {

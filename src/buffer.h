@@ -1,6 +1,6 @@
 ﻿/*
- *  MinHook - Minimalistic API Hook Library
- *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
+ *  MinHook - The Minimalistic API Hooking Library for x64/x86
+ *  Copyright (C) 2009-2014 Tsuda Kageyu. All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -11,10 +11,8 @@
  *  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
  *
- *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -28,13 +26,10 @@
 
 #pragma once
 
-namespace MinHook
-{
-	void	InitializeBuffer();
-	void	UninitializeBuffer();
-	void*	AllocateCodeBuffer(void* const pOrigin, size_t size);
-	void*	AllocateDataBuffer(void* const pOrigin, size_t size);
-	void	FreeBuffer(void* const pBuffer);
-	void	RollbackBuffer();
-	void	CommitBuffer();
-}
+void  InitializeBuffer(void);
+void  UninitializeBuffer(void);
+void *AllocateCodeBuffer(void *pOrigin);
+void  FreeBuffer(void *pBuffer);
+void  RollbackBuffer(void *pBuffer);
+void  CommitBuffer(void *pBuffer);
+BOOL  IsExecutableAddress(void *pAddress);

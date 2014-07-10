@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="9.00"
 	Name="MinHook"
-	ProjectGUID="{CA4EE302-D012-4826-86D6-80D23641AB4E}"
+	ProjectGUID="{027FAC75-3FDB-4044-8DD0-BC297BD4C461}"
 	RootNamespace="MinHook"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
@@ -22,7 +22,7 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)bin\$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			>
@@ -45,10 +45,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MINHOOK_EXPORTS"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="4"
 			/>
@@ -65,10 +65,9 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x86.dll"
 				LinkIncremental="2"
-				ModuleDefinitionFile="..\..\dll_resources\MinHook.def"
-				GenerateDebugInformation="true"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
+				GenerateDebugInformation="false"
 				SubSystem="2"
-				BaseAddress="0x68000000"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -120,10 +119,10 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;MINHOOK_EXPORTS"
-				MinimalRebuild="true"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="3"
-				RuntimeLibrary="3"
-				UsePrecompiledHeader="2"
+				RuntimeLibrary="1"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -140,8 +139,8 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x64.dll"
 				LinkIncremental="2"
-				ModuleDefinitionFile="..\..\dll_resources\MinHook.def"
-				GenerateDebugInformation="true"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
+				GenerateDebugInformation="false"
 				SubSystem="2"
 				TargetMachine="17"
 			/>
@@ -170,7 +169,7 @@
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)bin\$(ConfigurationName)"
-			IntermediateDirectory="$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)\$(ProjectName)"
 			ConfigurationType="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
@@ -192,12 +191,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MINHOOK_EXPORTS"
-				RuntimeLibrary="2"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -214,12 +214,13 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x86.dll"
 				LinkIncremental="1"
-				ModuleDefinitionFile="..\..\dll_resources\MinHook.def"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				BaseAddress="0x68000000"
+				ResourceOnlyDLL="true"
+				MergeSections=".CRT=.text"
 				TargetMachine="1"
 			/>
 			<Tool
@@ -270,12 +271,13 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="2"
+				Optimization="1"
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;MINHOOK_EXPORTS"
-				RuntimeLibrary="2"
+				MinimalRebuild="false"
+				RuntimeLibrary="0"
 				EnableFunctionLevelLinking="true"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
 			/>
@@ -292,12 +294,13 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x64.dll"
 				LinkIncremental="1"
-				ModuleDefinitionFile="..\..\dll_resources\MinHook.def"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				BaseAddress="0x68000000"
+				ResourceOnlyDLL="true"
+				MergeSections=".CRT=.text"
 				TargetMachine="17"
 			/>
 			<Tool
@@ -326,46 +329,6 @@
 	<References>
 	</References>
 	<Files>
-		<File
-			RelativePath="..\..\dll_resources\dllmain.cpp"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					UsePrecompiledHeader="0"
-					CompileAsManaged="0"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Debug|x64"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					UsePrecompiledHeader="0"
-					CompileAsManaged="0"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					UsePrecompiledHeader="0"
-					CompileAsManaged="0"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|x64"
-				>
-				<Tool
-					Name="VCCLCompilerTool"
-					UsePrecompiledHeader="0"
-					CompileAsManaged="0"
-				/>
-			</FileConfiguration>
-		</File>
 		<File
 			RelativePath="..\..\dll_resources\MinHook.def"
 			>

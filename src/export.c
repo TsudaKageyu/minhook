@@ -1,6 +1,6 @@
 ﻿/*
- *  MinHook - Minimalistic API Hook Library
- *  Copyright (C) 2009 Tsuda Kageyu. All rights reserved.
+ *  MinHook - The Minimalistic API Hooking Library for x64/x86
+ *  Copyright (C) 2009-2014 Tsuda Kageyu. All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
  *  modification, are permitted provided that the following conditions
@@ -11,10 +11,8 @@
  *  2. Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
- *  3. The name of the author may not be used to endorse or promote products
- *     derived from this software without specific prior written permission.
  *
- *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ *  THIS SOFTWARE IS PROVIDED BY THE AUTHOR "AS IS" AND ANY EXPRESS OR
  *  IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  *  OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
@@ -30,49 +28,47 @@
 #include "MinHook.h"
 #include "hook.h"
 
-using namespace MinHook;
-
-MH_STATUS WINAPI MH_Initialize()
+MH_STATUS WINAPI MH_Initialize(void)
 {
-	return Initialize();
+    return Initialize();
 }
 
-MH_STATUS WINAPI MH_Uninitialize()
+MH_STATUS WINAPI MH_Uninitialize(void)
 {
-	return Uninitialize();
+    return Uninitialize();
 }
 
 MH_STATUS WINAPI MH_CreateHook(void* pTarget, void* const pDetour, void** ppOriginal)
 {
-	return CreateHook(pTarget, pDetour, ppOriginal);
+    return CreateHook(pTarget, pDetour, ppOriginal);
 }
 
 MH_STATUS WINAPI MH_RemoveHook(void* pTarget)
 {
-	return RemoveHook(pTarget);
+    return RemoveHook(pTarget);
 }
 
 MH_STATUS WINAPI MH_EnableHook(void* pTarget)
 {
-	return EnableHook(pTarget);
+    return EnableHook(pTarget);
 }
 
 MH_STATUS WINAPI MH_DisableHook(void* pTarget)
 {
-	return DisableHook(pTarget);
+    return DisableHook(pTarget);
 }
 
 MH_STATUS WINAPI MH_QueueEnableHook(void* pTarget)
 {
-	return QueueEnableHook(pTarget);
+    return QueueEnableHook(pTarget);
 }
 
 MH_STATUS WINAPI MH_QueueDisableHook(void* pTarget)
 {
-	return QueueDisableHook(pTarget);
+    return QueueDisableHook(pTarget);
 }
 
-MH_STATUS WINAPI MH_ApplyQueued()
+MH_STATUS WINAPI MH_ApplyQueued(void)
 {
-	return ApplyQueued();
+    return ApplyQueued();
 }
