@@ -1,10 +1,8 @@
-# This is a tentative list. There may be more people should be added.
-
 Tsuda Kageyu <tsuda.kageyu@gmail.com>
- Creator.
+ Creator, maintainer
 
 Michael Maltsev <leahcimmar@gmail.com>
- Maintainer. Added "Queue" functions. A lot of bug fixes.
+ Added "Queue" functions. A lot of bug fixes.
 
 Andrey Unis <uniskz@gmail.com>
  Rewrote the hook engine in plain C.
