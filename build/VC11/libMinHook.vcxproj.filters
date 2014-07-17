@@ -16,18 +16,12 @@
     <ClCompile Include="..\..\src\HDE\hde64.c">
       <Filter>HDE</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\export.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\trampoline.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\buffer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\hook.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\include\MinHook.h" />

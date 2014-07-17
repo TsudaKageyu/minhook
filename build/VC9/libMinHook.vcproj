@@ -298,10 +298,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\export.c"
-				>
-			</File>
-			<File
 				RelativePath="..\..\src\hook.c"
 				>
 				<FileConfiguration
@@ -333,10 +329,6 @@
 			>
 			<File
 				RelativePath="..\..\src\buffer.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\src\hook.h"
 				>
 			</File>
 			<File

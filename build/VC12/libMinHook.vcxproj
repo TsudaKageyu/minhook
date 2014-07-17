@@ -144,7 +144,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\buffer.c" />
-    <ClCompile Include="..\..\src\export.c" />
     <ClCompile Include="..\..\src\HDE\hde32.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
@@ -164,7 +163,6 @@
     <ClInclude Include="..\..\src\HDE\pstdint.h" />
     <ClInclude Include="..\..\src\HDE\table32.h" />
     <ClInclude Include="..\..\src\HDE\table64.h" />
-    <ClInclude Include="..\..\src\hook.h" />
     <ClInclude Include="..\..\src\trampoline.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

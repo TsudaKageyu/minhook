@@ -29,9 +29,9 @@
 #define _WIN32_WINNT 0x0400
 #include <Windows.h>
 #include <TlHelp32.h>
+#include <intrin.h>
 
 #include "MinHook.h"
-#include "hook.h"
 #include "buffer.h"
 #include "trampoline.h"
 
@@ -503,7 +503,7 @@ static void LeaveSpinLock(void)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS Initialize(void)
+MH_STATUS WINAPI MH_Initialize(void)
 {
     MH_STATUS status = MH_OK;
 
@@ -533,7 +533,7 @@ MH_STATUS Initialize(void)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS Uninitialize(void)
+MH_STATUS WINAPI MH_Uninitialize(void)
 {
     MH_STATUS status = MH_OK;
 
@@ -572,7 +572,7 @@ MH_STATUS Uninitialize(void)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS CreateHook(void *pTarget, void *const pDetour, void **ppOriginal)
+MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOriginal)
 {
     MH_STATUS status = MH_OK;
 
@@ -672,7 +672,7 @@ MH_STATUS CreateHook(void *pTarget, void *const pDetour, void **ppOriginal)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS RemoveHook(void *pTarget)
+MH_STATUS WINAPI MH_RemoveHook(void *pTarget)
 {
     MH_STATUS status = MH_OK;
 
@@ -712,7 +712,7 @@ MH_STATUS RemoveHook(void *pTarget)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS EnableHook(void *pTarget)
+MH_STATUS WINAPI MH_EnableHook(void *pTarget)
 {
     MH_STATUS status = MH_OK;
 
@@ -757,7 +757,7 @@ MH_STATUS EnableHook(void *pTarget)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS DisableHook(void *pTarget)
+MH_STATUS WINAPI MH_DisableHook(void *pTarget)
 {
     MH_STATUS status = MH_OK;
 
@@ -836,19 +836,19 @@ static MH_STATUS QueueHook(void *pTarget, BOOL queueEnable)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS QueueEnableHook(void *pTarget)
+MH_STATUS WINAPI MH_QueueEnableHook(void *pTarget)
 {
     return QueueHook(pTarget, TRUE);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS QueueDisableHook(void *pTarget)
+MH_STATUS WINAPI MH_QueueDisableHook(void *pTarget)
 {
     return QueueHook(pTarget, FALSE);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS ApplyQueued(void)
+MH_STATUS WINAPI MH_ApplyQueued(void)
 {
     MH_STATUS status = MH_OK;
 
