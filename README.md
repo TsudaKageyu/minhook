@@ -8,7 +8,8 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
 - ####v1.3 - 
 
-  * Fixed some small bugs. 
+  * Fixed some small bugs.
+  * Reorganized the source files.
 
 - ####v1.3-beta - 17 Jul 2014
 
