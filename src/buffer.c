@@ -49,6 +49,7 @@
 typedef struct _MEMORY_BLOCK
 {
     struct _MEMORY_BLOCK *pNext;
+    size_t slotCount;
     size_t useCount;
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
 
@@ -111,7 +112,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
         if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr)
             continue;
 #endif
-        if (pBlock->useCount < MH_MAX_USE_COUNT)
+        if (pBlock->useCount < MH_MAX_USE_COUNT && pBlock->slotCount < MH_MAX_USE_COUNT)
             return pBlock;
     }
 
@@ -141,6 +142,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
     if (pBlock != NULL)
     {
         pBlock->pNext     = g_pMemoryBlocks;
+        pBlock->slotCount = 0;
         pBlock->useCount  = 0;
         g_pMemoryBlocks = pBlock;
     }
@@ -186,7 +188,7 @@ void* AllocateCodeBuffer(void *pOrigin)
     if (pBlock == NULL)
         return NULL;
 
-    return (char *)pBlock + ((pBlock->useCount + 1) * MH_BUFFER_SIZE);
+    return (char *)pBlock + ((pBlock->slotCount + 1) * MH_BUFFER_SIZE);
 }
 
 //-------------------------------------------------------------------------
@@ -210,7 +212,10 @@ void CommitBuffer(void *pBuffer)
     while (pBlock != NULL)
     {
         if ((ULONG_PTR)pBlock == pTarget)
+        {
+            pBlock->slotCount++;
             pBlock->useCount++;
+        }
 
         pBlock = pBlock->pNext;
     }
