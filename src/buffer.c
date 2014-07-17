@@ -50,8 +50,8 @@
 typedef struct _MEMORY_BLOCK
 {
     struct _MEMORY_BLOCK *pNext;
-    size_t slotCount;
-    size_t useCount;
+    size_t bufferCount;     // Number of buffers allocated.
+    size_t useCount;        // Number of buffers actually used.
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
 
 //-------------------------------------------------------------------------
@@ -113,7 +113,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
         if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr)
             continue;
 #endif
-        if (pBlock->useCount < MH_MAX_USE_COUNT && pBlock->slotCount < MH_MAX_USE_COUNT)
+        if (pBlock->useCount < MH_MAX_USE_COUNT && pBlock->bufferCount < MH_MAX_USE_COUNT)
             return pBlock;
     }
 
@@ -143,7 +143,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
     if (pBlock != NULL)
     {
         pBlock->pNext     = g_pMemoryBlocks;
-        pBlock->slotCount = 0;
+        pBlock->bufferCount = 0;
         pBlock->useCount  = 0;
         g_pMemoryBlocks = pBlock;
     }
@@ -199,7 +199,7 @@ void* AllocateCodeBuffer(void *pOrigin)
     if (pBlock == NULL)
         return NULL;
 
-    pBuffer = (char *)pBlock + ((pBlock->slotCount + 1) * MH_BUFFER_SIZE);
+    pBuffer = (char *)pBlock + ((pBlock->bufferCount + 1) * MH_BUFFER_SIZE);
 #ifdef _DEBUG
     // Check if the buffer is not used and fill it with NOP for debugging.
     assert(memcmp(pBuffer, zeroBuf, MH_BUFFER_SIZE) == 0);
@@ -230,7 +230,7 @@ void CommitBuffer(void *pBuffer)
     {
         if ((ULONG_PTR)pBlock == pTarget)
         {
-            pBlock->slotCount++;
+            pBlock->bufferCount++;
             pBlock->useCount++;
         }
 
