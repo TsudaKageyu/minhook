@@ -179,7 +179,7 @@ static void FreeBufferLL(void *pBuffer, BOOL decrement)
 #ifdef _DEBUG
         else
         {
-            // Fill the released buffer with NOP for debugging.
+            // Fill the released buffer with INT3 for debugging.
             memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
         }
 #endif
@@ -201,7 +201,7 @@ void* AllocateBuffer(void *pOrigin)
 
     pBuffer = (char *)pBlock + ((pBlock->bufferCount + 1) * MH_BUFFER_SIZE);
 #ifdef _DEBUG
-    // Check if the buffer is not used and fill it with NOP for debugging.
+    // Check if the buffer is not used and fill it with INT3 for debugging.
     assert(memcmp(pBuffer, zeroBuf, MH_BUFFER_SIZE) == 0);
     memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
 #endif
