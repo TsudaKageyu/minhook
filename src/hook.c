@@ -587,7 +587,7 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
             int pos = FindHookEntry(pTarget);
             if (pos < 0)
             {
-                void *pBuffer = AllocateCodeBuffer(pTarget);
+                void *pBuffer = AllocateBuffer(pTarget);
                 if (pBuffer != NULL)
                 {
                     CREATE_TRAMPOLINE_T ct = { 0 };

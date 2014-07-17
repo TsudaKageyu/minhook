@@ -189,7 +189,7 @@ static void FreeBufferLL(void *pBuffer, BOOL decrement)
 }
 
 //-------------------------------------------------------------------------
-void* AllocateCodeBuffer(void *pOrigin)
+void* AllocateBuffer(void *pOrigin)
 {
 #ifdef _DEBUG
     static const char zeroBuf[MH_BUFFER_SIZE] = { 0 };

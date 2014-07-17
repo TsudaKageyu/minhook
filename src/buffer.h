@@ -30,7 +30,7 @@
 
 void  InitializeBuffer(void);
 void  UninitializeBuffer(void);
-void *AllocateCodeBuffer(void *pOrigin);
+void *AllocateBuffer(void *pOrigin);
 void  FreeBuffer(void *pBuffer);
 void  RollbackBuffer(void *pBuffer);
 void  CommitBuffer(void *pBuffer);
