@@ -27,6 +27,7 @@
  */
 
 #include <Windows.h>
+#include <assert.h>
 #include "buffer.h"
 
 // Size of each memory block. (= page size of VirtualAlloc)
@@ -175,7 +176,13 @@ static void FreeBufferLL(void *pBuffer, BOOL decrement)
             }
             break;
         }
-
+#ifdef _DEBUG
+        else
+        {
+            // Fill the released buffer with NOP for debugging.
+            memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
+        }
+#endif
         pPrev  = pBlock;
         pBlock = pBlock->pNext;
     }
@@ -184,11 +191,21 @@ static void FreeBufferLL(void *pBuffer, BOOL decrement)
 //-------------------------------------------------------------------------
 void* AllocateCodeBuffer(void *pOrigin)
 {
+#ifdef _DEBUG
+    static const char zeroBuf[MH_BUFFER_SIZE] = { 0 };
+#endif
+    void *pBuffer;
     PMEMORY_BLOCK pBlock = GetMemoryBlock(pOrigin);
     if (pBlock == NULL)
         return NULL;
 
-    return (char *)pBlock + ((pBlock->slotCount + 1) * MH_BUFFER_SIZE);
+    pBuffer = (char *)pBlock + ((pBlock->slotCount + 1) * MH_BUFFER_SIZE);
+#ifdef _DEBUG
+    // Check if the buffer is not used and fill it with NOP for debugging.
+    assert(memcmp(pBuffer, zeroBuf, MH_BUFFER_SIZE) == 0);
+    memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
+#endif
+    return pBuffer;
 }
 
 //-------------------------------------------------------------------------
