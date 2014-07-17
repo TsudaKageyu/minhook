@@ -6,7 +6,7 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
 ### Version history
 
-- ####v1.3 - 
+- ####v1.3-beta - 17 Jul 2014 
 
   * Rewrote in plain C to reduce the footprint and memory usage. (suggested by Andrey Unis)
   * Simplified the overall code base to make it more readable and maintainable.
