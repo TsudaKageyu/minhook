@@ -641,7 +641,8 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
                                 memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
                             }
 
-                            *ppOriginal = pHook->pTrampoline;
+                            if (ppOriginal != NULL)
+                                *ppOriginal = pHook->pTrampoline;
                         }
                         else // if(pHook != NULL)
                         {
