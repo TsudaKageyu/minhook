@@ -39,8 +39,8 @@
 #define MH_SLOT_SIZE 32
 #endif
 
-// Max range for seeking a memory block in x64 mode. (= 16MB)
-#define MH_MAX_RANGE 0x01000000
+// Max range for seeking a memory block. (= 32MB)
+#define MH_MAX_RANGE 0x02000000
 
 // Memory slot.
 typedef struct _MEMORY_SLOT
@@ -114,6 +114,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
         if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr)
             continue;
 #endif
+        // The block has at least one unused slot.
         if (pBlock->pFree != NULL)
             return pBlock;
     }
@@ -168,7 +169,7 @@ void* AllocateBuffer(void *pOrigin)
     if (pBlock == NULL)
         return NULL;
 
-    // Remove a free slot from the list.
+    // Remove an unused slot from the list.
     pSlot = pBlock->pFree;
     pBlock->pFree = pSlot->pNext;
 #ifdef _DEBUG
@@ -193,7 +194,7 @@ void FreeBuffer(void *pBuffer)
             // Clear the released slot for debugging.
             memset(pSlot, 0x00, sizeof(MEMORY_SLOT));
 #endif
-            // Restore the freed slot to the list.
+            // Restore the released slot to the list.
             pSlot->pNext = pBlock->pFree;
             pBlock->pFree = pSlot;
             break;
