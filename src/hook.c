@@ -62,6 +62,13 @@
     (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT \
     | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT)
 
+// Import RtlMoveMemory from kernel32.dll.
+#ifdef RtlMoveMemory
+#undef RtlMoveMemory
+#endif
+EXTERN_C NTSYSAPI VOID NTAPI
+RtlMoveMemory(LPVOID UNALIGNED Dst, LPCVOID UNALIGNED Src, SIZE_T Length);
+
 // Hook information.
 typedef struct _HOOK_ENTRY
 {
@@ -161,7 +168,7 @@ static PHOOK_ENTRY NewHookEntry(int pos)
     // Add the element at the correct position
     if (pos < g_Hooks.size)
     {
-        memmove(
+        RtlMoveMemory(
             &g_Hooks.items[pos + 1],
             &g_Hooks.items[pos],
             (g_Hooks.size - pos) * sizeof(HOOK_ENTRY));
@@ -180,7 +187,7 @@ static void DelHookEntry(int pos)
         g_Hooks.size--;
         if (pos < g_Hooks.size)
         {
-            memmove(
+            RtlMoveMemory(
                 &g_Hooks.items[pos],
                 &g_Hooks.items[pos + 1],
                 (g_Hooks.size - pos) * sizeof(HOOK_ENTRY));
