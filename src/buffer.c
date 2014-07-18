@@ -27,31 +27,36 @@
  */
 
 #include <Windows.h>
-#include <assert.h>
 #include "buffer.h"
 
 // Size of each memory block. (= page size of VirtualAlloc)
-#define MH_PAGE_SIZE 0x1000
+#define MH_BLOCK_SIZE 0x1000
 
-// Size of each buffer.
+// Size of each slot.
 #if defined _M_X64
-#define MH_BUFFER_SIZE 64
+#define MH_SLOT_SIZE 64
 #elif defined _M_IX86
-#define MH_BUFFER_SIZE 32
+#define MH_SLOT_SIZE 32
 #endif
-
-// Max use count of each memory block.
-#define MH_MAX_USE_COUNT (MH_PAGE_SIZE / MH_BUFFER_SIZE - 1)
 
 // Max range for seeking a memory block in x64 mode. (= 16MB)
 #define MH_MAX_RANGE 0x01000000
+
+// Memory slot.
+typedef struct _MEMORY_SLOT
+{
+    union
+    {
+        struct _MEMORY_SLOT *pNext;
+        UINT8 buffer[MH_SLOT_SIZE];
+    };
+} MEMORY_SLOT, *PMEMORY_SLOT;
 
 // Memory block info. Placed at the head of each block.
 typedef struct _MEMORY_BLOCK
 {
     struct _MEMORY_BLOCK *pNext;
-    size_t bufferCount;     // Number of buffers allocated.
-    size_t useCount;        // Number of buffers actually used.
+    PMEMORY_SLOT pFree;             // First element of the free slot list.
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
 
 //-------------------------------------------------------------------------
@@ -113,27 +118,28 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
         if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr)
             continue;
 #endif
-        if (pBlock->useCount < MH_MAX_USE_COUNT && pBlock->bufferCount < MH_MAX_USE_COUNT)
+        // The block has at least one free slot.
+        if (pBlock->pFree != NULL)
             return pBlock;
     }
 
     // Alloc a new block if not found.
     {
-        ULONG_PTR pStart = ((ULONG_PTR)pOrigin / MH_PAGE_SIZE) * MH_PAGE_SIZE;
+        ULONG_PTR pStart = ((ULONG_PTR)pOrigin / MH_BLOCK_SIZE) * MH_BLOCK_SIZE;
         ULONG_PTR pAlloc;
-        for (pAlloc = pStart - MH_PAGE_SIZE; pAlloc >= minAddr; pAlloc -= MH_PAGE_SIZE)
+        for (pAlloc = pStart - MH_BLOCK_SIZE; pAlloc >= minAddr; pAlloc -= MH_BLOCK_SIZE)
         {
             pBlock = (PMEMORY_BLOCK)VirtualAlloc(
-                (void *)pAlloc, MH_PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+                (void *)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
             if (pBlock != NULL)
                 break;
         }
         if (pBlock == NULL)
         {
-            for (pAlloc = pStart + MH_PAGE_SIZE; pAlloc < maxAddr; pAlloc += MH_PAGE_SIZE)
+            for (pAlloc = pStart + MH_BLOCK_SIZE; pAlloc < maxAddr; pAlloc += MH_BLOCK_SIZE)
             {
                 pBlock = (PMEMORY_BLOCK)VirtualAlloc(
-                    (void *)pAlloc, MH_PAGE_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+                    (void *)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
                 if (pBlock != NULL)
                     break;
             }
@@ -142,9 +148,18 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 
     if (pBlock != NULL)
     {
-        pBlock->pNext     = g_pMemoryBlocks;
-        pBlock->bufferCount = 0;
-        pBlock->useCount  = 0;
+        // Build a linked list of all the slots.
+        PMEMORY_SLOT pSlot = (PMEMORY_SLOT)pBlock + 1;
+        pBlock->pFree = NULL;
+        do
+        {
+            pSlot->pNext  = pBlock->pFree;
+            pBlock->pFree = pSlot;
+            pSlot++;
+        } while ((ULONG_PTR)pSlot - (ULONG_PTR)pBlock <= sizeof(MEMORY_SLOT));
+
+        // Add the block to the block list.
+        pBlock->pNext = g_pMemoryBlocks;
         g_pMemoryBlocks = pBlock;
     }
 
@@ -152,61 +167,41 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 }
 
 //-------------------------------------------------------------------------
-static void FreeBufferLL(void *pBuffer, BOOL decrement)
-{
-}
-
-//-------------------------------------------------------------------------
 void* AllocateBuffer(void *pOrigin)
 {
-#ifdef _DEBUG
-    static const char zeroBuf[MH_BUFFER_SIZE] = { 0 };
-#endif
-    void *pBuffer;
+    PMEMORY_SLOT  pSlot;
     PMEMORY_BLOCK pBlock = GetMemoryBlock(pOrigin);
     if (pBlock == NULL)
         return NULL;
 
-    pBuffer = (char *)pBlock + ((pBlock->bufferCount + 1) * MH_BUFFER_SIZE);
+    pSlot = pBlock->pFree;
+    pBlock->pFree = pSlot->pNext;
 #ifdef _DEBUG
-    // Check if the buffer is not used and fill it with INT3 for debugging.
-    assert(memcmp(pBuffer, zeroBuf, MH_BUFFER_SIZE) == 0);
-    memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
+    // Fill the slot with INT3 for debugging.
+    memset(pSlot, 0xCC, sizeof(MEMORY_SLOT));
 #endif
-    return pBuffer;
+    return pSlot;
 }
 
 //-------------------------------------------------------------------------
 void FreeBuffer(void *pBuffer)
 {
-    PMEMORY_BLOCK pPrev  = NULL;
+    PMEMORY_SLOT  pSlot  = (PMEMORY_SLOT)pBuffer;
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
-    ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MH_PAGE_SIZE) * MH_PAGE_SIZE;
+    ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MH_BLOCK_SIZE) * MH_BLOCK_SIZE;
 
     while (pBlock != NULL)
     {
         if ((ULONG_PTR)pBlock == pTargetBlock)
         {
-            pBlock->useCount--;
-            if (pBlock->useCount == 0)
-            {
-                if (pPrev)
-                    pPrev->pNext = pBlock->pNext;
-                else
-                    g_pMemoryBlocks = pBlock->pNext;
-
-                VirtualFree(pBlock, 0, MEM_RELEASE);
-            }
+#ifdef _DEBUG
+            // Fill the slot with zero for debugging.
+            memset(pSlot, 0, sizeof(MEMORY_SLOT));
+#endif
+            pSlot->pNext = pBlock->pFree;
+            pBlock->pFree = pSlot;
             break;
         }
-#ifdef _DEBUG
-        else
-        {
-            // Fill the released buffer with INT3 for debugging.
-            memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
-        }
-#endif
-        pPrev  = pBlock;
         pBlock = pBlock->pNext;
     }
 }
