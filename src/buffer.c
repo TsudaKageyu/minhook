@@ -152,11 +152,6 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 }
 
 //-------------------------------------------------------------------------
-static void FreeBufferLL(void *pBuffer, BOOL decrement)
-{
-}
-
-//-------------------------------------------------------------------------
 void* AllocateBuffer(void *pOrigin)
 {
 #ifdef _DEBUG
@@ -197,15 +192,16 @@ void FreeBuffer(void *pBuffer)
 
                 VirtualFree(pBlock, 0, MEM_RELEASE);
             }
+#ifdef _DEBUG
+            else
+            {
+                // Fill the released buffer with INT3 for debugging.
+                memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
+            }
+#endif
             break;
         }
-#ifdef _DEBUG
-        else
-        {
-            // Fill the released buffer with INT3 for debugging.
-            memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
-        }
-#endif
+
         pPrev  = pBlock;
         pBlock = pBlock->pNext;
     }
