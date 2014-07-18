@@ -645,11 +645,13 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
                         }
                         else // if(pHook != NULL)
                         {
+                            FreeBuffer(pBuffer);
                             status = MH_ERROR_MEMORY_ALLOC;
                         }
                     }
                     else // if (CreateTrampolineFunction(&ct))
                     {
+                        FreeBuffer(pBuffer);
                         status = MH_ERROR_UNSUPPORTED_FUNCTION;
                     }
                 }
