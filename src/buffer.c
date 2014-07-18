@@ -43,11 +43,21 @@
 // Max range for seeking a memory block in x64 mode. (= 16MB)
 #define MH_MAX_RANGE 0x01000000
 
+// Memory slot.
+typedef struct _MEMORY_SLOT
+{
+    union
+    {
+        struct _MEMORY_SLOT *pNext;
+        UINT8 buffer[MH_SLOT_SIZE];
+    };
+} MEMORY_SLOT, *PMEMORY_SLOT;
+
 // Memory block info. Placed at the head of each block.
 typedef struct _MEMORY_BLOCK
 {
     struct _MEMORY_BLOCK *pNext;
-    LPVOID pFree;               // First element of the free slot list.
+    PMEMORY_SLOT pFree;         // First element of the free slot list.
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
 
 //-------------------------------------------------------------------------
@@ -138,14 +148,14 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 
     if (pBlock != NULL)
     {
-        LPVOID pSlot = (PCHAR)pBlock + MH_SLOT_SIZE;    // skip header
-
+        // Build a linked list of all the slots.
+        PMEMORY_SLOT pSlot = (PMEMORY_SLOT)pBlock + 1;
         pBlock->pFree = NULL;
         do
         {
-            *(LPVOID *)pSlot = pBlock->pFree;
+            pSlot->pNext = pBlock->pFree;
             pBlock->pFree = pSlot;
-            pSlot = (PCHAR)pSlot + MH_SLOT_SIZE;
+            pSlot++;
         } while ((ULONG_PTR)pSlot - (ULONG_PTR)pBlock <= MH_BLOCK_SIZE);
 
         pBlock->pNext = g_pMemoryBlocks;
@@ -158,16 +168,17 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 //-------------------------------------------------------------------------
 void* AllocateBuffer(void *pOrigin)
 {
-    LPVOID pSlot;
+    PMEMORY_SLOT  pSlot;
     PMEMORY_BLOCK pBlock = GetMemoryBlock(pOrigin);
     if (pBlock == NULL)
         return NULL;
 
+    // Remove a free slot from the list.
     pSlot = pBlock->pFree;
-    pBlock->pFree = *(LPVOID *)pSlot;
+    pBlock->pFree = pSlot->pNext;
 #ifdef _DEBUG
     // Fill the slot with INT3 for debugging.
-    memset(pSlot, 0xCC, MH_SLOT_SIZE);
+    memset(pSlot, 0xCC, sizeof(MEMORY_SLOT));
 #endif
     return pSlot;
 }
@@ -182,12 +193,14 @@ void FreeBuffer(void *pBuffer)
     {
         if ((ULONG_PTR)pBlock == pTargetBlock)
         {
+            PMEMORY_SLOT pSlot = (PMEMORY_SLOT)pBuffer;
 #ifdef _DEBUG
             // Clear the released slot for debugging.
-            memset(pBuffer, 0x00, sizeof(MH_SLOT_SIZE));
+            memset(pSlot, 0x00, sizeof(MEMORY_SLOT));
 #endif
-            *(LPVOID *)pBuffer = pBlock->pFree;
-            pBlock->pFree = pBuffer;
+            // Restore the freed slot to the list.
+            pSlot->pNext = pBlock->pFree;
+            pBlock->pFree = pSlot;
             break;
         }
 
