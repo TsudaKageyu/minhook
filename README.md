@@ -10,6 +10,7 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
   * Fixed some small bugs.
   * Reorganized the source files.
+  * Reduced the footprint a little more.
 
 - ####v1.3-beta - 17 Jul 2014
 
