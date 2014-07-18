@@ -630,19 +630,15 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
                                 memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
                             }
 
-                            CommitBuffer(pBuffer);
-
                             *ppOriginal = pHook->pTrampoline;
                         }
                         else // if(pHook != NULL)
                         {
-                            RollbackBuffer(pBuffer);
                             status = MH_ERROR_MEMORY_ALLOC;
                         }
                     }
                     else // if (CreateTrampolineFunction(&ct))
                     {
-                        RollbackBuffer(pBuffer);
                         status = MH_ERROR_UNSUPPORTED_FUNCTION;
                     }
                 }

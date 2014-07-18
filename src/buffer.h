@@ -32,6 +32,4 @@ void  InitializeBuffer(void);
 void  UninitializeBuffer(void);
 void *AllocateBuffer(void *pOrigin);
 void  FreeBuffer(void *pBuffer);
-void  RollbackBuffer(void *pBuffer);
-void  CommitBuffer(void *pBuffer);
 BOOL  IsExecutableAddress(void *pAddress);

@@ -154,38 +154,6 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 //-------------------------------------------------------------------------
 static void FreeBufferLL(void *pBuffer, BOOL decrement)
 {
-    PMEMORY_BLOCK pPrev  = NULL;
-    PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
-    ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MH_PAGE_SIZE) * MH_PAGE_SIZE;
-
-    while (pBlock != NULL)
-    {
-        if ((ULONG_PTR)pBlock == pTargetBlock)
-        {
-            if (decrement)
-                pBlock->useCount--;
-
-            if (pBlock->useCount == 0)
-            {
-                if (pPrev)
-                    pPrev->pNext = pBlock->pNext;
-                else
-                    g_pMemoryBlocks = pBlock->pNext;
-
-                VirtualFree(pBlock, 0, MEM_RELEASE);
-            }
-            break;
-        }
-#ifdef _DEBUG
-        else
-        {
-            // Fill the released buffer with INT3 for debugging.
-            memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
-        }
-#endif
-        pPrev  = pBlock;
-        pBlock = pBlock->pNext;
-    }
 }
 
 //-------------------------------------------------------------------------
@@ -211,29 +179,34 @@ void* AllocateBuffer(void *pOrigin)
 //-------------------------------------------------------------------------
 void FreeBuffer(void *pBuffer)
 {
-    FreeBufferLL(pBuffer, TRUE);
-}
-
-//-------------------------------------------------------------------------
-void RollbackBuffer(void *pBuffer)
-{
-    FreeBufferLL(pBuffer, FALSE);
-}
-
-//-------------------------------------------------------------------------
-void CommitBuffer(void *pBuffer)
-{
-    PMEMORY_BLOCK pBlock  = g_pMemoryBlocks;
-    ULONG_PTR     pTarget = ((ULONG_PTR)pBuffer / MH_PAGE_SIZE) * MH_PAGE_SIZE;
+    PMEMORY_BLOCK pPrev  = NULL;
+    PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
+    ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MH_PAGE_SIZE) * MH_PAGE_SIZE;
 
     while (pBlock != NULL)
     {
-        if ((ULONG_PTR)pBlock == pTarget)
+        if ((ULONG_PTR)pBlock == pTargetBlock)
         {
-            pBlock->bufferCount++;
-            pBlock->useCount++;
-        }
+            pBlock->useCount--;
+            if (pBlock->useCount == 0)
+            {
+                if (pPrev)
+                    pPrev->pNext = pBlock->pNext;
+                else
+                    g_pMemoryBlocks = pBlock->pNext;
 
+                VirtualFree(pBlock, 0, MEM_RELEASE);
+            }
+            break;
+        }
+#ifdef _DEBUG
+        else
+        {
+            // Fill the released buffer with INT3 for debugging.
+            memset(pBuffer, 0xCC, MH_BUFFER_SIZE);
+        }
+#endif
+        pPrev  = pBlock;
         pBlock = pBlock->pNext;
     }
 }
