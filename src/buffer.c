@@ -63,22 +63,13 @@ typedef struct _MEMORY_BLOCK
 // Global Variables:
 //-------------------------------------------------------------------------
 
-// Lowest memory address accessible.
-ULONG_PTR g_MinAddress;
-
-// Highest memory address accessible.
-ULONG_PTR g_MaxAddress;
-
 // First element of the memory block list.
 PMEMORY_BLOCK g_pMemoryBlocks;
 
 //-------------------------------------------------------------------------
 void InitializeBuffer(void)
 {
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    g_MinAddress = (ULONG_PTR)si.lpMinimumApplicationAddress;
-    g_MaxAddress = (ULONG_PTR)si.lpMaximumApplicationAddress;
+    // Nothing to do for now.
 }
 
 //-------------------------------------------------------------------------
@@ -98,9 +89,14 @@ void UninitializeBuffer(void)
 //-------------------------------------------------------------------------
 static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 {
-    ULONG_PTR minAddr = g_MinAddress;
-    ULONG_PTR maxAddr = g_MaxAddress;
+    ULONG_PTR minAddr;
+    ULONG_PTR maxAddr;
     PMEMORY_BLOCK pBlock;
+
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    minAddr = (ULONG_PTR)si.lpMinimumApplicationAddress;
+    maxAddr = (ULONG_PTR)si.lpMaximumApplicationAddress;
 
 #if defined _M_X64
     // pOrigin ± 16MB
