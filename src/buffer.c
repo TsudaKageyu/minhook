@@ -27,7 +27,6 @@
  */
 
 #include <Windows.h>
-#include <assert.h>
 #include "buffer.h"
 
 // Size of each memory block. (= page size of VirtualAlloc)
