@@ -492,9 +492,7 @@ static void EnterSpinLock(void)
     // Wait until the flag is FALSE.
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
-        // Prevent the loop from being too busy.
-        if (!SwitchToThread())
-            Sleep(1);
+        SwitchToThread();
     }
 }
 
