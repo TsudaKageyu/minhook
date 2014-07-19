@@ -676,7 +676,7 @@ MH_STATUS WINAPI MH_RemoveHook(void *pTarget)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_EnableHook(void *pTarget)
+static MH_STATUS EnableHook(void *pTarget, BOOL enable)
 {
     MH_STATUS status = MH_OK;
 
@@ -686,17 +686,17 @@ MH_STATUS WINAPI MH_EnableHook(void *pTarget)
     {
         if (pTarget == MH_ALL_HOOKS)
         {
-            status = EnableAllHooksLL(TRUE);
+            status = EnableAllHooksLL(enable);
         }
         else
         {
             const int pos = FindHookEntry(pTarget);
             if (pos >= 0)
             {
-                if (!g_Hooks.items[pos].isEnabled)
+                if (g_Hooks.items[pos].isEnabled != enable)
                 {
                     Freeze(pos, 1);
-                    status = EnableHookLL(pos, TRUE);
+                    status = EnableHookLL(pos, enable);
                     Unfreeze();
                 }
                 else
@@ -721,48 +721,15 @@ MH_STATUS WINAPI MH_EnableHook(void *pTarget)
 }
 
 //-------------------------------------------------------------------------
+MH_STATUS WINAPI MH_EnableHook(void *pTarget)
+{
+    return EnableHook(pTarget, TRUE);
+}
+
+//-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_DisableHook(void *pTarget)
 {
-    MH_STATUS status = MH_OK;
-
-    EnterSpinLock();
-
-    if (g_hHeap != NULL)
-    {
-        if (pTarget == MH_ALL_HOOKS)
-        {
-            status = EnableAllHooksLL(FALSE);
-        }
-        else
-        {
-            const int pos = FindHookEntry(pTarget);
-            if (pos >= 0)
-            {
-                if (g_Hooks.items[pos].isEnabled)
-                {
-                    Freeze(pos, 0);
-                    status = EnableHookLL(pos, FALSE);
-                    Unfreeze();
-                }
-                else
-                {
-                    status = MH_ERROR_DISABLED;
-                }
-            }
-            else
-            {
-                status = MH_ERROR_NOT_CREATED;
-            }
-        }
-    }
-    else
-    {
-        status = MH_ERROR_NOT_INITIALIZED;
-    }
-
-    LeaveSpinLock();
-
-    return status;
+    return EnableHook(pTarget, FALSE);
 }
 
 //-------------------------------------------------------------------------
