@@ -102,7 +102,7 @@ struct
     PHOOK_ENTRY items;      // Data heap
     int         capacity;   // Size of allocated data heap, items
     int         size;       // Actual number of data items
-} g_Hooks;
+} g_hooks;
 
 // Suspended threads for Freeze()/Unfreeze().
 struct
@@ -118,21 +118,21 @@ static int FindHookEntry(void *pTarget)
 {
     int left, right;
 
-    if (g_Hooks.size == 0)
+    if (g_hooks.size == 0)
         return -1;
 
     // Binary search through the list
     left  = 0;
-    right = g_Hooks.size - 1;
+    right = g_hooks.size - 1;
 
     do
     {
         const int center = (left + right) / 2;
 
-        if ((ULONG_PTR)g_Hooks.items[center].pTarget == (ULONG_PTR)pTarget)
+        if ((ULONG_PTR)g_hooks.items[center].pTarget == (ULONG_PTR)pTarget)
             return center;              // found
 
-        if ((ULONG_PTR)g_Hooks.items[center].pTarget < (ULONG_PTR)pTarget)
+        if ((ULONG_PTR)g_hooks.items[center].pTarget < (ULONG_PTR)pTarget)
             left = center + 1;          // continue right
         else
             right = center - 1;         // continue left
@@ -145,52 +145,52 @@ static int FindHookEntry(void *pTarget)
 //-------------------------------------------------------------------------
 static PHOOK_ENTRY NewHookEntry(int pos)
 {
-    if (g_Hooks.items == NULL)
+    if (g_hooks.items == NULL)
     {
-        g_Hooks.capacity = MH_INITIAL_CAPACITY;
-        g_Hooks.items = (HOOK_ENTRY *)HeapAlloc(
-            g_hHeap, 0, g_Hooks.capacity * sizeof(HOOK_ENTRY));
-        if (g_Hooks.items == NULL)
+        g_hooks.capacity = MH_INITIAL_CAPACITY;
+        g_hooks.items = (HOOK_ENTRY *)HeapAlloc(
+            g_hHeap, 0, g_hooks.capacity * sizeof(HOOK_ENTRY));
+        if (g_hooks.items == NULL)
             return NULL;
     }
-    else if (g_Hooks.size >= g_Hooks.capacity)
+    else if (g_hooks.size >= g_hooks.capacity)
     {
         void *p;
-        g_Hooks.capacity *= 2;
+        g_hooks.capacity *= 2;
         p = HeapReAlloc(
-            g_hHeap, 0, g_Hooks.items, g_Hooks.capacity * sizeof(HOOK_ENTRY));
+            g_hHeap, 0, g_hooks.items, g_hooks.capacity * sizeof(HOOK_ENTRY));
         if (p == NULL)
             return NULL;
 
-        g_Hooks.items = (HOOK_ENTRY *)p;
+        g_hooks.items = (HOOK_ENTRY *)p;
     }
 
     // Add the element at the correct position
-    if (pos < g_Hooks.size)
+    if (pos < g_hooks.size)
     {
         RtlMoveMemory(
-            &g_Hooks.items[pos + 1],
-            &g_Hooks.items[pos],
-            (g_Hooks.size - pos) * sizeof(HOOK_ENTRY));
+            &g_hooks.items[pos + 1],
+            &g_hooks.items[pos],
+            (g_hooks.size - pos) * sizeof(HOOK_ENTRY));
     }
 
-    g_Hooks.size++;
+    g_hooks.size++;
 
-    return &g_Hooks.items[pos];
+    return &g_hooks.items[pos];
 }
 
 //-------------------------------------------------------------------------
 static void DelHookEntry(int pos)
 {
-    if (pos >= 0 && pos < g_Hooks.size)
+    if (pos >= 0 && pos < g_hooks.size)
     {
-        g_Hooks.size--;
-        if (pos < g_Hooks.size)
+        g_hooks.size--;
+        if (pos < g_hooks.size)
         {
             RtlMoveMemory(
-                &g_Hooks.items[pos],
-                &g_Hooks.items[pos + 1],
-                (g_Hooks.size - pos) * sizeof(HOOK_ENTRY));
+                &g_hooks.items[pos],
+                &g_hooks.items[pos + 1],
+                (g_hooks.size - pos) * sizeof(HOOK_ENTRY));
         }
     }
 }
@@ -247,7 +247,7 @@ static void ProcessThreadIPs(HANDLE hThread, int pos, int action)
     if (pos < 0)
     {
         pos = 0;
-        count = g_Hooks.size;
+        count = g_hooks.size;
     }
     else
     {
@@ -256,7 +256,7 @@ static void ProcessThreadIPs(HANDLE hThread, int pos, int action)
 
     for (; pos < count; ++pos)
     {
-        PHOOK_ENTRY pHook = &g_Hooks.items[pos];
+        PHOOK_ENTRY pHook = &g_hooks.items[pos];
         BOOL      enable;
         DWORD_PTR ip;
 
@@ -381,7 +381,7 @@ static void Unfreeze(void)
 //-------------------------------------------------------------------------
 static MH_STATUS EnableHookLL(int pos, BOOL enable)
 {
-    PHOOK_ENTRY pHook = &g_Hooks.items[pos];
+    PHOOK_ENTRY pHook = &g_hooks.items[pos];
     DWORD   oldProtect;
     size_t  patchSize = sizeof(JMP_REL);
     char   *pPatchTarget = (char *)pHook->pTarget;
@@ -427,27 +427,32 @@ static MH_STATUS EnableHookLL(int pos, BOOL enable)
 //-------------------------------------------------------------------------
 static MH_STATUS EnableAllHooksLL(BOOL enable)
 {
-    MH_STATUS status = MH_OK;
     int i;
-    for (i = 0; i < g_Hooks.size; ++i)
+    for (i = 0; i < g_hooks.size; ++i)
     {
-        if (g_Hooks.items[i].isEnabled != enable)
+        if (g_hooks.items[i].isEnabled != enable)
         {
             Freeze(-1, 1);
-            for (; i < g_Hooks.size; ++i)
+            __try
             {
-                if (g_Hooks.items[i].isEnabled != enable)
+                for (; i < g_hooks.size; ++i)
                 {
-                    status = EnableHookLL(i, enable);
-                    if (status != MH_OK)
-                        break;
+                    if (g_hooks.items[i].isEnabled != enable)
+                    {
+                        MH_STATUS status = EnableHookLL(i, enable);
+                        if (status != MH_OK)
+                            return status;
+                    }
                 }
             }
-            Unfreeze();
-            break;
+            __finally
+            {
+                Unfreeze();
+            }
         }
     }
-    return status;
+
+    return MH_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -469,255 +474,236 @@ static void LeaveSpinLock(void)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Initialize(void)
 {
-    MH_STATUS status = MH_OK;
-
     EnterSpinLock();
-
-    if (g_hHeap == NULL)
+    __try
     {
-        g_hHeap = HeapCreate(0, 0, 0);
         if (g_hHeap != NULL)
-        {
-            // Initialize the internal function buffer.
-            InitializeBuffer();
-        }
-        else
-        {
-            status = MH_ERROR_MEMORY_ALLOC;
-        }
+            return MH_ERROR_ALREADY_INITIALIZED;
+
+        g_hHeap = HeapCreate(0, 0, 0);
+        if (g_hHeap == NULL)
+            return MH_ERROR_MEMORY_ALLOC;
+
+        // Initialize the internal function buffer.
+        InitializeBuffer();
+
+        return MH_OK;
     }
-    else
+    __finally
     {
-        status = MH_ERROR_ALREADY_INITIALIZED;
+        LeaveSpinLock();
     }
-
-    LeaveSpinLock();
-
-    return status;
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Uninitialize(void)
 {
-    MH_STATUS status = MH_OK;
-
     EnterSpinLock();
-
-    if (g_hHeap != NULL)
+    __try
     {
-        // Disable all hooks.
+        MH_STATUS status;
+
+        if (g_hHeap == NULL)
+            return MH_ERROR_NOT_INITIALIZED;
+
         status = EnableAllHooksLL(FALSE);
         if (status == MH_OK)
         {
-            HeapDestroy(g_hHeap);
-
             // Free the internal function buffer.
             UninitializeBuffer();
+            HeapDestroy(g_hHeap);
         }
 
         g_hHeap = NULL;
 
-        g_Hooks.items    = NULL;
-        g_Hooks.capacity = 0;
-        g_Hooks.size     = 0;
+        g_hooks.items    = NULL;
+        g_hooks.capacity = 0;
+        g_hooks.size     = 0;
 
         g_threads.items    = NULL;
         g_threads.capacity = 0;
         g_threads.size     = 0;
+
+        return status;
     }
-    else
+    __finally
     {
-        status = MH_ERROR_NOT_INITIALIZED;
+        LeaveSpinLock();
     }
-
-    LeaveSpinLock();
-
-    return status;
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOriginal)
 {
-    MH_STATUS status = MH_OK;
-
     EnterSpinLock();
-
-    if (g_hHeap != NULL)
+    __try
     {
-        if (IsExecutableAddress(pTarget) && IsExecutableAddress(pDetour))
+        __try
         {
-            int pos = FindHookEntry(pTarget);
-            if (pos < 0)
-            {
-                void *pBuffer = AllocateBuffer(pTarget);
-                if (pBuffer != NULL)
-                {
-                    CREATE_TRAMPOLINE_T ct;
-                    __stosb((PBYTE)&ct, 0, sizeof(ct));
-                    ct.pTrampoline    = pBuffer;
-                    ct.pTarget        = pTarget;
-                    ct.pDetour        = pDetour;
-                    ct.trampolineSize = MH_TRAMPOLINE_SIZE;
+            MH_STATUS status = MH_OK;
+            int pos;
+            void *pBuffer;
+            CREATE_TRAMPOLINE_T ct;
+            PHOOK_ENTRY pHook;
+
+            if (g_hHeap == NULL)
+                return MH_ERROR_NOT_INITIALIZED;
+
+            if (!IsExecutableAddress(pTarget) || !IsExecutableAddress(pDetour))
+                return MH_ERROR_NOT_EXECUTABLE;
+
+            pos = FindHookEntry(pTarget);
+            if (pos >= 0)
+                return MH_ERROR_ALREADY_CREATED;
+
+            pBuffer = AllocateBuffer(pTarget);
+            if (pBuffer == NULL)
+                return MH_ERROR_MEMORY_ALLOC;
+
+            __stosb((PBYTE)&ct, 0, sizeof(ct));
+            ct.pTrampoline    = pBuffer;
+            ct.pTarget        = pTarget;
+            ct.pDetour        = pDetour;
+            ct.trampolineSize = MH_TRAMPOLINE_SIZE;
 #if defined _M_X64
-                    ct.pRelay = (char *)ct.pTrampoline + MH_RELAY_OFFSET;
-                    ct.pTable = (ULONG_PTR*)((char *)ct.pTrampoline + MH_TABLE_OFFSET);
-                    ct.tableSize = MH_TABLE_SIZE;
+            ct.pRelay = (char *)ct.pTrampoline + MH_RELAY_OFFSET;
+            ct.pTable = (ULONG_PTR*)((char *)ct.pTrampoline + MH_TABLE_OFFSET);
+            ct.tableSize = MH_TABLE_SIZE;
 #endif
-                    if (CreateTrampolineFunction(&ct))
-                    {
-                        PHOOK_ENTRY pHook = NewHookEntry(0 - pos - 1);
-                        if (pHook != NULL)
-                        {
-                            pHook->pTarget     = pTarget;
+            if (!CreateTrampolineFunction(&ct))
+            {
+                FreeBuffer(pBuffer);
+                return MH_ERROR_UNSUPPORTED_FUNCTION;
+            }
+
+            pHook = NewHookEntry(0 - pos - 1);
+            if (pHook == NULL)
+            {
+                FreeBuffer(pBuffer);
+                return MH_ERROR_MEMORY_ALLOC;
+            }
+
+            pHook->pTarget     = pTarget;
 #if defined _M_X64
-                            pHook->pDetour     = ct.pRelay;
+            pHook->pDetour     = ct.pRelay;
 #elif defined _M_IX86
-                            pHook->pDetour     = ct.pDetour;
+            pHook->pDetour     = ct.pDetour;
 #endif
-                            pHook->pTrampoline = ct.pTrampoline;
-                            pHook->patchAbove  = ct.patchAbove;
-                            pHook->isEnabled   = FALSE;
-                            pHook->queueEnable = FALSE;
-                            pHook->nIP         = ct.nIP;
-                            memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
-                            memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
+            pHook->pTrampoline = ct.pTrampoline;
+            pHook->patchAbove  = ct.patchAbove;
+            pHook->isEnabled   = FALSE;
+            pHook->queueEnable = FALSE;
+            pHook->nIP         = ct.nIP;
+            memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
+            memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
 
-                            // Back up the target function.
-                            if (ct.patchAbove)
-                            {
-                                memcpy(
-                                    pHook->backup,
-                                    (char *)pTarget - sizeof(JMP_REL),
-                                    sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
-                            }
-                            else
-                            {
-                                memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
-                            }
-
-                            if (ppOriginal != NULL)
-                                *ppOriginal = pHook->pTrampoline;
-                        }
-                        else // if(pHook != NULL)
-                        {
-                            FreeBuffer(pBuffer);
-                            status = MH_ERROR_MEMORY_ALLOC;
-                        }
-                    }
-                    else // if (CreateTrampolineFunction(&ct))
-                    {
-                        FreeBuffer(pBuffer);
-                        status = MH_ERROR_UNSUPPORTED_FUNCTION;
-                    }
-                }
-                else // if (pBuffer != NULL)
-                {
-                    status = MH_ERROR_MEMORY_ALLOC;
-                }
-            }
-            else // if (pos < 0)
+            // Back up the target function.
+            if (ct.patchAbove)
             {
-                status = MH_ERROR_ALREADY_CREATED;
+                memcpy(
+                    pHook->backup,
+                    (char *)pTarget - sizeof(JMP_REL),
+                    sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
             }
+            else
+            {
+                memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
+            }
+
+            if (ppOriginal != NULL)
+                *ppOriginal = pHook->pTrampoline;
+
+            return MH_OK;
         }
-        else // if (IsExecutableAddress(pTarget) && IsExecutableAddress(pDetour))
+        __except (EXCEPTION_EXECUTE_HANDLER)
         {
-            status = MH_ERROR_NOT_EXECUTABLE;
+            return MH_UNKNOWN;
         }
     }
-    else // if (g_IsInitialized)
+    __finally
     {
-        status = MH_ERROR_NOT_INITIALIZED;
+        LeaveSpinLock();
     }
-
-    LeaveSpinLock();
-
-    return status;
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_RemoveHook(void *pTarget)
 {
-    MH_STATUS status = MH_OK;
-
     EnterSpinLock();
-
-    if (g_hHeap != NULL)
+    __try
     {
-        const int pos = FindHookEntry(pTarget);
-        if (pos >= 0)
+        int pos;
+
+        if (g_hHeap == NULL)
+            return MH_ERROR_NOT_INITIALIZED;
+
+        pos = FindHookEntry(pTarget);
+        if (pos < 0)
+            return MH_ERROR_NOT_CREATED;
+
+        if (g_hooks.items[pos].isEnabled)
         {
-            if (g_Hooks.items[pos].isEnabled)
+            Freeze(pos, 0);
+            __try
             {
-                Freeze(pos, 0);
-                status = EnableHookLL(pos, FALSE);
+                MH_STATUS status = EnableHookLL(pos, FALSE);
+                if (status != MH_OK)
+                    return status;
+            }
+            __finally
+            {
                 Unfreeze();
             }
+        }
 
-            if (status == MH_OK)
-            {
-                FreeBuffer(g_Hooks.items[pos].pTrampoline);
-                DelHookEntry(pos);
-            }
-        }
-        else
-        {
-            status = MH_ERROR_NOT_CREATED;
-        }
+        FreeBuffer(g_hooks.items[pos].pTrampoline);
+        DelHookEntry(pos);
+
+        return MH_OK;
     }
-    else
+    __finally
     {
-        status = MH_ERROR_NOT_INITIALIZED;
+        LeaveSpinLock();
     }
-
-    LeaveSpinLock();
-
-    return status;
 }
 
 //-------------------------------------------------------------------------
 static MH_STATUS EnableHook(void *pTarget, BOOL enable)
 {
-    MH_STATUS status = MH_OK;
-
     EnterSpinLock();
-
-    if (g_hHeap != NULL)
+    __try
     {
+        if (g_hHeap == NULL)
+            return MH_ERROR_NOT_INITIALIZED;
+
         if (pTarget == MH_ALL_HOOKS)
         {
-            status = EnableAllHooksLL(enable);
+            return EnableAllHooksLL(enable);
         }
         else
         {
-            const int pos = FindHookEntry(pTarget);
-            if (pos >= 0)
+            int pos = FindHookEntry(pTarget);
+            if (pos < 0)
+                return MH_ERROR_NOT_CREATED;
+
+            if (g_hooks.items[pos].isEnabled == enable)
+                return enable ? MH_ERROR_ENABLED : MH_ERROR_DISABLED;
+
+            Freeze(pos, 1);
+            __try
             {
-                if (g_Hooks.items[pos].isEnabled != enable)
-                {
-                    Freeze(pos, 1);
-                    status = EnableHookLL(pos, enable);
-                    Unfreeze();
-                }
-                else
-                {
-                    status = enable ? MH_ERROR_ENABLED : MH_ERROR_DISABLED;
-                }
+                return EnableHookLL(pos, enable);
             }
-            else
+            __finally
             {
-                status = MH_ERROR_NOT_CREATED;
+                Unfreeze();
             }
         }
     }
-    else
+    __finally
     {
-        status = MH_ERROR_NOT_INITIALIZED;
+        LeaveSpinLock();
     }
-
-    LeaveSpinLock();
-
-    return status;
 }
 
 //-------------------------------------------------------------------------
@@ -735,35 +721,33 @@ MH_STATUS WINAPI MH_DisableHook(void *pTarget)
 //-------------------------------------------------------------------------
 static MH_STATUS QueueHook(void *pTarget, BOOL queueEnable)
 {
-    MH_STATUS status = MH_OK;
-
     EnterSpinLock();
-
-    if (g_hHeap != NULL)
+    __try
     {
+        if (g_hHeap == NULL)
+            return MH_ERROR_NOT_INITIALIZED;
+
         if (pTarget == MH_ALL_HOOKS)
         {
             int i;
-            for (i = 0; i < g_Hooks.size; ++i)
-                g_Hooks.items[i].queueEnable = queueEnable;
+            for (i = 0; i < g_hooks.size; ++i)
+                g_hooks.items[i].queueEnable = queueEnable;
         }
         else
         {
             const int pos = FindHookEntry(pTarget);
-            if (pos >= 0)
-                g_Hooks.items[pos].queueEnable = queueEnable;
-            else
-                status = MH_ERROR_NOT_CREATED;
+            if (pos < 0)
+                return MH_ERROR_NOT_CREATED;
+
+            g_hooks.items[pos].queueEnable = queueEnable;
         }
+
+        return MH_OK;
     }
-    else
+    __finally
     {
-        status = MH_ERROR_NOT_INITIALIZED;
+        LeaveSpinLock();
     }
-
-    LeaveSpinLock();
-
-    return status;
 }
 
 //-------------------------------------------------------------------------
@@ -781,39 +765,43 @@ MH_STATUS WINAPI MH_QueueDisableHook(void *pTarget)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_ApplyQueued(void)
 {
-    MH_STATUS status = MH_OK;
-
     EnterSpinLock();
-
-    if (g_hHeap != NULL)
+    __try
     {
         int i;
-        for (i = 0; i < g_Hooks.size; ++i)
+
+        if (g_hHeap == NULL)
+            return MH_ERROR_NOT_INITIALIZED;
+
+        for (i = 0; i < g_hooks.size; ++i)
         {
-            if (g_Hooks.items[i].isEnabled != g_Hooks.items[i].queueEnable)
+            if (g_hooks.items[i].isEnabled != g_hooks.items[i].queueEnable)
             {
                 Freeze(-1, 2);
-                for (; i < g_Hooks.size; ++i)
+                __try
                 {
-                    PHOOK_ENTRY pHook = &g_Hooks.items[i];
-                    if (pHook->isEnabled != pHook->queueEnable)
+                    for (; i < g_hooks.size; ++i)
                     {
-                        MH_STATUS status = EnableHookLL(i,pHook->queueEnable);
-                        if (status != MH_OK)
-                            break;
+                        PHOOK_ENTRY pHook = &g_hooks.items[i];
+                        if (pHook->isEnabled != pHook->queueEnable)
+                        {
+                            MH_STATUS status = EnableHookLL(i, pHook->queueEnable);
+                            if (status != MH_OK)
+                                return status;
+                        }
                     }
                 }
-                Unfreeze();
-                break;
+                __finally
+                {
+                    Unfreeze();
+                }
             }
         }
+
+        return MH_OK;
     }
-    else
+    __finally
     {
-        status = MH_ERROR_NOT_INITIALIZED;
+        LeaveSpinLock();
     }
-
-    LeaveSpinLock();
-
-    return status;
 }
