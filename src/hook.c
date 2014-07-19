@@ -701,7 +701,7 @@ static MH_STATUS EnableHook(void *pTarget, BOOL enable)
                 }
                 else
                 {
-                    status = MH_ERROR_ENABLED;
+                    status = enable ? MH_ERROR_ENABLED : MH_ERROR_DISABLED;
                 }
             }
             else
