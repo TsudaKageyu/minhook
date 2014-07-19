@@ -379,7 +379,7 @@ static void Unfreeze(void)
 }
 
 //-------------------------------------------------------------------------
-static MH_STATUS EnableHookLL(int pos)
+static MH_STATUS EnableHookLL(int pos, BOOL enable)
 {
     PHOOK_ENTRY pHook = &g_Hooks.items[pos];
     DWORD   oldProtect;
@@ -395,96 +395,50 @@ static MH_STATUS EnableHookLL(int pos)
     if (!VirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect))
         return MH_ERROR_MEMORY_PROTECT;
 
-    ((JMP_REL *)pPatchTarget)->opcode  = 0xE9;
-    ((JMP_REL *)pPatchTarget)->operand
-        = (UINT32)((char *)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
-
-    if (pHook->patchAbove)
+    if (enable)
     {
-        ((JMP_REL_SHORT *)pHook->pTarget)->opcode  = 0xEB;
-        ((JMP_REL_SHORT *)pHook->pTarget)->operand
-            = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
+        ((JMP_REL *)pPatchTarget)->opcode = 0xE9;
+        ((JMP_REL *)pPatchTarget)->operand
+            = (UINT32)((char *)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
+
+        if (pHook->patchAbove)
+        {
+            ((JMP_REL_SHORT *)pHook->pTarget)->opcode = 0xEB;
+            ((JMP_REL_SHORT *)pHook->pTarget)->operand
+                = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
+        }
     }
-
-    VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
-
-    pHook->isEnabled   = TRUE;
-    pHook->queueEnable = TRUE;
-
-    return MH_OK;
-}
-
-//-------------------------------------------------------------------------
-static MH_STATUS DisableHookLL(int pos)
-{
-    PHOOK_ENTRY pHook = &g_Hooks.items[pos];
-    DWORD  oldProtect;
-    size_t patchSize = sizeof(JMP_REL);
-    char  *pPatchTarget = (char *)pHook->pTarget;
-
-    if (pHook->patchAbove)
-    {
-        pPatchTarget -= sizeof(JMP_REL);
-        patchSize    += sizeof(JMP_REL_SHORT);
-    }
-
-    if (!VirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect))
-        return MH_ERROR_MEMORY_PROTECT;
-
-    if (pHook->patchAbove)
-        memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
     else
-        memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL));
+    {
+        if (pHook->patchAbove)
+            memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
+        else
+            memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL));
+    }
 
     VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
-    pHook->isEnabled   = FALSE;
-    pHook->queueEnable = FALSE;
+    pHook->isEnabled   = enable;
+    pHook->queueEnable = enable;
 
     return MH_OK;
 }
 
 //-------------------------------------------------------------------------
-static MH_STATUS EnableAllHooksLL(void)
+static MH_STATUS EnableAllHooksLL(BOOL enable)
 {
     MH_STATUS status = MH_OK;
     int i;
     for (i = 0; i < g_Hooks.size; ++i)
     {
-        if (!g_Hooks.items[i].isEnabled)
+        if (g_Hooks.items[i].isEnabled != enable)
         {
             Freeze(-1, 1);
             for (; i < g_Hooks.size; ++i)
             {
-                if (!g_Hooks.items[i].isEnabled)
+                if (g_Hooks.items[i].isEnabled != enable)
                 {
-                    status = EnableHookLL(i);
-                    if (status != MH_OK)
-                        break;
-                }
-            }
-            Unfreeze();
-            break;
-        }
-    }
-    return status;
-}
-
-//-------------------------------------------------------------------------
-static MH_STATUS DisableAllHooksLL(void)
-{
-    MH_STATUS status = MH_OK;
-    int i;
-    for (i = 0; i < g_Hooks.size; ++i)
-    {
-        if (g_Hooks.items[i].isEnabled)
-        {
-            Freeze(-1, 0);
-            for (; i < g_Hooks.size; ++i)
-            {
-                if (g_Hooks.items[i].isEnabled)
-                {
-                    status = DisableHookLL(i);
+                    status = EnableHookLL(i, enable);
                     if (status != MH_OK)
                         break;
                 }
@@ -552,7 +506,7 @@ MH_STATUS WINAPI MH_Uninitialize(void)
     if (g_hHeap != NULL)
     {
         // Disable all hooks.
-        status = DisableAllHooksLL();
+        status = EnableAllHooksLL(FALSE);
         if (status == MH_OK)
         {
             HeapDestroy(g_hHeap);
@@ -696,7 +650,7 @@ MH_STATUS WINAPI MH_RemoveHook(void *pTarget)
             if (g_Hooks.items[pos].isEnabled)
             {
                 Freeze(pos, 0);
-                status = DisableHookLL(pos);
+                status = EnableHookLL(pos, FALSE);
                 Unfreeze();
             }
 
@@ -732,7 +686,7 @@ MH_STATUS WINAPI MH_EnableHook(void *pTarget)
     {
         if (pTarget == MH_ALL_HOOKS)
         {
-            status = EnableAllHooksLL();
+            status = EnableAllHooksLL(TRUE);
         }
         else
         {
@@ -742,7 +696,7 @@ MH_STATUS WINAPI MH_EnableHook(void *pTarget)
                 if (!g_Hooks.items[pos].isEnabled)
                 {
                     Freeze(pos, 1);
-                    status = EnableHookLL(pos);
+                    status = EnableHookLL(pos, TRUE);
                     Unfreeze();
                 }
                 else
@@ -777,7 +731,7 @@ MH_STATUS WINAPI MH_DisableHook(void *pTarget)
     {
         if (pTarget == MH_ALL_HOOKS)
         {
-            status = DisableAllHooksLL();
+            status = EnableAllHooksLL(FALSE);
         }
         else
         {
@@ -787,7 +741,7 @@ MH_STATUS WINAPI MH_DisableHook(void *pTarget)
                 if (g_Hooks.items[pos].isEnabled)
                 {
                     Freeze(pos, 0);
-                    status = DisableHookLL(pos);
+                    status = EnableHookLL(pos, FALSE);
                     Unfreeze();
                 }
                 else
@@ -874,14 +828,10 @@ MH_STATUS WINAPI MH_ApplyQueued(void)
                 Freeze(-1, 2);
                 for (; i < g_Hooks.size; ++i)
                 {
-                    if (g_Hooks.items[i].isEnabled != g_Hooks.items[i].queueEnable)
+                    PHOOK_ENTRY pHook = &g_Hooks.items[i];
+                    if (pHook->isEnabled != pHook->queueEnable)
                     {
-                        MH_STATUS status;
-                        if (g_Hooks.items[i].queueEnable)
-                            status = EnableHookLL(i);
-                        else
-                            status = DisableHookLL(i);
-
+                        MH_STATUS status = EnableHookLL(i,pHook->queueEnable);
                         if (status != MH_OK)
                             break;
                     }
