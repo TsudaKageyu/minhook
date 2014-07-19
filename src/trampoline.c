@@ -59,7 +59,7 @@ static BOOL IsCodePadding(UINT8 *pInst, size_t size)
 }
 
 //-------------------------------------------------------------------------
-BOOL CreateTrampolineFunction(CREATE_TRAMPOLINE_T *ct)
+BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
 {
 #if defined _M_X64
     CALL_ABS call = { 0x15FF, 0x00000000 };

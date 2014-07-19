@@ -64,7 +64,7 @@ typedef struct _JCC_ABS
 
 #pragma pack(pop)
 
-typedef struct _CREATE_TRAMPOLINE_T
+typedef struct _TRAMPOLINE
 {
     void      *pTarget;         // [In] Address of the target function.
     void      *pDetour;         // [In] Address of the detour function.
@@ -80,6 +80,6 @@ typedef struct _CREATE_TRAMPOLINE_T
     int        nIP;             // [Out] Number of the instruction boundaries.
     UINT8      oldIPs[8];       // [Out] Instruction boundaries of the target function.
     UINT8      newIPs[8];       // [Out] Instruction boundaries of the trampoline function.
-} CREATE_TRAMPOLINE_T;
+} TRAMPOLINE;
 
-BOOL CreateTrampolineFunction(CREATE_TRAMPOLINE_T *ct);
+BOOL CreateTrampolineFunction(TRAMPOLINE *ct);

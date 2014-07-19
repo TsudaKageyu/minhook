@@ -540,10 +540,9 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
     {
         __try
         {
-            MH_STATUS status = MH_OK;
-            int pos;
-            void *pBuffer;
-            CREATE_TRAMPOLINE_T ct;
+            int         pos;
+            void       *pBuffer;
+            TRAMPOLINE  ct;
             PHOOK_ENTRY pHook;
 
             if (g_hHeap == NULL)
