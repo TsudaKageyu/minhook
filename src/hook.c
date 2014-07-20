@@ -116,7 +116,7 @@ struct
 // returns: >= 0 if the element in contained, < 0 (-insertPos-1) if not
 static UINT FindHookEntry(LPVOID pTarget)
 {
-    UINT left, right;
+    INT left, right;
 
     if (g_hooks.size == 0)
         return UINT_MAX;
@@ -127,7 +127,7 @@ static UINT FindHookEntry(LPVOID pTarget)
 
     do
     {
-        UINT center = (left + right) / 2;
+        INT center = (left + right) / 2;
 
         if ((ULONG_PTR)g_hooks.pItems[center].pTarget == (ULONG_PTR)pTarget)
             return center;          // found
