@@ -42,6 +42,11 @@
 // Max range for seeking a memory block. (= 32MB)
 #define MH_MAX_RANGE 0x02000000
 
+// Memory protection flags to check the executable address.
+#define MH_PAGE_EXECUTE \
+    (PAGE_EXECUTE | PAGE_EXECUTE_READ \
+    | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)
+
 // Memory slot.
 typedef struct _MEMORY_SLOT
 {
@@ -67,13 +72,13 @@ typedef struct _MEMORY_BLOCK
 PMEMORY_BLOCK g_pMemoryBlocks;
 
 //-------------------------------------------------------------------------
-void InitializeBuffer(void)
+VOID InitializeBuffer(VOID)
 {
     // Nothing to do for now.
 }
 
 //-------------------------------------------------------------------------
-void UninitializeBuffer(void)
+VOID UninitializeBuffer(VOID)
 {
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
     g_pMemoryBlocks = NULL;
@@ -87,7 +92,7 @@ void UninitializeBuffer(void)
 }
 
 //-------------------------------------------------------------------------
-static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
+static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 {
     ULONG_PTR minAddr;
     ULONG_PTR maxAddr;
@@ -126,7 +131,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
         for (pAlloc = pStart - MH_BLOCK_SIZE; pAlloc >= minAddr; pAlloc -= MH_BLOCK_SIZE)
         {
             pBlock = (PMEMORY_BLOCK)VirtualAlloc(
-                (void *)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+                (LPVOID)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
             if (pBlock != NULL)
                 break;
         }
@@ -135,7 +140,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
             for (pAlloc = pStart + MH_BLOCK_SIZE; pAlloc < maxAddr; pAlloc += MH_BLOCK_SIZE)
             {
                 pBlock = (PMEMORY_BLOCK)VirtualAlloc(
-                    (void *)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+                    (LPVOID)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
                 if (pBlock != NULL)
                     break;
             }
@@ -162,7 +167,7 @@ static PMEMORY_BLOCK GetMemoryBlock(void *pOrigin)
 }
 
 //-------------------------------------------------------------------------
-void* AllocateBuffer(void *pOrigin)
+LPVOID AllocateBuffer(LPVOID pOrigin)
 {
     PMEMORY_SLOT  pSlot;
     PMEMORY_BLOCK pBlock = GetMemoryBlock(pOrigin);
@@ -180,7 +185,7 @@ void* AllocateBuffer(void *pOrigin)
 }
 
 //-------------------------------------------------------------------------
-void FreeBuffer(void *pBuffer)
+VOID FreeBuffer(LPVOID pBuffer)
 {
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
     ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MH_BLOCK_SIZE) * MH_BLOCK_SIZE;
@@ -205,14 +210,10 @@ void FreeBuffer(void *pBuffer)
 }
 
 //-------------------------------------------------------------------------
-BOOL IsExecutableAddress(void *pAddress)
+BOOL IsExecutableAddress(LPVOID pAddress)
 {
-    // Is the address allocated and has one of these flags?
-    static const DWORD PageExecuteMask
-        = (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY);
-
     MEMORY_BASIC_INFORMATION mi;
     VirtualQuery(pAddress, &mi, sizeof(MEMORY_BASIC_INFORMATION));
 
-    return (mi.State == MEM_COMMIT && (mi.Protect & PageExecuteMask)) ? TRUE : FALSE;
+    return (mi.State == MEM_COMMIT && (mi.Protect & MH_PAGE_EXECUTE));
 }

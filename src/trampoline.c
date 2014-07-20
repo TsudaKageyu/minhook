@@ -31,11 +31,11 @@
 
 #if defined _M_X64
 #include "hde/hde64.h"
-typedef hde64s hde_t;
+typedef hde64s HDE;
 #define HDE_DISASM(code, hs) hde64_disasm(code, hs)
 #elif defined _M_IX86
 #include "hde/hde32.h"
-typedef hde32s hde_t;
+typedef hde32s HDE;
 #define HDE_DISASM(code, hs) hde32_disasm(code, hs)
 #endif
 
@@ -43,9 +43,9 @@ typedef hde32s hde_t;
 #include "buffer.h"
 
 //-------------------------------------------------------------------------
-static BOOL IsCodePadding(UINT8 *pInst, size_t size)
+static BOOL IsCodePadding(LPBYTE pInst, UINT size)
 {
-    size_t i;
+    UINT i;
 
     if (pInst[0] != 0x00 && pInst[0] != 0x90 && pInst[0] != 0xCC)
         return FALSE;
@@ -70,28 +70,28 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
     JMP_REL  jmp  = { 0xE9, 0x00000000 };
     JCC_REL  jcc  = { 0x800F, 0x00000000 };
 #endif
-    size_t    oldPos   = 0;
-    size_t    newPos   = 0;
+    UINT      oldPos   = 0;
+    UINT      newPos   = 0;
     ULONG_PTR jmpDest  = 0;     // Destination address of an internal jump.
     BOOL      finished = FALSE; // Is the function completed?
 #if defined _M_X64
-    size_t    tableSize = 0;
-    UINT8   instBuf[16];
+    UINT      tableSize = 0;
+    UINT8     instBuf[16];
 #endif
 
     while (!finished)
     {
-        hde_t     hs;
+        HDE       hs;
         UINT      copySize;
-        void     *pCopySrc;
+        LPVOID    pCopySrc;
         ULONG_PTR pOldInst = (ULONG_PTR)ct->pTarget     + oldPos;
         ULONG_PTR pNewInst = (ULONG_PTR)ct->pTrampoline + newPos;
 
-        copySize = HDE_DISASM((void *)pOldInst, &hs);
+        copySize = HDE_DISASM((LPVOID)pOldInst, &hs);
         if (hs.flags & F_ERROR)
             return FALSE;
 
-        pCopySrc = (void *)pOldInst;
+        pCopySrc = (LPVOID)pOldInst;
         if (oldPos >= sizeof(JMP_REL))
         {
             // The trampoline function is long enough.
@@ -117,7 +117,7 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
             // Instructions using RIP relative addressing. (ModR/M = 00???101B)
 
             // Modify the RIP relative address.
-            UINT32 *pRelAddr;
+            PUINT32 pRelAddr;
 
             __movsb(instBuf, (PBYTE)pOldInst, copySize);
             pCopySrc = instBuf;
@@ -259,20 +259,20 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
 
     // Is there enough place for a long jump?
     if (oldPos < sizeof(JMP_REL)
-        && !IsCodePadding((UINT8 *)ct->pTarget + oldPos, sizeof(JMP_REL) - oldPos))
+        && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL) - oldPos))
     {
         // Is there enough place for a short jump?
         if (oldPos < sizeof(JMP_REL_SHORT)
-            && !IsCodePadding((UINT8 *)ct->pTarget + oldPos, sizeof(JMP_REL_SHORT) - oldPos))
+            && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL_SHORT) - oldPos))
         {
             return FALSE;
         }
 
         // Can we place the long jump above the function?
-        if (!IsExecutableAddress((UINT8 *)ct->pTarget - sizeof(JMP_REL)))
+        if (!IsExecutableAddress((LPBYTE)ct->pTarget - sizeof(JMP_REL)))
             return FALSE;
 
-        if (!IsCodePadding((UINT8 *)ct->pTarget - sizeof(JMP_REL), sizeof(JMP_REL)))
+        if (!IsCodePadding((LPBYTE)ct->pTarget - sizeof(JMP_REL), sizeof(JMP_REL)))
             return FALSE;
 
         ct->patchAbove = TRUE;
@@ -284,8 +284,8 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
         return FALSE;
 
     ct->pTable[tableSize++] = (ULONG_PTR)ct->pDetour;
-    ((JMP_ABS *)ct->pRelay)->opcode = 0x25FF;
-    ((JMP_ABS *)ct->pRelay)->operand
+    ((PJMP_ABS)ct->pRelay)->opcode = 0x25FF;
+    ((PJMP_ABS)ct->pRelay)->operand
         = (UINT32)((ULONG_PTR)(ct->pTable + tableSize - 1) - ((ULONG_PTR)ct->pRelay + sizeof(JMP_ABS)));
 #endif
 

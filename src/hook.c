@@ -72,16 +72,16 @@ RtlMoveMemory(LPVOID UNALIGNED Dst, LPCVOID UNALIGNED Src, SIZE_T Length);
 // Hook information.
 typedef struct _HOOK_ENTRY
 {
-    void  *pTarget;             // Address of the target function.
-    void  *pDetour;             // Address of the detour or relay function.
-    void  *pTrampoline;         // Address of the trampoline function.
+    LPVOID pTarget;             // Address of the target function.
+    LPVOID pDetour;             // Address of the detour or relay function.
+    LPVOID pTrampoline;         // Address of the trampoline function.
     UINT8  backup[8];           // Original prologue of the target function.
 
     BOOL   patchAbove  : 1;     // Uses the hot patch area.
     BOOL   isEnabled   : 1;     // Enabled.
     BOOL   queueEnable : 1;     // Queued for enabling/disabling when != isEnabled.
 
-    int    nIP : 3;             // Count of the instruction boundaries.
+    UINT   nIP : 3;             // Count of the instruction boundaries.
     UINT8  oldIPs[8];           // Instruction boundaries of the target function.
     UINT8  newIPs[8];           // Instruction boundaries of the trampoline function.
 } HOOK_ENTRY, *PHOOK_ENTRY;
@@ -99,27 +99,27 @@ HANDLE g_hHeap = NULL;
 // Hook entries.
 struct
 {
-    PHOOK_ENTRY items;      // Data heap
-    int         capacity;   // Size of allocated data heap, items
-    int         size;       // Actual number of data items
+    PHOOK_ENTRY pItems;     // Data heap
+    UINT        capacity;   // Size of allocated data heap, items
+    UINT        size;       // Actual number of data items
 } g_hooks;
 
 // Suspended threads for Freeze()/Unfreeze().
 struct
 {
-    LPDWORD items;          // Data heap
-    int     capacity;       // Size of allocated data heap, items
-    int     size;           // Actual number of data items
+    LPDWORD pItems;         // Data heap
+    UINT    capacity;       // Size of allocated data heap, items
+    UINT    size;           // Actual number of data items
 } g_threads;
 
 //-------------------------------------------------------------------------
 // returns: >= 0 if the element in contained, < 0 (-insertPos-1) if not
-static int FindHookEntry(void *pTarget)
+static UINT FindHookEntry(LPVOID pTarget)
 {
-    int left, right;
+    UINT left, right;
 
     if (g_hooks.size == 0)
-        return -1;
+        return UINT_MAX;
 
     // Binary search through the list
     left  = 0;
@@ -127,78 +127,74 @@ static int FindHookEntry(void *pTarget)
 
     do
     {
-        const int center = (left + right) / 2;
+        UINT center = (left + right) / 2;
 
-        if ((ULONG_PTR)g_hooks.items[center].pTarget == (ULONG_PTR)pTarget)
-            return center;              // found
+        if ((ULONG_PTR)g_hooks.pItems[center].pTarget == (ULONG_PTR)pTarget)
+            return center;          // found
 
-        if ((ULONG_PTR)g_hooks.items[center].pTarget < (ULONG_PTR)pTarget)
-            left = center + 1;          // continue right
+        if ((ULONG_PTR)g_hooks.pItems[center].pTarget < (ULONG_PTR)pTarget)
+            left = center + 1;      // continue right
         else
-            right = center - 1;         // continue left
+            right = center - 1;     // continue left
 
     } while (left <= right);
 
-    return (0 - left - 1);  // not found, return insert position
+    return (left ^ UINT_MAX);       // not found, return insert position
 }
 
 //-------------------------------------------------------------------------
-static PHOOK_ENTRY NewHookEntry(int pos)
+static PHOOK_ENTRY NewHookEntry(UINT pos)
 {
-    if (g_hooks.items == NULL)
+    if (g_hooks.pItems == NULL)
     {
         g_hooks.capacity = MH_INITIAL_CAPACITY;
-        g_hooks.items = (HOOK_ENTRY *)HeapAlloc(
+        g_hooks.pItems = (PHOOK_ENTRY)HeapAlloc(
             g_hHeap, 0, g_hooks.capacity * sizeof(HOOK_ENTRY));
-        if (g_hooks.items == NULL)
+        if (g_hooks.pItems == NULL)
             return NULL;
     }
     else if (g_hooks.size >= g_hooks.capacity)
     {
-        void *p;
+        PHOOK_ENTRY p;
         g_hooks.capacity *= 2;
-        p = HeapReAlloc(
-            g_hHeap, 0, g_hooks.items, g_hooks.capacity * sizeof(HOOK_ENTRY));
+        p = (PHOOK_ENTRY)HeapReAlloc(
+            g_hHeap, 0, g_hooks.pItems, g_hooks.capacity * sizeof(HOOK_ENTRY));
         if (p == NULL)
             return NULL;
 
-        g_hooks.items = (HOOK_ENTRY *)p;
+        g_hooks.pItems = p;
     }
 
     // Add the element at the correct position
     if (pos < g_hooks.size)
     {
         RtlMoveMemory(
-            &g_hooks.items[pos + 1],
-            &g_hooks.items[pos],
+            &g_hooks.pItems[pos + 1],
+            &g_hooks.pItems[pos],
             (g_hooks.size - pos) * sizeof(HOOK_ENTRY));
     }
 
     g_hooks.size++;
-
-    return &g_hooks.items[pos];
+    return &g_hooks.pItems[pos];
 }
 
 //-------------------------------------------------------------------------
-static void DelHookEntry(int pos)
+static void DelHookEntry(UINT pos)
 {
-    if (pos >= 0 && pos < g_hooks.size)
+    g_hooks.size--;
+    if (pos < g_hooks.size)
     {
-        g_hooks.size--;
-        if (pos < g_hooks.size)
-        {
-            RtlMoveMemory(
-                &g_hooks.items[pos],
-                &g_hooks.items[pos + 1],
-                (g_hooks.size - pos) * sizeof(HOOK_ENTRY));
-        }
+        RtlMoveMemory(
+            &g_hooks.pItems[pos],
+            &g_hooks.pItems[pos + 1],
+            (g_hooks.size - pos) * sizeof(HOOK_ENTRY));
     }
 }
 
 //-------------------------------------------------------------------------
 static DWORD_PTR FindOldIP(PHOOK_ENTRY pHook, DWORD_PTR ip)
 {
-    int i;
+    UINT i;
 
     if (pHook->patchAbove && ip == ((DWORD_PTR)pHook->pTarget - sizeof(JMP_REL)))
         return (DWORD_PTR)pHook->pTarget;
@@ -215,7 +211,7 @@ static DWORD_PTR FindOldIP(PHOOK_ENTRY pHook, DWORD_PTR ip)
 //-------------------------------------------------------------------------
 static DWORD_PTR FindNewIP(PHOOK_ENTRY pHook, DWORD_PTR ip)
 {
-    int i;
+    UINT i;
     for (i = 0; i < pHook->nIP; ++i)
     {
         if (ip == ((DWORD_PTR)pHook->pTarget + pHook->oldIPs[i]))
@@ -226,25 +222,25 @@ static DWORD_PTR FindNewIP(PHOOK_ENTRY pHook, DWORD_PTR ip)
 }
 
 //-------------------------------------------------------------------------
-static void ProcessThreadIPs(HANDLE hThread, int pos, int action)
+static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
 {
     // If the thread suspended in the overwritten area,
     // move IP to the proper address.
 
     CONTEXT c;
 #if defined _M_X64
-    DWORD_PTR *pIP = &c.Rip;
+    DWORD64 *pIP = &c.Rip;
 #elif defined _M_IX86
-    DWORD_PTR *pIP = &c.Eip;
+    DWORD   *pIP = &c.Eip;
 #endif
-    int count;
+    UINT count;
 
     __stosb((PBYTE)&c, 0, sizeof(CONTEXT));
     c.ContextFlags = CONTEXT_CONTROL;
     if (!GetThreadContext(hThread, &c))
         return;
 
-    if (pos < 0)
+    if (pos >> 31)
     {
         pos = 0;
         count = g_hooks.size;
@@ -256,9 +252,9 @@ static void ProcessThreadIPs(HANDLE hThread, int pos, int action)
 
     for (; pos < count; ++pos)
     {
-        PHOOK_ENTRY pHook = &g_hooks.items[pos];
-        BOOL      enable;
-        DWORD_PTR ip;
+        PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
+        BOOL        enable;
+        DWORD_PTR   ip;
 
         switch (action)
         {
@@ -291,7 +287,7 @@ static void ProcessThreadIPs(HANDLE hThread, int pos, int action)
 }
 
 //-------------------------------------------------------------------------
-static void EnumerateThreads(void)
+static VOID EnumerateThreads(VOID)
 {
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (hSnapshot != INVALID_HANDLE_VALUE)
@@ -307,12 +303,12 @@ static void EnumerateThreads(void)
                 if (te.th32OwnerProcessID == GetCurrentProcessId()
                     && te.th32ThreadID != GetCurrentThreadId())
                 {
-                    if (g_threads.items == NULL)
+                    if (g_threads.pItems == NULL)
                     {
                         g_threads.capacity = MH_INITIAL_THREAD_CAPACITY;
-                        g_threads.items
+                        g_threads.pItems
                             = (LPDWORD)HeapAlloc(g_hHeap, 0, g_threads.capacity * sizeof(DWORD));
-                        if (g_threads.items == NULL)
+                        if (g_threads.pItems == NULL)
                             break;
                     }
                     else if (g_threads.size >= g_threads.capacity)
@@ -320,13 +316,13 @@ static void EnumerateThreads(void)
                         LPDWORD p;
                         g_threads.capacity *= 2;
                         p = (LPDWORD)HeapReAlloc(
-                            g_hHeap, 0, g_threads.items, g_threads.capacity * sizeof(DWORD));
+                            g_hHeap, 0, g_threads.pItems, g_threads.capacity * sizeof(DWORD));
                         if (p != NULL)
-                            g_threads.items = p;
+                            g_threads.pItems = p;
                         else
                             break;
                     }
-                    g_threads.items[g_threads.size++] = te.th32ThreadID;
+                    g_threads.pItems[g_threads.size++] = te.th32ThreadID;
                 }
             } while (Thread32Next(hSnapshot, &te));
         }
@@ -335,16 +331,16 @@ static void EnumerateThreads(void)
 }
 
 //-------------------------------------------------------------------------
-static void Freeze(int pos, int action)
+static VOID Freeze(UINT pos, UINT action)
 {
     EnumerateThreads();
 
-    if (g_threads.items != NULL)
+    if (g_threads.pItems != NULL)
     {
-        int i;
+        UINT i;
         for (i = 0; i < g_threads.size; ++i)
         {
-            HANDLE hThread = OpenThread(MH_THREAD_ACCESS, FALSE, g_threads.items[i]);
+            HANDLE hThread = OpenThread(MH_THREAD_ACCESS, FALSE, g_threads.pItems[i]);
             if (hThread != NULL)
             {
                 SuspendThread(hThread);
@@ -356,14 +352,14 @@ static void Freeze(int pos, int action)
 }
 
 //-------------------------------------------------------------------------
-static void Unfreeze(void)
+static VOID Unfreeze(VOID)
 {
-    if (g_threads.items != NULL)
+    if (g_threads.pItems != NULL)
     {
-        int i;
+        UINT i;
         for (i = 0; i < g_threads.size; ++i)
         {
-            HANDLE hThread = OpenThread(MH_THREAD_ACCESS, FALSE, g_threads.items[i]);
+            HANDLE hThread = OpenThread(MH_THREAD_ACCESS, FALSE, g_threads.pItems[i]);
             if (hThread != NULL)
             {
                 ResumeThread(hThread);
@@ -371,20 +367,20 @@ static void Unfreeze(void)
             }
         }
 
-        HeapFree(g_hHeap, 0, g_threads.items);
-        g_threads.items    = NULL;
+        HeapFree(g_hHeap, 0, g_threads.pItems);
+        g_threads.pItems   = NULL;
         g_threads.capacity = 0;
         g_threads.size     = 0;
     }
 }
 
 //-------------------------------------------------------------------------
-static MH_STATUS EnableHookLL(int pos, BOOL enable)
+static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 {
-    PHOOK_ENTRY pHook = &g_hooks.items[pos];
-    DWORD   oldProtect;
-    size_t  patchSize = sizeof(JMP_REL);
-    char   *pPatchTarget = (char *)pHook->pTarget;
+    PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
+    DWORD  oldProtect;
+    SIZE_T patchSize    = sizeof(JMP_REL);
+    LPBYTE pPatchTarget = (LPBYTE)pHook->pTarget;
 
     if (pHook->patchAbove)
     {
@@ -397,14 +393,15 @@ static MH_STATUS EnableHookLL(int pos, BOOL enable)
 
     if (enable)
     {
-        ((JMP_REL *)pPatchTarget)->opcode = 0xE9;
-        ((JMP_REL *)pPatchTarget)->operand
-            = (UINT32)((char *)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
+        ((PJMP_REL)pPatchTarget)->opcode = 0xE9;
+        ((PJMP_REL)pPatchTarget)->operand
+            = (UINT32)((LPBYTE)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
 
         if (pHook->patchAbove)
         {
-            ((JMP_REL_SHORT *)pHook->pTarget)->opcode = 0xEB;
-            ((JMP_REL_SHORT *)pHook->pTarget)->operand
+
+            ((PJMP_REL_SHORT)pHook->pTarget)->opcode = 0xEB;
+            ((PJMP_REL_SHORT)pHook->pTarget)->operand
                 = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
         }
     }
@@ -427,17 +424,17 @@ static MH_STATUS EnableHookLL(int pos, BOOL enable)
 //-------------------------------------------------------------------------
 static MH_STATUS EnableAllHooksLL(BOOL enable)
 {
-    int i;
+    UINT i;
     for (i = 0; i < g_hooks.size; ++i)
     {
-        if (g_hooks.items[i].isEnabled != enable)
+        if (g_hooks.pItems[i].isEnabled != enable)
         {
-            Freeze(-1, 1);
+            Freeze(UINT_MAX, 1);
             __try
             {
                 for (; i < g_hooks.size; ++i)
                 {
-                    if (g_hooks.items[i].isEnabled != enable)
+                    if (g_hooks.pItems[i].isEnabled != enable)
                     {
                         MH_STATUS status = EnableHookLL(i, enable);
                         if (status != MH_OK)
@@ -456,7 +453,7 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 }
 
 //-------------------------------------------------------------------------
-static void EnterSpinLock(void)
+static VOID EnterSpinLock(VOID)
 {
     // Wait until the flag is FALSE.
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
@@ -466,13 +463,13 @@ static void EnterSpinLock(void)
 }
 
 //-------------------------------------------------------------------------
-static void LeaveSpinLock(void)
+static VOID LeaveSpinLock(VOID)
 {
     _InterlockedExchange(&g_isLocked, FALSE);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_Initialize(void)
+MH_STATUS WINAPI MH_Initialize(VOID)
 {
     EnterSpinLock();
     __try
@@ -496,7 +493,7 @@ MH_STATUS WINAPI MH_Initialize(void)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_Uninitialize(void)
+MH_STATUS WINAPI MH_Uninitialize(VOID)
 {
     EnterSpinLock();
     __try
@@ -516,11 +513,11 @@ MH_STATUS WINAPI MH_Uninitialize(void)
 
         g_hHeap = NULL;
 
-        g_hooks.items    = NULL;
+        g_hooks.pItems   = NULL;
         g_hooks.capacity = 0;
         g_hooks.size     = 0;
 
-        g_threads.items    = NULL;
+        g_threads.pItems   = NULL;
         g_threads.capacity = 0;
         g_threads.size     = 0;
 
@@ -533,15 +530,15 @@ MH_STATUS WINAPI MH_Uninitialize(void)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOriginal)
+MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal)
 {
     EnterSpinLock();
     __try
     {
         __try
         {
-            int         pos;
-            void       *pBuffer;
+            UINT        pos;
+            LPVOID      pBuffer;
             TRAMPOLINE  ct;
             PHOOK_ENTRY pHook;
 
@@ -552,7 +549,7 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
                 return MH_ERROR_NOT_EXECUTABLE;
 
             pos = FindHookEntry(pTarget);
-            if (pos >= 0)
+            if (!(pos >> 31))
                 return MH_ERROR_ALREADY_CREATED;
 
             pBuffer = AllocateBuffer(pTarget);
@@ -575,7 +572,7 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
                 return MH_ERROR_UNSUPPORTED_FUNCTION;
             }
 
-            pHook = NewHookEntry(0 - pos - 1);
+            pHook = NewHookEntry(pos ^ UINT_MAX);
             if (pHook == NULL)
             {
                 FreeBuffer(pBuffer);
@@ -626,21 +623,21 @@ MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOrig
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_RemoveHook(void *pTarget)
+MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
 {
     EnterSpinLock();
     __try
     {
-        int pos;
+        UINT pos;
 
         if (g_hHeap == NULL)
             return MH_ERROR_NOT_INITIALIZED;
 
         pos = FindHookEntry(pTarget);
-        if (pos < 0)
+        if (pos >> 31)
             return MH_ERROR_NOT_CREATED;
 
-        if (g_hooks.items[pos].isEnabled)
+        if (g_hooks.pItems[pos].isEnabled)
         {
             Freeze(pos, 0);
             __try
@@ -655,7 +652,7 @@ MH_STATUS WINAPI MH_RemoveHook(void *pTarget)
             }
         }
 
-        FreeBuffer(g_hooks.items[pos].pTrampoline);
+        FreeBuffer(g_hooks.pItems[pos].pTrampoline);
         DelHookEntry(pos);
 
         return MH_OK;
@@ -667,7 +664,7 @@ MH_STATUS WINAPI MH_RemoveHook(void *pTarget)
 }
 
 //-------------------------------------------------------------------------
-static MH_STATUS EnableHook(void *pTarget, BOOL enable)
+static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
 {
     EnterSpinLock();
     __try
@@ -681,11 +678,11 @@ static MH_STATUS EnableHook(void *pTarget, BOOL enable)
         }
         else
         {
-            int pos = FindHookEntry(pTarget);
-            if (pos < 0)
+            UINT pos = FindHookEntry(pTarget);
+            if (pos >> 31)
                 return MH_ERROR_NOT_CREATED;
 
-            if (g_hooks.items[pos].isEnabled == enable)
+            if (g_hooks.pItems[pos].isEnabled == enable)
                 return enable ? MH_ERROR_ENABLED : MH_ERROR_DISABLED;
 
             Freeze(pos, 1);
@@ -706,19 +703,19 @@ static MH_STATUS EnableHook(void *pTarget, BOOL enable)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_EnableHook(void *pTarget)
+MH_STATUS WINAPI MH_EnableHook(LPVOID pTarget)
 {
     return EnableHook(pTarget, TRUE);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_DisableHook(void *pTarget)
+MH_STATUS WINAPI MH_DisableHook(LPVOID pTarget)
 {
     return EnableHook(pTarget, FALSE);
 }
 
 //-------------------------------------------------------------------------
-static MH_STATUS QueueHook(void *pTarget, BOOL queueEnable)
+static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
 {
     EnterSpinLock();
     __try
@@ -728,17 +725,17 @@ static MH_STATUS QueueHook(void *pTarget, BOOL queueEnable)
 
         if (pTarget == MH_ALL_HOOKS)
         {
-            int i;
+            UINT i;
             for (i = 0; i < g_hooks.size; ++i)
-                g_hooks.items[i].queueEnable = queueEnable;
+                g_hooks.pItems[i].queueEnable = queueEnable;
         }
         else
         {
-            const int pos = FindHookEntry(pTarget);
-            if (pos < 0)
+            UINT pos = FindHookEntry(pTarget);
+            if (pos >> 31)
                 return MH_ERROR_NOT_CREATED;
 
-            g_hooks.items[pos].queueEnable = queueEnable;
+            g_hooks.pItems[pos].queueEnable = queueEnable;
         }
 
         return MH_OK;
@@ -750,38 +747,38 @@ static MH_STATUS QueueHook(void *pTarget, BOOL queueEnable)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_QueueEnableHook(void *pTarget)
+MH_STATUS WINAPI MH_QueueEnableHook(LPVOID pTarget)
 {
     return QueueHook(pTarget, TRUE);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_QueueDisableHook(void *pTarget)
+MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget)
 {
     return QueueHook(pTarget, FALSE);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_ApplyQueued(void)
+MH_STATUS WINAPI MH_ApplyQueued(VOID)
 {
     EnterSpinLock();
     __try
     {
-        int i;
+        UINT i;
 
         if (g_hHeap == NULL)
             return MH_ERROR_NOT_INITIALIZED;
 
         for (i = 0; i < g_hooks.size; ++i)
         {
-            if (g_hooks.items[i].isEnabled != g_hooks.items[i].queueEnable)
+            if (g_hooks.pItems[i].isEnabled != g_hooks.pItems[i].queueEnable)
             {
-                Freeze(-1, 2);
+                Freeze(UINT_MAX, 2);
                 __try
                 {
                     for (; i < g_hooks.size; ++i)
                     {
-                        PHOOK_ENTRY pHook = &g_hooks.items[i];
+                        PHOOK_ENTRY pHook = &g_hooks.pItems[i];
                         if (pHook->isEnabled != pHook->queueEnable)
                         {
                             MH_STATUS status = EnableHookLL(i, pHook->queueEnable);

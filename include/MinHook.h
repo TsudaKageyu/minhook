@@ -79,46 +79,46 @@ extern "C" {
 #endif
 
 	// Initialize the MinHook library.
-	MH_STATUS WINAPI MH_Initialize();
+	MH_STATUS WINAPI MH_Initialize(VOID);
 
 	// Uninitialize the MinHook library.
-	MH_STATUS WINAPI MH_Uninitialize();
+	MH_STATUS WINAPI MH_Uninitialize(VOID);
 
 	// Creates the Hook for the specified target function, in disabled state.
 	// Parameters:
 	//   pTarget    [in]  A pointer to the target function, which will be overridden by the detour function.
 	//   pDetour    [in]  A pointer to the detour function, which will override the target function.
 	//   ppOriginal [out] A pointer to the trampoline function, which will be used to call the original target function.
-	MH_STATUS WINAPI MH_CreateHook(void *pTarget, void *const pDetour, void **ppOriginal);
+	MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal);
 
 	// Removes the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
-	MH_STATUS WINAPI MH_RemoveHook(void *pTarget);
+	MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget);
 
 	// Enables the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are enabled in one go.
-	MH_STATUS WINAPI MH_EnableHook(void *pTarget);
+	MH_STATUS WINAPI MH_EnableHook(LPVOID pTarget);
 
 	// Disables the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are disabled in one go.
-	MH_STATUS WINAPI MH_DisableHook(void *pTarget);
+	MH_STATUS WINAPI MH_DisableHook(LPVOID pTarget);
 
 	// Queues to enable the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are queued to be enabled.
-	MH_STATUS WINAPI MH_QueueEnableHook(void *pTarget);
+	MH_STATUS WINAPI MH_QueueEnableHook(LPVOID pTarget);
 
 	// Queues to disable the already created hook.
 	// Parameters:
 	//   pTarget [in] A pointer to the target function.
 	//                If this parameter is MH_ALL_HOOKS, all created hooks are queued to be disabled.
-	MH_STATUS WINAPI MH_QueueDisableHook(void *pTarget);
+	MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget);
 
 	// Applies all queued changes in one go.
 	MH_STATUS WINAPI MH_ApplyQueued();
