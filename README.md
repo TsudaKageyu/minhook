@@ -8,6 +8,7 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
 - ####v1.3 - 
 
+  * Changed the parameters to Windows-friendly types. (void* to LPVOID)
   * Fixed some small bugs.
   * Reorganized the source files.
   * Reduced the footprint a little more.
