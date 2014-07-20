@@ -113,37 +113,21 @@ struct
 } g_threads;
 
 //-------------------------------------------------------------------------
-// returns: >= 0 if the element in contained, < 0 (-insertPos-1) if not
+// Returns UINT_MAX if not found.
 static UINT FindHookEntry(LPVOID pTarget)
 {
-    INT left, right;
-
-    if (g_hooks.size == 0)
-        return UINT_MAX;
-
-    // Binary search through the list
-    left  = 0;
-    right = g_hooks.size - 1;
-
-    do
+    UINT i;
+    for (i = 0; i < g_hooks.size; ++i)
     {
-        INT center = (left + right) / 2;
+        if ((ULONG_PTR)pTarget == (ULONG_PTR)g_hooks.pItems[i].pTarget)
+            return i;
+    }
 
-        if ((ULONG_PTR)g_hooks.pItems[center].pTarget == (ULONG_PTR)pTarget)
-            return center;          // found
-
-        if ((ULONG_PTR)g_hooks.pItems[center].pTarget < (ULONG_PTR)pTarget)
-            left = center + 1;      // continue right
-        else
-            right = center - 1;     // continue left
-
-    } while (left <= right);
-
-    return (left ^ UINT_MAX);       // not found, return insert position
+    return UINT_MAX;
 }
 
 //-------------------------------------------------------------------------
-static PHOOK_ENTRY NewHookEntry(UINT pos)
+static PHOOK_ENTRY NewHookEntry()
 {
     if (g_hooks.pItems == NULL)
     {
@@ -165,17 +149,7 @@ static PHOOK_ENTRY NewHookEntry(UINT pos)
         g_hooks.pItems = p;
     }
 
-    // Add the element at the correct position
-    if (pos < g_hooks.size)
-    {
-        RtlMoveMemory(
-            &g_hooks.pItems[pos + 1],
-            &g_hooks.pItems[pos],
-            (g_hooks.size - pos) * sizeof(HOOK_ENTRY));
-    }
-
-    g_hooks.size++;
-    return &g_hooks.pItems[pos];
+    return &g_hooks.pItems[g_hooks.size++];
 }
 
 //-------------------------------------------------------------------------
@@ -549,7 +523,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                 return MH_ERROR_NOT_EXECUTABLE;
 
             pos = FindHookEntry(pTarget);
-            if (!(pos >> 31))
+            if (pos != UINT_MAX)
                 return MH_ERROR_ALREADY_CREATED;
 
             pBuffer = AllocateBuffer(pTarget);
@@ -572,7 +546,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                 return MH_ERROR_UNSUPPORTED_FUNCTION;
             }
 
-            pHook = NewHookEntry(pos ^ UINT_MAX);
+            pHook = NewHookEntry();
             if (pHook == NULL)
             {
                 FreeBuffer(pBuffer);
@@ -634,7 +608,7 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
             return MH_ERROR_NOT_INITIALIZED;
 
         pos = FindHookEntry(pTarget);
-        if (pos >> 31)
+        if (pos == UINT_MAX)
             return MH_ERROR_NOT_CREATED;
 
         if (g_hooks.pItems[pos].isEnabled)
@@ -679,7 +653,7 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
         else
         {
             UINT pos = FindHookEntry(pTarget);
-            if (pos >> 31)
+            if (pos == UINT_MAX)
                 return MH_ERROR_NOT_CREATED;
 
             if (g_hooks.pItems[pos].isEnabled == enable)
@@ -732,7 +706,7 @@ static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
         else
         {
             UINT pos = FindHookEntry(pTarget);
-            if (pos >> 31)
+            if (pos == UINT_MAX)
                 return MH_ERROR_NOT_CREATED;
 
             g_hooks.pItems[pos].queueEnable = queueEnable;
