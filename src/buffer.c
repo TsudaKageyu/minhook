@@ -157,7 +157,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
             pSlot->pNext = pBlock->pFree;
             pBlock->pFree = pSlot;
             pSlot++;
-        } while ((ULONG_PTR)pSlot - (ULONG_PTR)pBlock <= MH_BLOCK_SIZE);
+        } while ((ULONG_PTR)pSlot - (ULONG_PTR)pBlock <= MH_BLOCK_SIZE-MH_SLOT_SIZE);
 
         pBlock->pNext = g_pMemoryBlocks;
         g_pMemoryBlocks = pBlock;
