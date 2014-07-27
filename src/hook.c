@@ -468,12 +468,12 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
         return MH_ERROR_NOT_INITIALIZED;
 
     status = EnableAllHooksLL(FALSE);
-    if (status == MH_OK)
-    {
-        // Free the internal function buffer.
-        UninitializeBuffer();
-        HeapDestroy(g_hHeap);
-    }
+    if (status != MH_OK)
+        return status;
+
+    // Free the internal function buffer.
+    UninitializeBuffer();
+    HeapDestroy(g_hHeap);
 
     g_hHeap = NULL;
 
@@ -483,7 +483,7 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
 
     DeleteCriticalSection(&g_cs);
 
-    return status;
+    return MH_OK;
 }
 
 //-------------------------------------------------------------------------
