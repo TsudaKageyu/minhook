@@ -451,7 +451,10 @@ MH_STATUS WINAPI MH_Initialize(VOID)
 
     g_hHeap = HeapCreate(0, 0, 0);
     if (g_hHeap == NULL)
+    {
+        DeleteCriticalSection(&g_cs);
         return MH_ERROR_MEMORY_ALLOC;
+    }
 
     // Initialize the internal function buffer.
     InitializeBuffer();
