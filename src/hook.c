@@ -391,7 +391,6 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 
         if (pHook->patchAbove)
         {
-
             ((PJMP_REL_SHORT)pHook->pTarget)->opcode = 0xEB;
             ((PJMP_REL_SHORT)pHook->pTarget)->operand
                 = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
@@ -399,10 +398,7 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
     }
     else
     {
-        if (pHook->patchAbove)
-            memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
-        else
-            memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL));
+        memcpy(pPatchTarget, pHook->backup, patchSize);
     }
 
     VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
