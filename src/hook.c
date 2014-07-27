@@ -57,6 +57,15 @@
 
 #endif
 
+// Special hook position values.
+#define INVALID_HOOK_POS UINT_MAX
+#define ALL_HOOKS_POS UINT_MAX
+
+// Freeze() action argument defines.
+#define ACTION_DISABLE      0
+#define ACTION_ENABLE       1
+#define ACTION_APPLY_QUEUED 2
+
 // Thread access rights for suspending/resuming threads.
 #define MH_THREAD_ACCESS \
     (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT \
@@ -113,7 +122,7 @@ struct
 } g_hooks;
 
 //-------------------------------------------------------------------------
-// Returns UINT_MAX if not found.
+// Returns INVALID_HOOK_POS if not found.
 static UINT FindHookEntry(LPVOID pTarget)
 {
     UINT i;
@@ -123,7 +132,7 @@ static UINT FindHookEntry(LPVOID pTarget)
             return i;
     }
 
-    return UINT_MAX;
+	return INVALID_HOOK_POS;
 }
 
 //-------------------------------------------------------------------------
@@ -214,7 +223,7 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
     if (!GetThreadContext(hThread, &c))
         return;
 
-    if (pos >> 31)
+    if (pos == ALL_HOOKS_POS)
     {
         pos = 0;
         count = g_hooks.size;
@@ -232,15 +241,15 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
 
         switch (action)
         {
-        case 0:
+		case ACTION_DISABLE:
             enable = FALSE;
             break;
 
-        case 1:
+		case ACTION_ENABLE:
             enable = TRUE;
             break;
 
-        default:
+		case ACTION_APPLY_QUEUED:
             enable = pHook->queueEnable;
             break;
         }
@@ -407,7 +416,7 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
         if (g_hooks.pItems[i].isEnabled != enable)
         {
 			FROZEN_THREADS threads;
-            Freeze(&threads, UINT_MAX, 1);
+			Freeze(&threads, ALL_HOOKS_POS, enable ? ACTION_ENABLE : ACTION_DISABLE);
             __try
             {
                 for (; i < g_hooks.size; ++i)
@@ -510,7 +519,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                 return MH_ERROR_NOT_EXECUTABLE;
 
             pos = FindHookEntry(pTarget);
-            if (pos != UINT_MAX)
+            if (pos != INVALID_HOOK_POS)
                 return MH_ERROR_ALREADY_CREATED;
 
             pBuffer = AllocateBuffer(pTarget);
@@ -603,13 +612,13 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
             return MH_ERROR_NOT_INITIALIZED;
 
         pos = FindHookEntry(pTarget);
-        if (pos == UINT_MAX)
+        if (pos == INVALID_HOOK_POS)
             return MH_ERROR_NOT_CREATED;
 
         if (g_hooks.pItems[pos].isEnabled)
         {
 			FROZEN_THREADS threads;
-			Freeze(&threads, pos, 0);
+			Freeze(&threads, pos, ACTION_DISABLE);
             __try
             {
                 MH_STATUS status = EnableHookLL(pos, FALSE);
@@ -657,14 +666,14 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
         else
         {
             UINT pos = FindHookEntry(pTarget);
-            if (pos == UINT_MAX)
+            if (pos == INVALID_HOOK_POS)
                 return MH_ERROR_NOT_CREATED;
 
             if (g_hooks.pItems[pos].isEnabled == enable)
                 return enable ? MH_ERROR_ENABLED : MH_ERROR_DISABLED;
 
 			FROZEN_THREADS threads;
-			Freeze(&threads, pos, 1);
+			Freeze(&threads, pos, ACTION_ENABLE);
             __try
             {
                 return EnableHookLL(pos, enable);
@@ -719,7 +728,7 @@ static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
         else
         {
             UINT pos = FindHookEntry(pTarget);
-            if (pos == UINT_MAX)
+            if (pos == INVALID_HOOK_POS)
                 return MH_ERROR_NOT_CREATED;
 
             g_hooks.pItems[pos].queueEnable = queueEnable;
@@ -769,7 +778,7 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
             if (g_hooks.pItems[i].isEnabled != g_hooks.pItems[i].queueEnable)
 			{
 				FROZEN_THREADS threads;
-				Freeze(&threads, UINT_MAX, 2);
+				Freeze(&threads, ALL_HOOKS_POS, ACTION_APPLY_QUEUED);
                 __try
                 {
                     for (; i < g_hooks.size; ++i)
