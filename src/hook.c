@@ -437,6 +437,9 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Initialize(VOID)
 {
+    if(g_hHeap != NULL)
+        return MH_ERROR_ALREADY_INITIALIZED;
+
     __try
     {
         InitializeCriticalSection(&g_cs);
@@ -445,9 +448,6 @@ MH_STATUS WINAPI MH_Initialize(VOID)
     {
         return MH_ERROR_MEMORY_ALLOC;
     }
-
-    if (g_hHeap != NULL)
-        return MH_ERROR_ALREADY_INITIALIZED;
 
     g_hHeap = HeapCreate(0, 0, 0);
     if (g_hHeap == NULL)
