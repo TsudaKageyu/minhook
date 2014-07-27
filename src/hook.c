@@ -148,13 +148,12 @@ static PHOOK_ENTRY NewHookEntry()
     }
     else if (g_hooks.size >= g_hooks.capacity)
     {
-        PHOOK_ENTRY p;
-        g_hooks.capacity *= 2;
-        p = (PHOOK_ENTRY)HeapReAlloc(
-            g_hHeap, 0, g_hooks.pItems, g_hooks.capacity * sizeof(HOOK_ENTRY));
+        PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
+            g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity * 2) * sizeof(HOOK_ENTRY));
         if (p == NULL)
             return NULL;
 
+        g_hooks.capacity *= 2;
         g_hooks.pItems = p;
     }
 
@@ -164,13 +163,21 @@ static PHOOK_ENTRY NewHookEntry()
 //-------------------------------------------------------------------------
 static void DelHookEntry(UINT pos)
 {
-    g_hooks.size--;
-    if (pos < g_hooks.size)
+    if (pos < g_hooks.size - 1)
     {
-        RtlMoveMemory(
-            &g_hooks.pItems[pos],
-            &g_hooks.pItems[pos + 1],
-            (g_hooks.size - pos) * sizeof(HOOK_ENTRY));
+        g_hooks.pItems[pos] = g_hooks.pItems[g_hooks.size - 1];
+    }
+    g_hooks.size--;
+
+    if(g_hooks.capacity / 2 >= MH_INITIAL_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
+    {
+        PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
+            g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity / 2) * sizeof(HOOK_ENTRY));
+        if (p == NULL)
+            return;
+
+        g_hooks.capacity /= 2;
+        g_hooks.pItems = p;
     }
 }
 
