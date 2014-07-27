@@ -303,14 +303,13 @@ static VOID EnumerateThreads(PFROZEN_THREADS pThreads)
                     }
                     else if (pThreads->size >= pThreads->capacity)
                     {
-                        LPDWORD p;
-                        pThreads->capacity *= 2;
-                        p = (LPDWORD)HeapReAlloc(
-                            g_hHeap, 0, pThreads->pItems, pThreads->capacity * sizeof(DWORD));
-                        if (p != NULL)
-                            pThreads->pItems = p;
-                        else
+                        LPDWORD p = (LPDWORD)HeapReAlloc(
+                            g_hHeap, 0, pThreads->pItems, (pThreads->capacity * 2) * sizeof(DWORD));
+                        if (p == NULL)
                             break;
+
+                        pThreads->capacity *= 2;
+                        pThreads->pItems = p;
                     }
                     pThreads->pItems[pThreads->size++] = te.th32ThreadID;
                 }
