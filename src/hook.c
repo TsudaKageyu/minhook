@@ -71,13 +71,6 @@
     (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT \
     | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT)
 
-// Import RtlMoveMemory from kernel32.dll.
-#ifdef RtlMoveMemory
-#undef RtlMoveMemory
-#endif
-EXTERN_C NTSYSAPI VOID NTAPI
-RtlMoveMemory(LPVOID UNALIGNED Dst, LPCVOID UNALIGNED Src, SIZE_T Length);
-
 // Hook information.
 typedef struct _HOOK_ENTRY
 {
