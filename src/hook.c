@@ -434,7 +434,7 @@ static VOID EnterSpinLock(VOID)
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
         // Prevent the loop from being too busy.
-        Sleep(0);
+        Sleep(1);
     }
 }
 
