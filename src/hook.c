@@ -26,7 +26,6 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _WIN32_WINNT 0x0400
 #include <Windows.h>
 #include <TlHelp32.h>
 
@@ -434,7 +433,8 @@ static VOID EnterSpinLock(VOID)
     // Wait until the flag is FALSE.
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
-        SwitchToThread();
+        // Prevent the loop from being too busy.
+        Sleep(0);
     }
 }
 
