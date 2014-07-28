@@ -353,9 +353,6 @@ static VOID Unfreeze(PFROZEN_THREADS pThreads)
         }
 
         HeapFree(g_hHeap, 0, pThreads->pItems);
-        pThreads->pItems   = NULL;
-        pThreads->capacity = 0;
-        pThreads->size     = 0;
     }
 }
 
