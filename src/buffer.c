@@ -62,6 +62,7 @@ typedef struct _MEMORY_BLOCK
 {
     struct _MEMORY_BLOCK *pNext;
     PMEMORY_SLOT pFree;         // First element of the free slot list.
+    UINT usedCount;
 } MEMORY_BLOCK, *PMEMORY_BLOCK;
 
 //-------------------------------------------------------------------------
@@ -152,6 +153,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
         // Build a linked list of all the slots.
         PMEMORY_SLOT pSlot = (PMEMORY_SLOT)pBlock + 1;
         pBlock->pFree = NULL;
+        pBlock->usedCount = 0;
         do
         {
             pSlot->pNext = pBlock->pFree;
@@ -177,6 +179,7 @@ LPVOID AllocateBuffer(LPVOID pOrigin)
     // Remove an unused slot from the list.
     pSlot = pBlock->pFree;
     pBlock->pFree = pSlot->pNext;
+    pBlock->usedCount++;
 #ifdef _DEBUG
     // Fill the slot with INT3 for debugging.
     memset(pSlot, 0xCC, sizeof(MEMORY_SLOT));
@@ -188,6 +191,7 @@ LPVOID AllocateBuffer(LPVOID pOrigin)
 VOID FreeBuffer(LPVOID pBuffer)
 {
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
+    PMEMORY_BLOCK pPrev = NULL;
     ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MH_BLOCK_SIZE) * MH_BLOCK_SIZE;
 
     while (pBlock != NULL)
@@ -202,9 +206,23 @@ VOID FreeBuffer(LPVOID pBuffer)
             // Restore the released slot to the list.
             pSlot->pNext = pBlock->pFree;
             pBlock->pFree = pSlot;
+            pBlock->usedCount--;
+
+            // Free if unused.
+            if (pBlock->usedCount == 0)
+            {
+                if (pPrev)
+                    pPrev->pNext = pBlock->pNext;
+                else
+                    g_pMemoryBlocks = pBlock->pNext;
+
+                VirtualFree(pBlock, 0, MEM_RELEASE);
+            }
+
             break;
         }
 
+        pPrev = pBlock;
         pBlock = pBlock->pNext;
     }
 }
