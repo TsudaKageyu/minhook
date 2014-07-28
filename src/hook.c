@@ -99,8 +99,8 @@ typedef struct _FROZEN_THREADS
 // Global Variables:
 //-------------------------------------------------------------------------
 
-// CriticalSection.
-CRITICAL_SECTION g_cs;
+// Spin lock flag for EnterSpinLock()/LeaveSpinLock().
+volatile LONG g_isLocked = FALSE;
 
 // Private heap handle. If not NULL, this library is initialized.
 HANDLE g_hHeap = NULL;
@@ -429,65 +429,82 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 }
 
 //-------------------------------------------------------------------------
+static VOID EnterSpinLock(VOID)
+{
+    // Wait until the flag is FALSE.
+    while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
+    {
+        SwitchToThread();
+    }
+}
+
+//-------------------------------------------------------------------------
+static VOID LeaveSpinLock(VOID)
+{
+    _InterlockedExchange(&g_isLocked, FALSE);
+}
+
+//-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Initialize(VOID)
 {
-    if (g_hHeap != NULL)
-        return MH_ERROR_ALREADY_INITIALIZED;
-
-    InitializeCriticalSection(&g_cs);
-
-    g_hHeap = HeapCreate(0, 0, 0);
-    if (g_hHeap == NULL)
+    EnterSpinLock();
+    __try
     {
-        DeleteCriticalSection(&g_cs);
-        return MH_ERROR_MEMORY_ALLOC;
+        if (g_hHeap != NULL)
+            return MH_ERROR_ALREADY_INITIALIZED;
+
+        g_hHeap = HeapCreate(0, 0, 0);
+        if (g_hHeap == NULL)
+            return MH_ERROR_MEMORY_ALLOC;
+
+        // Initialize the internal function buffer.
+        InitializeBuffer();
+
+        return MH_OK;
     }
-
-    // Initialize the internal function buffer.
-    InitializeBuffer();
-
-    return MH_OK;
+    __finally
+    {
+        LeaveSpinLock();
+    }
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Uninitialize(VOID)
 {
-    MH_STATUS status;
+    EnterSpinLock();
+    __try
+    {
+        MH_STATUS status;
 
-    if (g_hHeap == NULL)
-        return MH_ERROR_NOT_INITIALIZED;
+        if (g_hHeap == NULL)
+            return MH_ERROR_NOT_INITIALIZED;
 
-    status = EnableAllHooksLL(FALSE);
-    if (status != MH_OK)
-        return status;
+        status = EnableAllHooksLL(FALSE);
+        if (status != MH_OK)
+            return status;
 
-    // Free the internal function buffer.
-    UninitializeBuffer();
-    HeapDestroy(g_hHeap);
+        // Free the internal function buffer.
+        UninitializeBuffer();
+        HeapDestroy(g_hHeap);
 
-    g_hHeap = NULL;
+        g_hHeap = NULL;
 
-    g_hooks.pItems   = NULL;
-    g_hooks.capacity = 0;
-    g_hooks.size     = 0;
+        g_hooks.pItems = NULL;
+        g_hooks.capacity = 0;
+        g_hooks.size = 0;
 
-    DeleteCriticalSection(&g_cs);
-
-    return MH_OK;
+        return MH_OK;
+    }
+    __finally
+    {
+        LeaveSpinLock();
+    }
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        return MH_ERROR_NOT_INITIALIZED;
-    }
-
+    EnterSpinLock();
     __try
     {
         UINT        pos;
@@ -566,22 +583,14 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
     }
     __finally
     {
-        LeaveCriticalSection(&g_cs);
+        LeaveSpinLock();
     }
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        return MH_ERROR_NOT_INITIALIZED;
-    }
-
+    EnterSpinLock();
     __try
     {
         UINT pos;
@@ -616,22 +625,14 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
     }
     __finally
     {
-        LeaveCriticalSection(&g_cs);
+        LeaveSpinLock();
     }
 }
 
 //-------------------------------------------------------------------------
 static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        return MH_ERROR_NOT_INITIALIZED;
-    }
-
+    EnterSpinLock();
     __try
     {
         if (g_hHeap == NULL)
@@ -664,7 +665,7 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
     }
     __finally
     {
-        LeaveCriticalSection(&g_cs);
+        LeaveSpinLock();
     }
 }
 
@@ -683,15 +684,7 @@ MH_STATUS WINAPI MH_DisableHook(LPVOID pTarget)
 //-------------------------------------------------------------------------
 static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        return MH_ERROR_NOT_INITIALIZED;
-    }
-
+    EnterSpinLock();
     __try
     {
         if (g_hHeap == NULL)
@@ -716,7 +709,7 @@ static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
     }
     __finally
     {
-        LeaveCriticalSection(&g_cs);
+        LeaveSpinLock();
     }
 }
 
@@ -735,15 +728,7 @@ MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_ApplyQueued(VOID)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        return MH_ERROR_NOT_INITIALIZED;
-    }
-
+    EnterSpinLock();
     __try
     {
         UINT i;
@@ -781,6 +766,6 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
     }
     __finally
     {
-        LeaveCriticalSection(&g_cs);
+        LeaveSpinLock();
     }
 }
