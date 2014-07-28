@@ -99,6 +99,9 @@ typedef struct _FROZEN_THREADS
 // Global Variables:
 //-------------------------------------------------------------------------
 
+// Initialization flag.
+volatile BOOL g_isInitialized = FALSE;
+
 // CriticalSection.
 CRITICAL_SECTION g_cs;
 
@@ -431,7 +434,7 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Initialize(VOID)
 {
-    if (g_hHeap != NULL)
+    if (g_isInitialized)
         return MH_ERROR_ALREADY_INITIALIZED;
 
     InitializeCriticalSection(&g_cs);
@@ -446,6 +449,7 @@ MH_STATUS WINAPI MH_Initialize(VOID)
     // Initialize the internal function buffer.
     InitializeBuffer();
 
+    g_isInitialized = TRUE;
     return MH_OK;
 }
 
@@ -454,7 +458,7 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
 {
     MH_STATUS status;
 
-    if (g_hHeap == NULL)
+    if (!g_isInitialized)
         return MH_ERROR_NOT_INITIALIZED;
 
     status = EnableAllHooksLL(FALSE);
@@ -473,20 +477,17 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
 
     DeleteCriticalSection(&g_cs);
 
+    g_isInitialized = FALSE;
     return MH_OK;
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
+    if (!g_isInitialized)
         return MH_ERROR_NOT_INITIALIZED;
-    }
+
+    EnterCriticalSection(&g_cs);
 
     __try
     {
@@ -494,9 +495,6 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         LPVOID      pBuffer;
         TRAMPOLINE  ct;
         PHOOK_ENTRY pHook;
-
-        if (g_hHeap == NULL)
-            return MH_ERROR_NOT_INITIALIZED;
 
         if (!IsExecutableAddress(pTarget) || !IsExecutableAddress(pDetour))
             return MH_ERROR_NOT_EXECUTABLE;
@@ -573,21 +571,14 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
+    if (!g_isInitialized)
         return MH_ERROR_NOT_INITIALIZED;
-    }
+
+    EnterCriticalSection(&g_cs);
 
     __try
     {
         UINT pos;
-
-        if (g_hHeap == NULL)
-            return MH_ERROR_NOT_INITIALIZED;
 
         pos = FindHookEntry(pTarget);
         if (pos == INVALID_HOOK_POS)
@@ -623,20 +614,13 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
 //-------------------------------------------------------------------------
 static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
+    if (!g_isInitialized)
         return MH_ERROR_NOT_INITIALIZED;
-    }
+
+    EnterCriticalSection(&g_cs);
 
     __try
     {
-        if (g_hHeap == NULL)
-            return MH_ERROR_NOT_INITIALIZED;
-
         if (pTarget == MH_ALL_HOOKS)
         {
             return EnableAllHooksLL(enable);
@@ -683,20 +667,13 @@ MH_STATUS WINAPI MH_DisableHook(LPVOID pTarget)
 //-------------------------------------------------------------------------
 static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
+    if (!g_isInitialized)
         return MH_ERROR_NOT_INITIALIZED;
-    }
+
+    EnterCriticalSection(&g_cs);
 
     __try
     {
-        if (g_hHeap == NULL)
-            return MH_ERROR_NOT_INITIALIZED;
-
         if (pTarget == MH_ALL_HOOKS)
         {
             UINT i;
@@ -735,21 +712,14 @@ MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_ApplyQueued(VOID)
 {
-    __try
-    {
-        EnterCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
+    if (!g_isInitialized)
         return MH_ERROR_NOT_INITIALIZED;
-    }
+
+    EnterCriticalSection(&g_cs);
 
     __try
     {
         UINT i;
-
-        if (g_hHeap == NULL)
-            return MH_ERROR_NOT_INITIALIZED;
 
         for (i = 0; i < g_hooks.size; ++i)
         {
