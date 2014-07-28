@@ -440,14 +440,7 @@ MH_STATUS WINAPI MH_Initialize(VOID)
     if(g_hHeap != NULL)
         return MH_ERROR_ALREADY_INITIALIZED;
 
-    __try
-    {
-        InitializeCriticalSection(&g_cs);
-    }
-    __except (EXCEPTION_EXECUTE_HANDLER)
-    {
-        return MH_ERROR_MEMORY_ALLOC;
-    }
+    InitializeCriticalSection(&g_cs);
 
     g_hHeap = HeapCreate(0, 0, 0);
     if (g_hHeap == NULL)
