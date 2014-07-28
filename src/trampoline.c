@@ -69,8 +69,8 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
     JMP_REL  jmp  = { 0xE9, 0x00000000 };
     JCC_REL  jcc  = { 0x800F, 0x00000000 };
 #endif
-    UINT      oldPos   = 0;
-    UINT      newPos   = 0;
+    UINT8     oldPos   = 0;
+    UINT8     newPos   = 0;
     ULONG_PTR jmpDest  = 0;     // Destination address of an internal jump.
     BOOL      finished = FALSE; // Is the function completed?
 #if defined _M_X64
@@ -247,8 +247,8 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
         if (ct->nIP >= ARRAYSIZE(ct->oldIPs))
             return FALSE;
 
-        ct->oldIPs[ct->nIP] = (UINT8)oldPos;
-        ct->newIPs[ct->nIP] = (UINT8)newPos;
+        ct->oldIPs[ct->nIP] = oldPos;
+        ct->newIPs[ct->nIP] = newPos;
         ct->nIP++;
 
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);

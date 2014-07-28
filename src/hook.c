@@ -160,7 +160,7 @@ static void DelHookEntry(UINT pos)
 
     g_hooks.size--;
 
-    if(g_hooks.capacity / 2 >= MH_INITIAL_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
+    if (g_hooks.capacity / 2 >= MH_INITIAL_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
     {
         PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
             g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity / 2) * sizeof(HOOK_ENTRY));
@@ -431,7 +431,7 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Initialize(VOID)
 {
-    if(g_hHeap != NULL)
+    if (g_hHeap != NULL)
         return MH_ERROR_ALREADY_INITIALIZED;
 
     InitializeCriticalSection(&g_cs);
