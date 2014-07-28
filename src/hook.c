@@ -656,6 +656,7 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
         }
         else
         {
+            FROZEN_THREADS threads;
             UINT pos = FindHookEntry(pTarget);
             if (pos == INVALID_HOOK_POS)
                 return MH_ERROR_NOT_CREATED;
@@ -663,7 +664,6 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
             if (g_hooks.pItems[pos].isEnabled == enable)
                 return enable ? MH_ERROR_ENABLED : MH_ERROR_DISABLED;
 
-            FROZEN_THREADS threads;
             Freeze(&threads, pos, ACTION_ENABLE);
             __try
             {
