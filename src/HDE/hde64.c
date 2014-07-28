@@ -5,7 +5,7 @@
  *
  */
 
-#include <intrin.h>
+#include <string.h>
 #include "hde64.h"
 #include "table64.h"
 
@@ -15,7 +15,7 @@ unsigned int hde64_disasm(const void *code, hde64s *hs)
     uint8_t *ht = hde64_table, m_mod, m_reg, m_rm, disp_size = 0;
     uint8_t op64 = 0;
 
-    __stosb((PBYTE)hs, 0, sizeof(hde64s));
+    memset((PBYTE)hs, 0, sizeof(hde64s));
 
     for (x = 16; x; x--)
         switch (c = *p++) {
