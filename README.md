@@ -6,6 +6,10 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
 ### Version history
 
+- ####v1.3
+
+  * Fixed some small bugs.
+
 - ####v1.3-beta2 - 21 Jul 2014
 
   * Changed the parameters to Windows-friendly types. (void* to LPVOID)
