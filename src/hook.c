@@ -155,7 +155,9 @@ static PHOOK_ENTRY NewHookEntry()
 //-------------------------------------------------------------------------
 static void DelHookEntry(UINT pos)
 {
-    g_hooks.pItems[pos] = g_hooks.pItems[g_hooks.size - 1];
+    if (pos < g_hooks.size - 1)
+        g_hooks.pItems[pos] = g_hooks.pItems[g_hooks.size - 1];
+
     g_hooks.size--;
 
     if(g_hooks.capacity / 2 >= MH_INITIAL_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
@@ -485,86 +487,79 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
 
     __try
     {
-        __try
-        {
-            UINT        pos;
-            LPVOID      pBuffer;
-            TRAMPOLINE  ct;
-            PHOOK_ENTRY pHook;
+        UINT        pos;
+        LPVOID      pBuffer;
+        TRAMPOLINE  ct;
+        PHOOK_ENTRY pHook;
 
-            if (g_hHeap == NULL)
-                return MH_ERROR_NOT_INITIALIZED;
+        if (g_hHeap == NULL)
+            return MH_ERROR_NOT_INITIALIZED;
 
-            if (!IsExecutableAddress(pTarget) || !IsExecutableAddress(pDetour))
-                return MH_ERROR_NOT_EXECUTABLE;
+        if (!IsExecutableAddress(pTarget) || !IsExecutableAddress(pDetour))
+            return MH_ERROR_NOT_EXECUTABLE;
 
-            pos = FindHookEntry(pTarget);
-            if (pos != INVALID_HOOK_POS)
-                return MH_ERROR_ALREADY_CREATED;
+        pos = FindHookEntry(pTarget);
+        if (pos != INVALID_HOOK_POS)
+            return MH_ERROR_ALREADY_CREATED;
 
-            pBuffer = AllocateBuffer(pTarget);
-            if (pBuffer == NULL)
-                return MH_ERROR_MEMORY_ALLOC;
+        pBuffer = AllocateBuffer(pTarget);
+        if (pBuffer == NULL)
+            return MH_ERROR_MEMORY_ALLOC;
 
-            memset(&ct, 0, sizeof(TRAMPOLINE));
-            ct.pTrampoline    = pBuffer;
-            ct.pTarget        = pTarget;
-            ct.pDetour        = pDetour;
-            ct.trampolineSize = MH_TRAMPOLINE_SIZE;
+        memset(&ct, 0, sizeof(TRAMPOLINE));
+        ct.pTrampoline    = pBuffer;
+        ct.pTarget        = pTarget;
+        ct.pDetour        = pDetour;
+        ct.trampolineSize = MH_TRAMPOLINE_SIZE;
 #if defined _M_X64
-            ct.pRelay = (char *)ct.pTrampoline + MH_RELAY_OFFSET;
-            ct.pTable = (ULONG_PTR*)((char *)ct.pTrampoline + MH_TABLE_OFFSET);
-            ct.tableSize = MH_TABLE_SIZE;
+        ct.pRelay = (char *)ct.pTrampoline + MH_RELAY_OFFSET;
+        ct.pTable = (ULONG_PTR*)((char *)ct.pTrampoline + MH_TABLE_OFFSET);
+        ct.tableSize = MH_TABLE_SIZE;
 #endif
-            if (!CreateTrampolineFunction(&ct))
-            {
-                FreeBuffer(pBuffer);
-                return MH_ERROR_UNSUPPORTED_FUNCTION;
-            }
+        if (!CreateTrampolineFunction(&ct))
+        {
+            FreeBuffer(pBuffer);
+            return MH_ERROR_UNSUPPORTED_FUNCTION;
+        }
 
-            pHook = NewHookEntry();
-            if (pHook == NULL)
-            {
-                FreeBuffer(pBuffer);
-                return MH_ERROR_MEMORY_ALLOC;
-            }
+        pHook = NewHookEntry();
+        if (pHook == NULL)
+        {
+            FreeBuffer(pBuffer);
+            return MH_ERROR_MEMORY_ALLOC;
+        }
 
-            pHook->pTarget     = pTarget;
+        pHook->pTarget     = pTarget;
 #if defined _M_X64
-            pHook->pDetour     = ct.pRelay;
+        pHook->pDetour     = ct.pRelay;
 #elif defined _M_IX86
-            pHook->pDetour     = ct.pDetour;
+        pHook->pDetour     = ct.pDetour;
 #endif
-            pHook->pTrampoline = ct.pTrampoline;
-            pHook->patchAbove  = ct.patchAbove;
-            pHook->isEnabled   = FALSE;
-            pHook->queueEnable = FALSE;
-            pHook->nIP         = ct.nIP;
-            memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
-            memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
+        pHook->pTrampoline = ct.pTrampoline;
+        pHook->patchAbove  = ct.patchAbove;
+        pHook->isEnabled   = FALSE;
+        pHook->queueEnable = FALSE;
+        pHook->nIP         = ct.nIP;
+        memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
+        memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
 
-            // Back up the target function.
-            if (ct.patchAbove)
-            {
-                memcpy(
-                    pHook->backup,
-                    (char *)pTarget - sizeof(JMP_REL),
-                    sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
-            }
-            else
-            {
-                memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
-            }
-
-            if (ppOriginal != NULL)
-                *ppOriginal = pHook->pTrampoline;
-
-            return MH_OK;
-        }
-        __except (EXCEPTION_EXECUTE_HANDLER)
+        // Back up the target function.
+        if (ct.patchAbove)
         {
-            return MH_UNKNOWN;
+            memcpy(
+                pHook->backup,
+                (char *)pTarget - sizeof(JMP_REL),
+                sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
         }
+        else
+        {
+            memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
+        }
+
+        if (ppOriginal != NULL)
+            *ppOriginal = pHook->pTrampoline;
+
+        return MH_OK;
     }
     __finally
     {
