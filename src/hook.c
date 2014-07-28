@@ -29,7 +29,6 @@
 #define _WIN32_WINNT 0x0400
 #include <Windows.h>
 #include <TlHelp32.h>
-#include <intrin.h>
 
 #include "MinHook.h"
 #include "buffer.h"
@@ -156,10 +155,7 @@ static PHOOK_ENTRY NewHookEntry()
 //-------------------------------------------------------------------------
 static void DelHookEntry(UINT pos)
 {
-    if (pos < g_hooks.size - 1)
-    {
-        g_hooks.pItems[pos] = g_hooks.pItems[g_hooks.size - 1];
-    }
+    g_hooks.pItems[pos] = g_hooks.pItems[g_hooks.size - 1];
     g_hooks.size--;
 
     if(g_hooks.capacity / 2 >= MH_INITIAL_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
