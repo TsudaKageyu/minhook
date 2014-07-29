@@ -78,6 +78,9 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
     UINT8     instBuf[16];
 #endif
 
+    ct->patchAbove = FALSE;
+    ct->nIP        = 0;
+
     while (!finished)
     {
         HDE       hs;

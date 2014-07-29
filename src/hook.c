@@ -207,7 +207,7 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
     // If the thread suspended in the overwritten area,
     // move IP to the proper address.
 
-    CONTEXT c = { 0 };
+    CONTEXT c;
 #if defined _M_X64
     DWORD64 *pIP = &c.Rip;
 #elif defined _M_IX86
@@ -271,7 +271,8 @@ static VOID EnumerateThreads(PFROZEN_THREADS pThreads)
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (hSnapshot != INVALID_HANDLE_VALUE)
     {
-        THREADENTRY32 te = { sizeof(THREADENTRY32) };
+        THREADENTRY32 te;
+        te.dwSize = sizeof(THREADENTRY32);
         if (Thread32First(hSnapshot, &te))
         {
             do
@@ -526,7 +527,6 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         if (pBuffer == NULL)
             return MH_ERROR_MEMORY_ALLOC;
 
-        memset(&ct, 0, sizeof(TRAMPOLINE));
         ct.pTrampoline    = pBuffer;
         ct.pTarget        = pTarget;
         ct.pDetour        = pDetour;
