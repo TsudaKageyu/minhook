@@ -489,9 +489,9 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
 
         g_hHeap = NULL;
 
-        g_hooks.pItems = NULL;
+        g_hooks.pItems   = NULL;
         g_hooks.capacity = 0;
-        g_hooks.size = 0;
+        g_hooks.size     = 0;
 
         return MH_OK;
     }
@@ -532,9 +532,9 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         ct.pDetour        = pDetour;
         ct.trampolineSize = MH_TRAMPOLINE_SIZE;
 #if defined _M_X64
-        ct.pRelay = (char *)ct.pTrampoline + MH_RELAY_OFFSET;
-        ct.pTable = (ULONG_PTR*)((char *)ct.pTrampoline + MH_TABLE_OFFSET);
-        ct.tableSize = MH_TABLE_SIZE;
+        ct.pRelay         = (LPBYTE)ct.pTrampoline + MH_RELAY_OFFSET;
+        ct.pTable         = (ULONG_PTR*)((LPBYTE)ct.pTrampoline + MH_TABLE_OFFSET);
+        ct.tableSize      = MH_TABLE_SIZE;
 #endif
         if (!CreateTrampolineFunction(&ct))
         {
@@ -568,7 +568,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         {
             memcpy(
                 pHook->backup,
-                (char *)pTarget - sizeof(JMP_REL),
+                (LPBYTE)pTarget - sizeof(JMP_REL),
                 sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
         }
         else
