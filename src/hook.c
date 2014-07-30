@@ -35,10 +35,10 @@
 #include "trampoline.h"
 
 // Initial capacity of the HOOK_ENTRY buffer.
-#define MH_INITIAL_CAPACITY 64
+#define MH_INITIAL_CAPACITY 32
 
 // Initial capacity of the thread IDs buffer.
-#define MH_INITIAL_THREAD_CAPACITY 256
+#define MH_INITIAL_THREAD_CAPACITY 128
 
 // Max length of a trampoline function.
 #define MH_TRAMPOLINE_SIZE 32
