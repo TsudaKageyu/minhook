@@ -70,7 +70,7 @@ typedef struct _TRAMPOLINE
     LPVOID     pDetour;         // [In] Address of the detour function.
     LPVOID     pTrampoline;     // [In] Buffer address for the trampoline function.
     UINT       trampolineSize;  // [In] Buffer size for the trampoline function.
-#if defined _M_X64
+#ifdef _M_X64
     LPVOID     pRelay;          // [In] Buffer address for the relay function.
     PULONG_PTR pTable;          // [In] Buffer address for the jump address table.
     UINT       tableSize;       // [In] Buffer size for the jump address table.

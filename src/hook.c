@@ -42,16 +42,16 @@
 // Max length of a trampoline function.
 #define MH_TRAMPOLINE_SIZE 32
 
-#if defined _M_X64
+#ifdef _M_X64
 
-// Offset of the relay function in a 64-byte buffer.
-#define MH_RELAY_OFFSET   32
+    // Offset of the relay function in a 64-byte buffer.
+    #define MH_RELAY_OFFSET   32
 
-// Offset of the jump table function in a 64-byte buffer.
-#define MH_TABLE_OFFSET   40
+    // Offset of the jump table function in a 64-byte buffer.
+    #define MH_TABLE_OFFSET   40
 
-// Max length of the jump table.
-#define MH_TABLE_SIZE 3
+    // Max length of the jump table.
+    #define MH_TABLE_SIZE 3
 
 #endif
 
@@ -208,9 +208,9 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
     // move IP to the proper address.
 
     CONTEXT c;
-#if defined _M_X64
+#ifdef _M_X64
     DWORD64 *pIP = &c.Rip;
-#elif defined _M_IX86
+#else
     DWORD   *pIP = &c.Eip;
 #endif
     UINT count;
@@ -531,7 +531,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         ct.pDetour        = pDetour;
         ct.pTrampoline    = pBuffer;
         ct.trampolineSize = MH_TRAMPOLINE_SIZE;
-#if defined _M_X64
+#ifdef _M_X64
         ct.pRelay         = (LPBYTE)ct.pTrampoline + MH_RELAY_OFFSET;
         ct.pTable         = (ULONG_PTR*)((LPBYTE)ct.pTrampoline + MH_TABLE_OFFSET);
         ct.tableSize      = MH_TABLE_SIZE;
@@ -550,9 +550,9 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         }
 
         pHook->pTarget     = pTarget;
-#if defined _M_X64
+#ifdef _M_X64
         pHook->pDetour     = ct.pRelay;
-#elif defined _M_IX86
+#else
         pHook->pDetour     = ct.pDetour;
 #endif
         pHook->pTrampoline = ct.pTrampoline;

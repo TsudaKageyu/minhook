@@ -28,6 +28,10 @@
 
 #pragma once
 
+#if !(defined _M_IX86) && !(defined _M_X64)
+    #error MinHook supports only x86 and x64 systems.
+#endif
+
 #include <Windows.h>
 
 // MinHook Error Codes.
@@ -77,7 +81,7 @@ MH_STATUS;
 // MH_QueueEnableHook or MH_QueueDisableHook.
 #define MH_ALL_HOOKS NULL
 
-#if defined __cplusplus
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -136,7 +140,7 @@ extern "C" {
     // Applies all queued changes in one go.
     MH_STATUS WINAPI MH_ApplyQueued(VOID);
 
-#if defined __cplusplus
+#ifdef __cplusplus
 }
 #endif
 

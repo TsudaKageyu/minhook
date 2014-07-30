@@ -33,9 +33,9 @@
 #define MH_BLOCK_SIZE 0x1000
 
 // Size of each buffer.
-#if defined _M_X64
+#ifdef _M_X64
 #define MH_SLOT_SIZE 64
-#elif defined _M_IX86
+#else
 #define MH_SLOT_SIZE 32
 #endif
 
@@ -104,7 +104,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
     minAddr = (ULONG_PTR)si.lpMinimumApplicationAddress;
     maxAddr = (ULONG_PTR)si.lpMaximumApplicationAddress;
 
-#if defined _M_X64
+#ifdef _M_X64
     // pOrigin ± 16MB
     if ((ULONG_PTR)pOrigin > MH_MAX_RANGE)
         minAddr = max(minAddr, (ULONG_PTR)pOrigin - MH_MAX_RANGE);
@@ -115,7 +115,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
     // Look the registered blocks for a reachable one.
     for (pBlock = g_pMemoryBlocks; pBlock != NULL; pBlock = pBlock->pNext)
     {
-#if defined _M_X64
+#ifdef _M_X64
         // Ignore the blocks too far.
         if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr)
             continue;
