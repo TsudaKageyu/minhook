@@ -278,7 +278,8 @@ static VOID EnumerateThreads(PFROZEN_THREADS pThreads)
         {
             do
             {
-                if (te.th32OwnerProcessID == GetCurrentProcessId()
+                if (te.dwSize >= (FIELD_OFFSET(THREADENTRY32, th32OwnerProcessID) + sizeof(DWORD))
+                    && te.th32OwnerProcessID == GetCurrentProcessId()
                     && te.th32ThreadID != GetCurrentThreadId())
                 {
                     if (pThreads->pItems == NULL)
@@ -301,10 +302,12 @@ static VOID EnumerateThreads(PFROZEN_THREADS pThreads)
                     }
                     pThreads->pItems[pThreads->size++] = te.th32ThreadID;
                 }
+
+                te.dwSize = sizeof(THREADENTRY32);
             } while (Thread32Next(hSnapshot, &te));
         }
+        CloseHandle(hSnapshot);
     }
-    CloseHandle(hSnapshot);
 }
 
 //-------------------------------------------------------------------------
