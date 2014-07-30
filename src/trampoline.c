@@ -27,6 +27,7 @@
  */
 
 #include <Windows.h>
+#include <intrin.h>
 
 #ifdef _M_X64
     #include "hde/hde64.h"
@@ -121,7 +122,8 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
             // Modify the RIP relative address.
             PUINT32 pRelAddr;
 
-            memcpy(instBuf, (PBYTE)pOldInst, copySize);
+            // Avoid using memcpy to reduce the footprint.
+            __movsb(instBuf, (LPBYTE)pOldInst, copySize);
             pCopySrc = instBuf;
 
             // Relative address is stored at (instruction length - immediate value length - 4).
@@ -254,7 +256,8 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
         ct->newIPs[ct->nIP] = newPos;
         ct->nIP++;
 
-        memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
+        // Avoid using memcpy to reduce the footprint.
+        __movsb((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
         newPos += copySize;
         oldPos += hs.len;
     }

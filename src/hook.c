@@ -28,6 +28,7 @@
 
 #include <Windows.h>
 #include <TlHelp32.h>
+#include <intrin.h>
 
 #include "MinHook.h"
 #include "buffer.h"

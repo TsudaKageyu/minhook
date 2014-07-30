@@ -5,7 +5,7 @@
  *
  */
 
-#include <string.h>
+#include <intrin.h>
 #include "hde32.h"
 #include "table32.h"
 
@@ -14,7 +14,8 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
     uint8_t x, c, *p = (uint8_t *)code, cflags, opcode, pref = 0;
     uint8_t *ht = hde32_table, m_mod, m_reg, m_rm, disp_size = 0;
 
-    memset((PBYTE)hs, 0, sizeof(hde32s));
+    // Avoid using memset to reduce the footprint.
+    __stosb((LPBYTE)hs, 0, sizeof(hde32s));
 
     for (x = 16; x; x--)
         switch (c = *p++) {
