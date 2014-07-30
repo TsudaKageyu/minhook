@@ -34,9 +34,9 @@
 
 // Size of each buffer.
 #ifdef _M_X64
-#define MH_SLOT_SIZE 64
+    #define MH_SLOT_SIZE 64
 #else
-#define MH_SLOT_SIZE 32
+    #define MH_SLOT_SIZE 32
 #endif
 
 // Max range for seeking a memory block. (= 32MB)
