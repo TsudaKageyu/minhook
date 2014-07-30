@@ -527,9 +527,9 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         if (pBuffer == NULL)
             return MH_ERROR_MEMORY_ALLOC;
 
-        ct.pTrampoline    = pBuffer;
         ct.pTarget        = pTarget;
         ct.pDetour        = pDetour;
+        ct.pTrampoline    = pBuffer;
         ct.trampolineSize = MH_TRAMPOLINE_SIZE;
 #if defined _M_X64
         ct.pRelay         = (LPBYTE)ct.pTrampoline + MH_RELAY_OFFSET;
