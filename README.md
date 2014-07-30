@@ -9,6 +9,7 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 - ####v1.3
 
   * Fixed some small bugs.
+  * Improved the memory management.
 
 - ####v1.3-beta2 - 21 Jul 2014
 
