@@ -30,22 +30,21 @@
 #include "buffer.h"
 
 // Size of each memory block. (= page size of VirtualAlloc)
-#define MH_BLOCK_SIZE 0x1000
+#define MEMORY_BLOCK_SIZE 0x1000
 
-// Size of each buffer.
+// Size of each memory slot.
 #ifdef _M_X64
-    #define MH_SLOT_SIZE 64
+    #define MEMORY_SLOT_SIZE 64
 #else
-    #define MH_SLOT_SIZE 32
+    #define MEMORY_SLOT_SIZE 32
 #endif
 
 // Max range for seeking a memory block. (= 32MB)
-#define MH_MAX_RANGE 0x02000000
+#define MAX_MEMORY_RANGE 0x02000000
 
 // Memory protection flags to check the executable address.
-#define MH_PAGE_EXECUTE \
-    (PAGE_EXECUTE | PAGE_EXECUTE_READ \
-    | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)
+#define PAGE_EXECUTE_FLAGS \
+    (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)
 
 // Memory slot.
 typedef struct _MEMORY_SLOT
@@ -53,7 +52,7 @@ typedef struct _MEMORY_SLOT
     union
     {
         struct _MEMORY_SLOT *pNext;
-        UINT8 buffer[MH_SLOT_SIZE];
+        UINT8 buffer[MEMORY_SLOT_SIZE];
     };
 } MEMORY_SLOT, *PMEMORY_SLOT;
 
@@ -106,10 +105,10 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 
 #ifdef _M_X64
     // pOrigin ± 16MB
-    if ((ULONG_PTR)pOrigin > MH_MAX_RANGE)
-        minAddr = max(minAddr, (ULONG_PTR)pOrigin - MH_MAX_RANGE);
+    if ((ULONG_PTR)pOrigin > MAX_MEMORY_RANGE)
+        minAddr = max(minAddr, (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE);
 
-    maxAddr = min(maxAddr, (ULONG_PTR)pOrigin + MH_MAX_RANGE);
+    maxAddr = min(maxAddr, (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE);
 #endif
 
     // Look the registered blocks for a reachable one.
@@ -127,21 +126,21 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 
     // Alloc a new block if not found.
     {
-        ULONG_PTR pStart = ((ULONG_PTR)pOrigin / MH_BLOCK_SIZE) * MH_BLOCK_SIZE;
+        ULONG_PTR pStart = ((ULONG_PTR)pOrigin / MEMORY_BLOCK_SIZE) * MEMORY_BLOCK_SIZE;
         ULONG_PTR pAlloc;
-        for (pAlloc = pStart - MH_BLOCK_SIZE; pAlloc >= minAddr; pAlloc -= MH_BLOCK_SIZE)
+        for (pAlloc = pStart - MEMORY_BLOCK_SIZE; pAlloc >= minAddr; pAlloc -= MEMORY_BLOCK_SIZE)
         {
             pBlock = (PMEMORY_BLOCK)VirtualAlloc(
-                (LPVOID)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+                (LPVOID)pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
             if (pBlock != NULL)
                 break;
         }
         if (pBlock == NULL)
         {
-            for (pAlloc = pStart + MH_BLOCK_SIZE; pAlloc < maxAddr; pAlloc += MH_BLOCK_SIZE)
+            for (pAlloc = pStart + MEMORY_BLOCK_SIZE; pAlloc < maxAddr; pAlloc += MEMORY_BLOCK_SIZE)
             {
                 pBlock = (PMEMORY_BLOCK)VirtualAlloc(
-                    (LPVOID)pAlloc, MH_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+                    (LPVOID)pAlloc, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
                 if (pBlock != NULL)
                     break;
             }
@@ -159,7 +158,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
             pSlot->pNext = pBlock->pFree;
             pBlock->pFree = pSlot;
             pSlot++;
-        } while ((ULONG_PTR)pSlot - (ULONG_PTR)pBlock <= MH_BLOCK_SIZE - MH_SLOT_SIZE);
+        } while ((ULONG_PTR)pSlot - (ULONG_PTR)pBlock <= MEMORY_BLOCK_SIZE - MEMORY_SLOT_SIZE);
 
         pBlock->pNext = g_pMemoryBlocks;
         g_pMemoryBlocks = pBlock;
@@ -192,7 +191,7 @@ VOID FreeBuffer(LPVOID pBuffer)
 {
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
     PMEMORY_BLOCK pPrev = NULL;
-    ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MH_BLOCK_SIZE) * MH_BLOCK_SIZE;
+    ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MEMORY_BLOCK_SIZE) * MEMORY_BLOCK_SIZE;
 
     while (pBlock != NULL)
     {
@@ -233,5 +232,5 @@ BOOL IsExecutableAddress(LPVOID pAddress)
     MEMORY_BASIC_INFORMATION mi;
     VirtualQuery(pAddress, &mi, sizeof(MEMORY_BASIC_INFORMATION));
 
-    return (mi.State == MEM_COMMIT && (mi.Protect & MH_PAGE_EXECUTE));
+    return (mi.State == MEM_COMMIT && (mi.Protect & PAGE_EXECUTE_FLAGS));
 }

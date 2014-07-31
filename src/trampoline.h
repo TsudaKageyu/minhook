@@ -72,8 +72,8 @@ typedef struct _TRAMPOLINE
     UINT       trampolineSize;  // [In] Buffer size for the trampoline function.
 #ifdef _M_X64
     LPVOID     pRelay;          // [In] Buffer address for the relay function.
-    PULONG_PTR pTable;          // [In] Buffer address for the jump address table.
-    UINT       tableSize;       // [In] Buffer size for the jump address table.
+    PULONG_PTR pAddrTable;      // [In] Buffer address for the jump address table.
+    UINT       addrTableSize;   // [In] Buffer size for the jump address table.
 #endif
 
     BOOL       patchAbove;      // [Out] Should use the hot patch area?

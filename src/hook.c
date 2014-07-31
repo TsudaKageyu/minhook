@@ -35,24 +35,24 @@
 #include "trampoline.h"
 
 // Initial capacity of the HOOK_ENTRY buffer.
-#define MH_INITIAL_CAPACITY 32
+#define INITIAL_HOOK_CAPACITY   32
 
 // Initial capacity of the thread IDs buffer.
-#define MH_INITIAL_THREAD_CAPACITY 128
+#define INITIAL_THREAD_CAPACITY 128
 
 // Max length of a trampoline function.
-#define MH_TRAMPOLINE_SIZE 32
+#define TRAMPOLINE_FUNC_SIZE    32
 
 #ifdef _M_X64
 
     // Offset of the relay function in a 64-byte buffer.
-    #define MH_RELAY_OFFSET   32
+    #define RELAY_FUNC_OFFSET   32
 
-    // Offset of the jump table function in a 64-byte buffer.
-    #define MH_TABLE_OFFSET   40
+    // Offset of the address table in a 64-byte buffer.
+    #define ADDR_TABLE_OFFSET   40
 
-    // Max length of the jump table.
-    #define MH_TABLE_SIZE 3
+    // Max length of the address table.
+    #define ADDR_TABLE_SIZE 3
 
 #endif
 
@@ -66,9 +66,8 @@
 #define ACTION_APPLY_QUEUED 2
 
 // Thread access rights for suspending/resuming threads.
-#define MH_THREAD_ACCESS \
-    (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT \
-    | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT)
+#define THREAD_ACCESS \
+    (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT)
 
 // Hook information.
 typedef struct _HOOK_ENTRY
@@ -132,7 +131,7 @@ static PHOOK_ENTRY NewHookEntry()
 {
     if (g_hooks.pItems == NULL)
     {
-        g_hooks.capacity = MH_INITIAL_CAPACITY;
+        g_hooks.capacity = INITIAL_HOOK_CAPACITY;
         g_hooks.pItems = (PHOOK_ENTRY)HeapAlloc(
             g_hHeap, 0, g_hooks.capacity * sizeof(HOOK_ENTRY));
         if (g_hooks.pItems == NULL)
@@ -160,7 +159,7 @@ static void DelHookEntry(UINT pos)
 
     g_hooks.size--;
 
-    if (g_hooks.capacity / 2 >= MH_INITIAL_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
+    if (g_hooks.capacity / 2 >= INITIAL_HOOK_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
     {
         PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
             g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity / 2) * sizeof(HOOK_ENTRY));
@@ -284,7 +283,7 @@ static VOID EnumerateThreads(PFROZEN_THREADS pThreads)
                 {
                     if (pThreads->pItems == NULL)
                     {
-                        pThreads->capacity = MH_INITIAL_THREAD_CAPACITY;
+                        pThreads->capacity = INITIAL_THREAD_CAPACITY;
                         pThreads->pItems
                             = (LPDWORD)HeapAlloc(g_hHeap, 0, pThreads->capacity * sizeof(DWORD));
                         if (pThreads->pItems == NULL)
@@ -323,7 +322,7 @@ static VOID Freeze(PFROZEN_THREADS pThreads, UINT pos, UINT action)
         UINT i;
         for (i = 0; i < pThreads->size; ++i)
         {
-            HANDLE hThread = OpenThread(MH_THREAD_ACCESS, FALSE, pThreads->pItems[i]);
+            HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
             if (hThread != NULL)
             {
                 SuspendThread(hThread);
@@ -342,7 +341,7 @@ static VOID Unfreeze(PFROZEN_THREADS pThreads)
         UINT i;
         for (i = 0; i < pThreads->size; ++i)
         {
-            HANDLE hThread = OpenThread(MH_THREAD_ACCESS, FALSE, pThreads->pItems[i]);
+            HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
             if (hThread != NULL)
             {
                 ResumeThread(hThread);
@@ -534,11 +533,11 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         ct.pTarget        = pTarget;
         ct.pDetour        = pDetour;
         ct.pTrampoline    = pBuffer;
-        ct.trampolineSize = MH_TRAMPOLINE_SIZE;
+        ct.trampolineSize = TRAMPOLINE_FUNC_SIZE;
 #ifdef _M_X64
-        ct.pRelay         = (LPBYTE)ct.pTrampoline + MH_RELAY_OFFSET;
-        ct.pTable         = (ULONG_PTR*)((LPBYTE)ct.pTrampoline + MH_TABLE_OFFSET);
-        ct.tableSize      = MH_TABLE_SIZE;
+        ct.pRelay         = (LPBYTE)ct.pTrampoline + RELAY_FUNC_OFFSET;
+        ct.pAddrTable     = (ULONG_PTR*)((LPBYTE)ct.pTrampoline + ADDR_TABLE_OFFSET);
+        ct.addrTableSize  = ADDR_TABLE_SIZE;
 #endif
         if (!CreateTrampolineFunction(&ct))
         {
