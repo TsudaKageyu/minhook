@@ -59,7 +59,7 @@ static BOOL IsCodePadding(LPBYTE pInst, UINT size)
 }
 
 //-------------------------------------------------------------------------
-BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
+BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 {
     UINT8     oldPos   = 0;
     UINT8     newPos   = 0;
@@ -283,15 +283,22 @@ BOOL CreateTrampolineFunction(TRAMPOLINE *ct)
         ct->patchAbove = TRUE;
     }
 
-    // Create a relay function.
 #ifdef _M_X64
-    if (addrTablePos >= ct->addrTableSize)
-        return FALSE;
+    {
+        // Create a relay function.
+        ULONG_PTR dest = (ULONG_PTR)ct->pDetour;
+        PJMP_ABS  pRelay;
 
-    ct->pAddrTable[addrTablePos++] = (ULONG_PTR)ct->pDetour;
-    ((PJMP_ABS)ct->pRelay)->opcode = 0x25FF;
-    ((PJMP_ABS)ct->pRelay)->operand
-        = (UINT32)((ULONG_PTR)(ct->pAddrTable + addrTablePos - 1) - ((ULONG_PTR)ct->pRelay + sizeof(JMP_ABS)));
+        if (addrTablePos >= ct->addrTableSize)
+            return FALSE;
+
+        ct->pAddrTable[addrTablePos++] = dest;
+        dest = (ULONG_PTR)(ct->pAddrTable + addrTablePos - 1);
+
+        pRelay = (PJMP_ABS)ct->pRelay;
+        pRelay->opcode  = 0x25FF;
+        pRelay->operand = (UINT32)(dest - ((ULONG_PTR)pRelay + sizeof(JMP_ABS)));
+    }
 #endif
 
     return TRUE;

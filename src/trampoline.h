@@ -80,6 +80,6 @@ typedef struct _TRAMPOLINE
     UINT       nIP;             // [Out] Number of the instruction boundaries.
     UINT8      oldIPs[8];       // [Out] Instruction boundaries of the target function.
     UINT8      newIPs[8];       // [Out] Instruction boundaries of the trampoline function.
-} TRAMPOLINE;
+} TRAMPOLINE, *PTRAMPOLINE;
 
-BOOL CreateTrampolineFunction(TRAMPOLINE *ct);
+BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
