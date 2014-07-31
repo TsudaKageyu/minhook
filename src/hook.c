@@ -65,10 +65,6 @@
 #define ACTION_ENABLE       1
 #define ACTION_APPLY_QUEUED 2
 
-// Invalid thread ID.
-// According to http://blogs.msdn.com/b/oldnewthing/archive/2004/02/23/78395.aspx
-#define INVALID_THREAD_ID (-1)
-
 // Thread access rights for suspending/resuming threads.
 #define THREAD_ACCESS \
     (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT)
@@ -102,8 +98,8 @@ typedef struct _FROZEN_THREADS
 // Global Variables:
 //-------------------------------------------------------------------------
 
-// Thread ID for EnterSpinLock()/LeaveSpinLock().
-volatile LONG g_lockThread = INVALID_THREAD_ID;
+// Spin lock flag for EnterSpinLock()/LeaveSpinLock().
+volatile LONG g_isLocked = FALSE;
 
 // Private heap handle. If not NULL, this library is initialized.
 HANDLE g_hHeap = NULL;
@@ -438,15 +434,9 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 //-------------------------------------------------------------------------
 static VOID EnterSpinLock(VOID)
 {
-    LONG tid = (LONG)GetCurrentThreadId();
-
     // Wait until the flag is FALSE.
-    while (TRUE)
+    while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
-        LONG lid = _InterlockedCompareExchange(&g_lockThread, tid, INVALID_THREAD_ID);
-        if (lid == tid || lid == INVALID_THREAD_ID)
-            break;
-
         // Prevent the loop from being too busy.
         Sleep(1);
     }
@@ -455,7 +445,7 @@ static VOID EnterSpinLock(VOID)
 //-------------------------------------------------------------------------
 static VOID LeaveSpinLock(VOID)
 {
-    _InterlockedExchange(&g_lockThread, INVALID_THREAD_ID);
+    _InterlockedExchange(&g_isLocked, FALSE);
 }
 
 //-------------------------------------------------------------------------
