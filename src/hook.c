@@ -44,10 +44,10 @@
 #ifdef _M_X64
 
     // Max length of a trampoline function.
-    #define TRAMPOLINE_FUNC_SIZE    50
+    #define TRAMPOLINE_FUNC_SIZE    (64 - sizeof(JMP_ABS))
 
     // Offset of the relay function in a 64-byte buffer.
-    #define RELAY_FUNC_OFFSET       50
+    #define RELAY_FUNC_OFFSET       TRAMPOLINE_FUNC_SIZE
 
 #else
 
