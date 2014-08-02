@@ -46,13 +46,23 @@ typedef struct _JMP_REL
     UINT32 operand;
 } JMP_REL, *PJMP_REL, CALL_REL;
 
-// 64-bit indirect absolute jump/call.
+// 64-bit indirect absolute jump.
 typedef struct _JMP_ABS
 {
-    UINT16 opcode;      // FF25/FF15 00000000: JMP/CALL [RIP+6]
+    UINT16 opcode;      // FF25 00000000: JMP [RIP+6]
     UINT32 dummy;
     UINT64 address;     // Absolute destination address
-} JMP_ABS, *PJMP_ABS, CALL_ABS;
+} JMP_ABS, *PJMP_ABS;
+
+// 64-bit indirect absolute call.
+typedef struct _CALL_ABS
+{
+    UINT16 opcode;      // FF15 00000002: CALL [RIP+8]
+    UINT32 dummy0;
+    UINT8  dummy1;      // EB08:          JMP +10
+    UINT8  dummy2;
+    UINT64 address;     // Absolute destination address
+} CALL_ABS;
 
 // 32-bit direct relative conditional jumps.
 typedef struct _JCC_REL

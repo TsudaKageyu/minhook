@@ -75,13 +75,13 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     while (!finished)
     {
 #ifdef _M_X64
-        CALL_ABS call = { 0x15FF, 0, 0 };
-        JMP_ABS  jmp  = { 0x25FF, 0, 0 };
+        CALL_ABS call = { 0x15FF, 0x00000002, 0xEB, 0x08, 0 };
+        JMP_ABS  jmp  = { 0x25FF, 0x00000000, 0 };
         JCC_ABS  jcc  = { 0x70, 0x0E, 0x25FF, 0, 0 };
 #else
-        CALL_REL call = { 0xE8,   0 };
-        JMP_REL  jmp  = { 0xE9,   0 };
-        JCC_REL  jcc  = { 0x800F, 0 };
+        CALL_REL call = { 0xE8,   0x00000000 };
+        JMP_REL  jmp  = { 0xE9,   0x00000000 };
+        JCC_REL  jcc  = { 0x800F, 0x00000000 };
 #endif
         HDE       hs;
         UINT      copySize;
