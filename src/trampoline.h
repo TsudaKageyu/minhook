@@ -56,7 +56,7 @@ typedef struct _JMP_ABS
 // 64bit indirect absolute conditional jumps that x64 lacks.
 typedef struct _JCC_ABS
 {
-    UINT8  opcode;    // 7* 06          J** +4
+    UINT8  opcode;    // 7* 06          J** +8
     UINT8  dummy0;
     UINT16 dummy1;    // FF25 xxxxxxxx  JMP [RIP+xxxxxxxx]
     UINT32 operand;
