@@ -61,6 +61,16 @@ static BOOL IsCodePadding(LPBYTE pInst, UINT size)
 //-------------------------------------------------------------------------
 BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 {
+#ifdef _M_X64
+    CALL_ABS call = { 0x15FF, 0x00000002, 0xEB, 0x08, 0 };
+    JMP_ABS  jmp  = { 0x25FF, 0x00000000, 0 };
+    JCC_ABS  jcc  = { 0x70, 0x0E, 0x25FF, 0, 0 };
+#else
+    CALL_REL call = { 0xE8,   0x00000000 };
+    JMP_REL  jmp  = { 0xE9,   0x00000000 };
+    JCC_REL  jcc  = { 0x800F, 0x00000000 };
+#endif
+
     UINT8     oldPos   = 0;
     UINT8     newPos   = 0;
     ULONG_PTR jmpDest  = 0;     // Destination address of an internal jump.
@@ -74,15 +84,6 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
     while (!finished)
     {
-#ifdef _M_X64
-        CALL_ABS call = { 0x15FF, 0x00000002, 0xEB, 0x08, 0 };
-        JMP_ABS  jmp  = { 0x25FF, 0x00000000, 0 };
-        JCC_ABS  jcc  = { 0x70, 0x0E, 0x25FF, 0, 0 };
-#else
-        CALL_REL call = { 0xE8,   0x00000000 };
-        JMP_REL  jmp  = { 0xE9,   0x00000000 };
-        JCC_REL  jcc  = { 0x800F, 0x00000000 };
-#endif
         HDE       hs;
         UINT      copySize;
         LPVOID    pCopySrc;
@@ -262,12 +263,9 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     }
 
 #ifdef _M_X64
-    {
-        // Create a relay function.
-        PJMP_ABS pRelay = (PJMP_ABS)ct->pRelay;
-        pRelay->opcode  = 0x25FF;
-        pRelay->address = (ULONG_PTR)ct->pDetour;
-    }
+    // Create a relay function.
+    jmp.address = (ULONG_PTR)ct->pDetour;
+    memcpy(ct->pRelay, &jmp, sizeof(jmp));
 #endif
 
     return TRUE;

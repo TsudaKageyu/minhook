@@ -356,6 +356,9 @@ static VOID Unfreeze(PFROZEN_THREADS pThreads)
 //-------------------------------------------------------------------------
 static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 {
+    JMP_REL       jmp      = { 0xE9, 0x00000000 };
+    JMP_REL_SHORT shortJmp = { 0xEB, (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL))) };
+
     PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
     DWORD  oldProtect;
     SIZE_T patchSize    = sizeof(JMP_REL);
@@ -372,16 +375,11 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 
     if (enable)
     {
-        PJMP_REL pJmp = (PJMP_REL)pPatchTarget;
-        pJmp->opcode  = 0xE9;
-        pJmp->operand = (UINT32)((LPBYTE)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
+        jmp.operand = (UINT32)((LPBYTE)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
+        memcpy(pPatchTarget, &jmp, sizeof(JMP_REL));
 
         if (pHook->patchAbove)
-        {
-            PJMP_REL_SHORT pShortJmp = (PJMP_REL_SHORT)pHook->pTarget;
-            pShortJmp->opcode  = 0xEB;
-            pShortJmp->operand = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
-        }
+            memcpy(pHook->pTarget, &shortJmp, sizeof(JMP_REL_SHORT));
     }
     else
     {
