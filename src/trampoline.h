@@ -46,40 +46,47 @@ typedef struct _JMP_REL
     UINT32 operand;
 } JMP_REL, *PJMP_REL, CALL_REL;
 
-// 32-bit indirect absolute jump/call or direct relative conditional jumps.
+// 64-bit indirect absolute jump/call.
 typedef struct _JMP_ABS
+{
+    UINT16 opcode;      // FF25/FF15 00000000: JMP/CALL [RIP+6]
+    UINT32 dummy;
+    UINT64 address;     // Absolute destination address
+} JMP_ABS, *PJMP_ABS, CALL_ABS;
+
+// 32-bit direct relative conditional jumps.
+typedef struct _JCC_REL
 {
     UINT16 opcode;
     UINT32 operand;
-} JMP_ABS, *PJMP_ABS, CALL_ABS, JCC_REL;
+} JCC_REL;
 
 // 64bit indirect absolute conditional jumps that x64 lacks.
 typedef struct _JCC_ABS
 {
-    UINT8  opcode;    // 7* 06          J** +8
+    UINT8  opcode;      // 7*0E:          J** +16
     UINT8  dummy0;
-    UINT16 dummy1;    // FF25 xxxxxxxx  JMP [RIP+xxxxxxxx]
-    UINT32 operand;
+    UINT16 dummy1;      // FF25 00000000: JMP [RIP+6]
+    UINT32 dummy2;
+    UINT64 address;     // Absolute destination address
 } JCC_ABS;
 
 #pragma pack(pop)
 
 typedef struct _TRAMPOLINE
 {
-    LPVOID     pTarget;         // [In] Address of the target function.
-    LPVOID     pDetour;         // [In] Address of the detour function.
-    LPVOID     pTrampoline;     // [In] Buffer address for the trampoline function.
-    UINT       trampolineSize;  // [In] Buffer size for the trampoline function.
+    LPVOID pTarget;         // [In] Address of the target function.
+    LPVOID pDetour;         // [In] Address of the detour function.
+    LPVOID pTrampoline;     // [In] Buffer address for the trampoline function.
+    UINT   trampolineSize;  // [In] Buffer size for the trampoline function.
 #ifdef _M_X64
-    LPVOID     pRelay;          // [In] Buffer address for the relay function.
-    PULONG_PTR pAddrTable;      // [In] Buffer address for the jump address table.
-    UINT       addrTableSize;   // [In] Buffer size for the jump address table.
+    LPVOID pRelay;          // [In] Buffer address for the relay function.
 #endif
 
-    BOOL       patchAbove;      // [Out] Should use the hot patch area?
-    UINT       nIP;             // [Out] Number of the instruction boundaries.
-    UINT8      oldIPs[8];       // [Out] Instruction boundaries of the target function.
-    UINT8      newIPs[8];       // [Out] Instruction boundaries of the trampoline function.
+    BOOL   patchAbove;      // [Out] Should use the hot patch area?
+    UINT   nIP;             // [Out] Number of the instruction boundaries.
+    UINT8  oldIPs[8];       // [Out] Instruction boundaries of the target function.
+    UINT8  newIPs[8];       // [Out] Instruction boundaries of the trampoline function.
 } TRAMPOLINE, *PTRAMPOLINE;
 
 BOOL CreateTrampolineFunction(PTRAMPOLINE ct);

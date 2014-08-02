@@ -66,7 +66,6 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     ULONG_PTR jmpDest  = 0;     // Destination address of an internal jump.
     BOOL      finished = FALSE; // Is the function completed?
 #ifdef _M_X64
-    UINT      addrTablePos = 0;
     UINT8     instBuf[16];
 #endif
 
@@ -76,13 +75,13 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     while (!finished)
     {
 #ifdef _M_X64
-        CALL_ABS call = { 0x15FF, 0x00000000 };
-        JMP_ABS  jmp  = { 0x25FF, 0x00000000 };
-        JCC_ABS  jcc  = { 0x70, 0x06, 0x25FF, 0x00000000 };
+        CALL_ABS call = { 0x15FF, 0, 0 };
+        JMP_ABS  jmp  = { 0x25FF, 0, 0 };
+        JCC_ABS  jcc  = { 0x70, 0x06, 0x25FF, 0, 0 };
 #else
-        CALL_REL call = { 0xE8, 0x00000000 };
-        JMP_REL  jmp  = { 0xE9, 0x00000000 };
-        JCC_REL  jcc  = { 0x800F, 0x00000000 };
+        CALL_REL call = { 0xE8,   0 };
+        JMP_REL  jmp  = { 0xE9,   0 };
+        JCC_REL  jcc  = { 0x800F, 0 };
 #endif
         HDE       hs;
         UINT      copySize;
@@ -99,16 +98,11 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         {
             // The trampoline function is long enough.
             // Complete the function with the jump to the target function.
-            ULONG_PTR dest = pOldInst;
 #ifdef _M_X64
-            if (addrTablePos >= ct->addrTableSize)
-                return FALSE;
-
-            ct->pAddrTable[addrTablePos++] = dest;
-            dest = (ULONG_PTR)(ct->pAddrTable + addrTablePos - 1);
+            jmp.address = pOldInst;
+#else
+            jmp.operand = (UINT32)(pOldInst - (pNewInst + sizeof(jmp)));
 #endif
-            jmp.operand = (UINT32)(dest - (pNewInst + sizeof(jmp)));
-
             pCopySrc = &jmp;
             copySize = sizeof(jmp);
 
@@ -141,14 +135,10 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
             // Direct relative CALL
             ULONG_PTR dest = pOldInst + hs.len + (INT32)hs.imm.imm32;
 #ifdef _M_X64
-            if (addrTablePos >= ct->addrTableSize)
-                return FALSE;
-
-            ct->pAddrTable[addrTablePos++] = dest;
-            dest = (ULONG_PTR)(ct->pAddrTable + addrTablePos - 1);
-#endif
+            call.address = dest;
+#else
             call.operand = (UINT32)(dest - (pNewInst + sizeof(call)));
-
+#endif
             pCopySrc = &call;
             copySize = sizeof(call);
         }
@@ -172,14 +162,10 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
             else
             {
 #ifdef _M_X64
-                if (addrTablePos >= ct->addrTableSize)
-                    return FALSE;
-
-                ct->pAddrTable[addrTablePos++] = dest;
-                dest = (ULONG_PTR)(ct->pAddrTable + addrTablePos - 1);
-#endif
+                jmp.address = dest;
+#else
                 jmp.operand = (UINT32)(dest - (pNewInst + sizeof(jmp)));
-
+#endif
                 pCopySrc = &jmp;
                 copySize = sizeof(jmp);
 
@@ -215,21 +201,13 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
             else
             {
 #ifdef _M_X64
-                if (addrTablePos >= ct->addrTableSize)
-                    return FALSE;
-
-                ct->pAddrTable[addrTablePos++] = dest;
-                dest = (ULONG_PTR)(ct->pAddrTable + addrTablePos - 1);
-
-                // JCC_ABS jcc = { 0x70, 0x06, 0x25FF, 0x00000000 };
                 // Invert the condition.
-                jcc.opcode = 0x71 ^ ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
+                jcc.opcode  = 0x71 ^ ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
+                jcc.address = dest;
 #else
-                // JCC_REL  jcc = { 0x800F, 0x00000000 };
-                jcc.opcode = 0x800F | (((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F) << 8);
-#endif
+                jcc.opcode  = 0x800F | (((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F) << 8);
                 jcc.operand = (UINT32)(dest - (pNewInst + sizeof(jcc)));
-
+#endif
                 pCopySrc = &jcc;
                 copySize = sizeof(jcc);
             }
@@ -286,18 +264,9 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #ifdef _M_X64
     {
         // Create a relay function.
-        ULONG_PTR dest = (ULONG_PTR)ct->pDetour;
-        PJMP_ABS  pRelay;
-
-        if (addrTablePos >= ct->addrTableSize)
-            return FALSE;
-
-        ct->pAddrTable[addrTablePos++] = dest;
-        dest = (ULONG_PTR)(ct->pAddrTable + addrTablePos - 1);
-
-        pRelay = (PJMP_ABS)ct->pRelay;
+        PJMP_ABS pRelay = (PJMP_ABS)ct->pRelay;
         pRelay->opcode  = 0x25FF;
-        pRelay->operand = (UINT32)(dest - ((ULONG_PTR)pRelay + sizeof(JMP_ABS)));
+        pRelay->address = (ULONG_PTR)ct->pDetour;
     }
 #endif
 

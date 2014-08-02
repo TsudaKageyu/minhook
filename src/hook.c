@@ -40,19 +40,19 @@
 // Initial capacity of the thread IDs buffer.
 #define INITIAL_THREAD_CAPACITY 128
 
-// Max length of a trampoline function.
-#define TRAMPOLINE_FUNC_SIZE    32
 
 #ifdef _M_X64
 
+    // Max length of a trampoline function.
+    #define TRAMPOLINE_FUNC_SIZE    50
+
     // Offset of the relay function in a 64-byte buffer.
-    #define RELAY_FUNC_OFFSET   32
+    #define RELAY_FUNC_OFFSET       50
 
-    // Offset of the address table in a 64-byte buffer.
-    #define ADDR_TABLE_OFFSET   40
+#else
 
-    // Max length of the address table.
-    #define ADDR_TABLE_SIZE 3
+    // Max length of a trampoline function.
+    #define TRAMPOLINE_FUNC_SIZE    32
 
 #endif
 
@@ -536,8 +536,6 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         ct.trampolineSize = TRAMPOLINE_FUNC_SIZE;
 #ifdef _M_X64
         ct.pRelay         = (LPBYTE)ct.pTrampoline + RELAY_FUNC_OFFSET;
-        ct.pAddrTable     = (ULONG_PTR*)((LPBYTE)ct.pTrampoline + ADDR_TABLE_OFFSET);
-        ct.addrTableSize  = ADDR_TABLE_SIZE;
 #endif
         if (!CreateTrampolineFunction(&ct))
         {
