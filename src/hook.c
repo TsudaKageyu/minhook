@@ -44,10 +44,7 @@
 #ifdef _M_X64
 
     // Max length of a trampoline function.
-    #define TRAMPOLINE_FUNC_SIZE    (64 - sizeof(JMP_ABS))
-
-    // Offset of the relay function in a 64-byte buffer.
-    #define RELAY_FUNC_OFFSET       TRAMPOLINE_FUNC_SIZE
+    #define TRAMPOLINE_FUNC_SIZE    64
 
 #else
 
@@ -534,9 +531,6 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         ct.pDetour        = pDetour;
         ct.pTrampoline    = pBuffer;
         ct.trampolineSize = TRAMPOLINE_FUNC_SIZE;
-#ifdef _M_X64
-        ct.pRelay         = (LPBYTE)ct.pTrampoline + RELAY_FUNC_OFFSET;
-#endif
         if (!CreateTrampolineFunction(&ct))
         {
             FreeBuffer(pBuffer);
@@ -550,7 +544,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
             return MH_ERROR_MEMORY_ALLOC;
         }
 
-        pHook->pTarget     = pTarget;
+        pHook->pTarget     = ct.pTarget;
 #ifdef _M_X64
         pHook->pDetour     = ct.pRelay;
 #else

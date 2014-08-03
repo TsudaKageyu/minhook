@@ -225,8 +225,13 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         if (pOldInst < jmpDest && copySize != hs.len)
             return FALSE;
 
+#ifdef _M_X64
+        if ((newPos + copySize) > (ct->trampolineSize - sizeof(JMP_ABS)))
+            return FALSE;
+#else
         if ((newPos + copySize) > ct->trampolineSize)
             return FALSE;
+#endif
 
         if (ct->nIP >= ARRAYSIZE(ct->oldIPs))
             return FALSE;
@@ -265,6 +270,8 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #ifdef _M_X64
     // Create a relay function.
     jmp.address = (ULONG_PTR)ct->pDetour;
+
+    ct->pRelay = (LPBYTE)ct->pTrampoline + newPos;
     memcpy(ct->pRelay, &jmp, sizeof(jmp));
 #endif
 
