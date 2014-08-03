@@ -62,13 +62,38 @@ static BOOL IsCodePadding(LPBYTE pInst, UINT size)
 BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 {
 #ifdef _M_X64
-    CALL_ABS call = { 0x15FF, 0x00000002, 0xEB, 0x08, 0 };
-    JMP_ABS  jmp  = { 0x25FF, 0x00000000, 0 };
-    JCC_ABS  jcc  = { 0x70, 0x0E, 0x25FF, 0, 0 };
+    CALL_ABS call = {
+        0xFF, 0x15,             // FF15 00000002: CALL [RIP+6]
+        0x00000002,
+        0xEB,                   // EB 08:         JMP +10
+        0x08,
+        0x0000000000000000ULL   // Absolute destination address
+    };
+    JMP_ABS jmp = {
+        0xFF, 0x25,             // FF25 00000000: JMP [RIP+6]
+        0x00000000,
+        0x0000000000000000ULL   // Absolute destination address
+    };
+    JCC_ABS jcc = {
+        0x70,                   // 7* 0E:         J** +16
+        0x0E,
+        0xFF, 0x25,             // FF25 00000000: JMP [RIP+6]
+        0x00000000,
+        0x0000000000000000ULL   // Absolute destination address
+    };
 #else
-    CALL_REL call = { 0xE8,   0x00000000 };
-    JMP_REL  jmp  = { 0xE9,   0x00000000 };
-    JCC_REL  jcc  = { 0x800F, 0x00000000 };
+    CALL_REL call = {
+        0xE8,                   // E8 xxxxxxxx: CALL +5+xxxxxxxx
+        0x00000000              // Relative destination address
+    };
+    JMP_REL jmp = {
+        0xE9,                   // E9 xxxxxxxx: JMP +5+xxxxxxxx
+        0x00000000              // Relative destination address
+    };
+    JCC_REL jcc = {
+        0x0F, 0x80,             // 0F8* xxxxxxxx: J** +6+xxxxxxxx
+        0x00000000              // Relative destination address
+    };
 #endif
 
     UINT8     oldPos   = 0;
@@ -206,7 +231,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
                 jcc.opcode  = 0x71 ^ ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
                 jcc.address = dest;
 #else
-                jcc.opcode  = 0x800F | (((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F) << 8);
+                jcc.opcode1 = 0x80 | ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
                 jcc.operand = (UINT32)(dest - (pNewInst + sizeof(jcc)));
 #endif
                 pCopySrc = &jcc;
