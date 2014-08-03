@@ -107,7 +107,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     ct->patchAbove = FALSE;
     ct->nIP        = 0;
 
-    while (!finished)
+    do
     {
         HDE       hs;
         UINT      copySize;
@@ -270,6 +270,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         newPos += copySize;
         oldPos += hs.len;
     }
+    while (!finished);
 
     // Is there enough place for a long jump?
     if (oldPos < sizeof(JMP_REL)
