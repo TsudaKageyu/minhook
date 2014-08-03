@@ -219,19 +219,20 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
                 if (jmpDest < dest)
                     jmpDest = dest;
             }
-            else if ((hs.opcode & 0xFC) == 0xE0) // JCXZ/JECXZ to the outside are not supported.
+            else if ((hs.opcode & 0xFC) == 0xE0)
             {
-                // LOOPNZ/LOOPZ/LOOP/JECXZ
+                // LOOPNZ/LOOPZ/LOOP/JCXZ/JECXZ to the outside are not supported.
                 return FALSE;
             }
             else
             {
+                UINT8 cond = ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
 #ifdef _M_X64
                 // Invert the condition.
-                jcc.opcode  = 0x71 ^ ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
+                jcc.opcode  = 0x71 ^ cond;
                 jcc.address = dest;
 #else
-                jcc.opcode1 = 0x80 | ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
+                jcc.opcode1 = 0x80 | cond;
                 jcc.operand = (UINT32)(dest - (pNewInst + sizeof(jcc)));
 #endif
                 pCopySrc = &jcc;
