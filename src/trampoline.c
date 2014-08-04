@@ -63,22 +63,17 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 {
 #ifdef _M_X64
     CALL_ABS call = {
-        0xFF, 0x15,             // FF15 00000002: CALL [RIP+6]
-        0x00000002,
-        0xEB,                   // EB 08:         JMP +10
-        0x08,
+        0xFF, 0x15, 0x00000002, // FF15 00000002: CALL [RIP+8]
+        0xEB, 0x08,             // EB 08:         JMP +10
         0x0000000000000000ULL   // Absolute destination address
     };
     JMP_ABS jmp = {
-        0xFF, 0x25,             // FF25 00000000: JMP [RIP+6]
-        0x00000000,
+        0xFF, 0x25, 0x00000000, // FF25 00000000: JMP [RIP+6]
         0x0000000000000000ULL   // Absolute destination address
     };
     JCC_ABS jcc = {
-        0x70,                   // 7* 0E:         J** +16
-        0x0E,
-        0xFF, 0x25,             // FF25 00000000: JMP [RIP+6]
-        0x00000000,
+        0x70, 0x0E,             // 7* 0E:         J** +16
+        0xFF, 0x25, 0x00000000, // FF25 00000000: JMP [RIP+6]
         0x0000000000000000ULL   // Absolute destination address
     };
 #else
