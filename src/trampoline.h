@@ -92,7 +92,6 @@ typedef struct _TRAMPOLINE
     LPVOID pTarget;         // [In] Address of the target function.
     LPVOID pDetour;         // [In] Address of the detour function.
     LPVOID pTrampoline;     // [In] Buffer address for the trampoline and relay function.
-    UINT   trampolineSize;  // [In] Buffer size for the trampoline and relay function.
 
 #ifdef _M_X64
     LPVOID pRelay;          // [Out] Address of the relay function.

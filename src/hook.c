@@ -40,19 +40,6 @@
 // Initial capacity of the thread IDs buffer.
 #define INITIAL_THREAD_CAPACITY 128
 
-
-#ifdef _M_X64
-
-    // Max length of a trampoline function.
-    #define TRAMPOLINE_FUNC_SIZE    64
-
-#else
-
-    // Max length of a trampoline function.
-    #define TRAMPOLINE_FUNC_SIZE    32
-
-#endif
-
 // Special hook position values.
 #define INVALID_HOOK_POS UINT_MAX
 #define ALL_HOOKS_POS    UINT_MAX
@@ -530,7 +517,6 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
         ct.pTarget        = pTarget;
         ct.pDetour        = pDetour;
         ct.pTrampoline    = pBuffer;
-        ct.trampolineSize = TRAMPOLINE_FUNC_SIZE;
         if (!CreateTrampolineFunction(&ct))
         {
             FreeBuffer(pBuffer);

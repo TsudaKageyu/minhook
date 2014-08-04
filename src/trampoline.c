@@ -42,6 +42,13 @@
 #include "trampoline.h"
 #include "buffer.h"
 
+// Maximum size of a trampoline function.
+#ifdef _M_X64
+    #define TRAMPOLINE_MAX_SIZE (MEMORY_SLOT_SIZE - sizeof(JMP_ABS))
+#else
+    #define TRAMPOLINE_MAX_SIZE MEMORY_SLOT_SIZE
+#endif
+
 //-------------------------------------------------------------------------
 static BOOL IsCodePadding(LPBYTE pInst, UINT size)
 {
@@ -246,13 +253,8 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         if (pOldInst < jmpDest && copySize != hs.len)
             return FALSE;
 
-#ifdef _M_X64
-        if ((newPos + copySize) > (ct->trampolineSize - sizeof(JMP_ABS)))
+        if ((newPos + copySize) > TRAMPOLINE_MAX_SIZE)
             return FALSE;
-#else
-        if ((newPos + copySize) > ct->trampolineSize)
-            return FALSE;
-#endif
 
         if (ct->nIP >= ARRAYSIZE(ct->oldIPs))
             return FALSE;
