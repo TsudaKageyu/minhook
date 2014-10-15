@@ -169,6 +169,12 @@ static DWORD_PTR FindOldIP(PHOOK_ENTRY pHook, DWORD_PTR ip)
             return (DWORD_PTR)pHook->pTarget + pHook->oldIPs[i];
     }
 
+#ifdef _M_X64
+    // Check relay function.
+    if (ip == (DWORD_PTR)pHook->pDetour)
+        return (DWORD_PTR)pHook->pTarget;
+#endif
+
     return 0;
 }
 
