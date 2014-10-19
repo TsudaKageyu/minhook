@@ -1,0 +1,12 @@
+# top-most EditorConfig file
+root = true
+
+# Windows-style newlines with a newline ending every file
+[*]
+end_of_line = crlf
+insert_final_newline = true
+
+# 4 space indentation
+[*.{c,h}]
+indent_style = space
+indent_size = 4
