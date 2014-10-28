@@ -1,3 +1,5 @@
+# EditorConfig is awesome: http://EditorConfig.org
+
 # top-most EditorConfig file
 root = true
 
@@ -10,3 +12,11 @@ insert_final_newline = true
 [*.{c,h}]
 indent_style = space
 indent_size = 4
+
+# Trim trailing whitespaces
+[*.{c,h}]
+trim_trailing_whitespace = true
+
+# UTF-8 with BOM
+[*.{c,h}]
+charset=utf-8-bom
