@@ -9,14 +9,14 @@ end_of_line = crlf
 insert_final_newline = true
 
 # 4 space indentation
-[*.{c,h}]
+[*.{c,h,def}]
 indent_style = space
 indent_size = 4
 
 # Trim trailing whitespaces
-[*.{c,h}]
+[*.{c,h,def,def,txt}]
 trim_trailing_whitespace = true
 
 # UTF-8 with BOM
-[*.{c,h}]
+[*.{c,h,def,txt}]
 charset=utf-8-bom
