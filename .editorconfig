@@ -14,7 +14,7 @@ indent_style = space
 indent_size = 4
 
 # Trim trailing whitespaces
-[*.{c,h,def,def,txt}]
+[*.{c,h,def,txt}]
 trim_trailing_whitespace = true
 
 # UTF-8 with BOM
