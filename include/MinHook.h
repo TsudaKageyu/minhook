@@ -73,7 +73,10 @@ typedef enum MH_STATUS
     MH_ERROR_MEMORY_ALLOC,
 
     // Failed to change the memory protection.
-    MH_ERROR_MEMORY_PROTECT
+    MH_ERROR_MEMORY_PROTECT,
+
+    // Invalid Argument(s)
+    MH_ERROR_INVALID_ARGUMENTS
 }
 MH_STATUS;
 
@@ -103,6 +106,18 @@ extern "C" {
     //                    used to call the original target function.
     //                    This parameter can be NULL.
     MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal);
+
+    // Creates a Hook for the specified API function, in disabled state.
+    // Parameters:
+    //   pszTarget  [in]  A pointer to the target function name, which will be
+    //                    overridden by the detour function.
+    //                    ex. "user32.MessageBoxW" or "user32.dll.MessageBoxW"
+    //   pDetour    [in]  A pointer to the detour function, which will override
+    //                    the target function.
+    //   ppOriginal [out] A pointer to the trampoline function, which will be
+    //                    used to call the original target function.
+    //                    This parameter can be NULL.
+    MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOriginal);
 
     // Removes an already created hook.
     // Parameters:

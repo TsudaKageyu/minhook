@@ -383,6 +383,10 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 
     VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
+    // Applications should call FlushInstructionCache() if they generate or modify code in memory. 
+    // The CPU cannot detect the change, and may execute the old code it cached.
+    FlushInstructionCache(GetCurrentProcess(), pPatchTarget, patchSize);
+
     pHook->isEnabled   = enable;
     pHook->queueEnable = enable;
 
@@ -756,4 +760,47 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
     {
         LeaveSpinLock();
     }
+}
+
+//-------------------------------------------------------------------------
+MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOriginal)
+{
+    HMODULE hModule;
+    LPVOID  pTarget;
+    SIZE_T  copySize;
+    LPCSTR  psz = pszTarget;
+    LPCSTR  pszProcName = NULL;
+    CHAR    szModuleName[MAX_PATH];
+
+    if (pszTarget == NULL || pDetour == NULL)
+        return MH_ERROR_INVALID_ARGUMENTS;
+
+    // search the last '.' (replacement for strrchr())
+    while (*psz)
+        if (*psz++ == '.')
+            pszProcName = psz;
+
+    if (pszProcName == NULL)
+        return MH_ERROR_INVALID_ARGUMENTS;
+
+    copySize = pszProcName - pszTarget - 1;
+    if (copySize >= MAX_PATH)
+        return MH_ERROR_INVALID_ARGUMENTS;
+
+    __movsb((LPBYTE)szModuleName, (LPBYTE)pszTarget, copySize);
+    szModuleName[copySize] = 0;
+
+    hModule = GetModuleHandleA(szModuleName);
+    if (hModule == NULL)
+    {
+        hModule = LoadLibraryA(szModuleName);
+        if (hModule == NULL)
+            return MH_ERROR_INVALID_ARGUMENTS;
+    }
+
+    pTarget = GetProcAddress(hModule, pszProcName);
+    if (pTarget == NULL)
+        return MH_ERROR_INVALID_ARGUMENTS;
+
+    return MH_CreateHook(pTarget, pDetour, ppOriginal);
 }
