@@ -383,8 +383,7 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 
     VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
-    // Applications should call FlushInstructionCache() if they generate or modify code in memory. 
-    // The CPU cannot detect the change, and may execute the old code it cached.
+    // Just-in-case measure.
     FlushInstructionCache(GetCurrentProcess(), pPatchTarget, patchSize);
 
     pHook->isEnabled   = enable;
@@ -482,6 +481,8 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
             return status;
 
         // Free the internal function buffer.
+        // HeapFree is actually not required, but some tools detect a false
+        // memory leak without HeapFree.
         UninitializeBuffer();
         HeapFree(g_hHeap, 0, g_hooks.pItems);
         HeapDestroy(g_hHeap);
@@ -777,8 +778,10 @@ MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOr
 
     // search the last '.' (replacement for strrchr())
     while (*psz)
+    {
         if (*psz++ == '.')
             pszProcName = psz;
+    }
 
     if (pszProcName == NULL)
         return MH_ERROR_INVALID_ARGUMENTS;
