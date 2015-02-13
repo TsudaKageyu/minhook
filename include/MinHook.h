@@ -75,8 +75,8 @@ typedef enum MH_STATUS
     // Failed to change the memory protection.
     MH_ERROR_MEMORY_PROTECT,
 
-    // Invalid Argument(s)
-    MH_ERROR_INVALID_ARGUMENTS
+    // The specified function is not found or module is not loaded.
+    MH_ERROR_FUNCTION_NOT_FOUND
 }
 MH_STATUS;
 

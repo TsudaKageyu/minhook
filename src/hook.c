@@ -773,9 +773,6 @@ MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOr
     LPCSTR  pszProcName = NULL;
     CHAR    szModuleName[MAX_PATH];
 
-    if (pszTarget == NULL || pDetour == NULL)
-        return MH_ERROR_INVALID_ARGUMENTS;
-
     // search the last '.' (replacement for strrchr())
     while (*psz)
     {
@@ -784,26 +781,22 @@ MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOr
     }
 
     if (pszProcName == NULL)
-        return MH_ERROR_INVALID_ARGUMENTS;
+        return MH_ERROR_FUNCTION_NOT_FOUND;
 
     copySize = pszProcName - pszTarget - 1;
     if (copySize >= MAX_PATH)
-        return MH_ERROR_INVALID_ARGUMENTS;
+        return MH_ERROR_FUNCTION_NOT_FOUND;
 
     __movsb((LPBYTE)szModuleName, (LPBYTE)pszTarget, copySize);
     szModuleName[copySize] = 0;
 
     hModule = GetModuleHandleA(szModuleName);
     if (hModule == NULL)
-    {
-        hModule = LoadLibraryA(szModuleName);
-        if (hModule == NULL)
-            return MH_ERROR_INVALID_ARGUMENTS;
-    }
+        return MH_ERROR_FUNCTION_NOT_FOUND;
 
     pTarget = GetProcAddress(hModule, pszProcName);
     if (pTarget == NULL)
-        return MH_ERROR_INVALID_ARGUMENTS;
+        return MH_ERROR_FUNCTION_NOT_FOUND;
 
     return MH_CreateHook(pTarget, pDetour, ppOriginal);
 }
