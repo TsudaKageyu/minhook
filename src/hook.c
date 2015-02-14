@@ -788,7 +788,7 @@ MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOr
         return MH_ERROR_FUNCTION_NOT_FOUND;
 
     __movsb((LPBYTE)szModuleName, (LPBYTE)pszTarget, copySize);
-    szModuleName[copySize] = 0;
+    szModuleName[copySize] = '\0';
 
     hModule = GetModuleHandleA(szModuleName);
     if (hModule == NULL)
