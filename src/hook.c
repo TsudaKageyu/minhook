@@ -1,6 +1,6 @@
 ﻿/*
  *  MinHook - The Minimalistic API Hooking Library for x64/x86
- *  Copyright (C) 2009-2014 Tsuda Kageyu.
+ *  Copyright (C) 2009-2015 Tsuda Kageyu.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
