@@ -14,7 +14,7 @@ Need some funds to continue developing this library. All contributions gratefull
 
 - ####v1.3.1 - ?? ??? 2015
   * Added the ```MH_CreateHookApi``` function.
-  * Some minor fixes.
+  * Fixed a false memory leak reported by some tools.
 
 - ####v1.3 - 13 Sep 2014
   * No major changes from v1.3-beta3.
