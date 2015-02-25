@@ -29,6 +29,7 @@
 #include <Windows.h>
 #include <TlHelp32.h>
 #include <intrin.h>
+#include <xmmintrin.h>
 
 #include "MinHook.h"
 #include "buffer.h"
@@ -427,13 +428,22 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 //-------------------------------------------------------------------------
 static VOID EnterSpinLock(VOID)
 {
+    SIZE_T spinCount = 0;
+
     // Wait until the flag is FALSE.
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
         _ReadWriteBarrier();
 
         // Prevent the loop from being too busy.
-        Sleep(1);
+        if (spinCount < 16)
+            _mm_pause();
+        else if (spinCount < 32)
+            Sleep(0);
+        else
+            Sleep(1);
+
+        spinCount++;
     }
 }
 
