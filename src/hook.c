@@ -430,6 +430,8 @@ static VOID EnterSpinLock(VOID)
     // Wait until the flag is FALSE.
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
+        _ReadWriteBarrier();
+
         // Prevent the loop from being too busy.
         Sleep(1);
     }
@@ -438,6 +440,7 @@ static VOID EnterSpinLock(VOID)
 //-------------------------------------------------------------------------
 static VOID LeaveSpinLock(VOID)
 {
+    _ReadWriteBarrier();
     _InterlockedExchange(&g_isLocked, FALSE);
 }
 
