@@ -777,35 +777,15 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOriginal)
+MH_STATUS WINAPI MH_CreateHookApi(
+    LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal)
 {
     HMODULE hModule;
     LPVOID  pTarget;
-    SIZE_T  copySize;
-    LPCSTR  psz = pszTarget;
-    LPCSTR  pszProcName = NULL;
-    CHAR    szModuleName[MAX_PATH];
 
-    // search the last '.' (replacement for strrchr())
-    while (*psz)
-    {
-        if (*psz++ == '.')
-            pszProcName = psz;
-    }
-
-    if (pszProcName == NULL)
-        return MH_ERROR_FUNCTION_NOT_FOUND;
-
-    copySize = pszProcName - pszTarget - 1;
-    if (copySize >= MAX_PATH)
-        return MH_ERROR_FUNCTION_NOT_FOUND;
-
-    __movsb((LPBYTE)szModuleName, (LPBYTE)pszTarget, copySize);
-    szModuleName[copySize] = '\0';
-
-    hModule = GetModuleHandleA(szModuleName);
+    hModule = GetModuleHandleW(pszModule);
     if (hModule == NULL)
-        return MH_ERROR_FUNCTION_NOT_FOUND;
+        return MH_ERROR_MODULE_NOT_FOUND;
 
     pTarget = GetProcAddress(hModule, pszProcName);
     if (pTarget == NULL)

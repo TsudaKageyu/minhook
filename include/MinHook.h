@@ -75,7 +75,10 @@ typedef enum MH_STATUS
     // Failed to change the memory protection.
     MH_ERROR_MEMORY_PROTECT,
 
-    // The specified function is not found or module is not loaded.
+    // The specified module is not loaded.
+    MH_ERROR_MODULE_NOT_FOUND,
+
+    // The specified function is not found.
     MH_ERROR_FUNCTION_NOT_FOUND
 }
 MH_STATUS;
@@ -109,15 +112,17 @@ extern "C" {
 
     // Creates a Hook for the specified API function, in disabled state.
     // Parameters:
+    //   pszModule  [in]  A pointer to the loaded module name which contains the
+    //                    target function.
     //   pszTarget  [in]  A pointer to the target function name, which will be
     //                    overridden by the detour function.
-    //                    ex. "user32.MessageBoxW" or "user32.dll.MessageBoxW"
     //   pDetour    [in]  A pointer to the detour function, which will override
     //                    the target function.
     //   ppOriginal [out] A pointer to the trampoline function, which will be
     //                    used to call the original target function.
     //                    This parameter can be NULL.
-    MH_STATUS WINAPI MH_CreateHookApi(LPCSTR pszTarget, LPVOID pDetour, LPVOID *ppOriginal);
+    MH_STATUS WINAPI MH_CreateHookApi(
+        LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal);
 
     // Removes an already created hook.
     // Parameters:
