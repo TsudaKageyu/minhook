@@ -87,9 +87,9 @@ VOID UninitializeBuffer(VOID)
 //-------------------------------------------------------------------------
 static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 {
-    ULONG_PTR minAddr;
-    ULONG_PTR maxAddr;
-    PMEMORY_BLOCK pBlock;
+    ULONG_PTR minAddr=NULL;
+    ULONG_PTR maxAddr=NULL;
+    PMEMORY_BLOCK pBlock=NULL;
 
     SYSTEM_INFO si;
     GetSystemInfo(&si);
@@ -119,8 +119,8 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 
     // Alloc a new block if not found.
     {
-        ULONG_PTR pStart = ((ULONG_PTR)pOrigin / MEMORY_BLOCK_SIZE) * MEMORY_BLOCK_SIZE;
-        ULONG_PTR pAlloc;
+        ULONG_PTR pStart = ((ULONG_PTR)pOrigin / MEMORY_BLOCK_SIZE) * MEMORY_BLOCK_SIZE
+        ULONG_PTR PAlloc = NULL;
         for (pAlloc = pStart - MEMORY_BLOCK_SIZE; pAlloc >= minAddr; pAlloc -= MEMORY_BLOCK_SIZE)
         {
             pBlock = (PMEMORY_BLOCK)VirtualAlloc(
@@ -163,7 +163,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 //-------------------------------------------------------------------------
 LPVOID AllocateBuffer(LPVOID pOrigin)
 {
-    PMEMORY_SLOT  pSlot;
+    PMEMORY_SLOT  pSlot = NULL;
     PMEMORY_BLOCK pBlock = GetMemoryBlock(pOrigin);
     if (pBlock == NULL)
         return NULL;
