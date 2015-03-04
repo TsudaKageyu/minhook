@@ -179,6 +179,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
             return pBlock;
     }
 
+#ifdef _M_X64
     // Alloc a new block above if not found.
     {
         LPVOID pAlloc = pOrigin;
@@ -211,6 +212,11 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
                 break;
         }
     }
+#else
+    // In x86 mode, a memory block can be placed anywhere.
+    pBlock = (PMEMORY_BLOCK)VirtualAlloc(
+        NULL, MEMORY_BLOCK_SIZE, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+#endif
 
     if (pBlock != NULL)
     {
