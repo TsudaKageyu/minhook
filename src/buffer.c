@@ -146,25 +146,25 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
 //-------------------------------------------------------------------------
 static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 {
+    PMEMORY_BLOCK pBlock;
+#ifdef _M_X64
     ULONG_PTR minAddr;
     ULONG_PTR maxAddr;
-    PMEMORY_BLOCK pBlock;
 
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     minAddr = (ULONG_PTR)si.lpMinimumApplicationAddress;
     maxAddr = (ULONG_PTR)si.lpMaximumApplicationAddress;
 
-#ifdef _M_X64
     // pOrigin ± 512MB
     if ((ULONG_PTR)pOrigin > MAX_MEMORY_RANGE)
         minAddr = max(minAddr, (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE);
 
     maxAddr = min(maxAddr, (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE);
-#endif
 
     // Make room for MEMORY_BLOCK_SIZE bytes.
     maxAddr -= MEMORY_BLOCK_SIZE - 1;
+#endif
 
     // Look the registered blocks for a reachable one.
     for (pBlock = g_pMemoryBlocks; pBlock != NULL; pBlock = pBlock->pNext)
