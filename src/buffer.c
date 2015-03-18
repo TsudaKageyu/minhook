@@ -85,6 +85,7 @@ VOID UninitializeBuffer(VOID)
 }
 
 //-------------------------------------------------------------------------
+#ifdef _M_X64
 static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAllocationGranularity)
 {
     ULONG_PTR tryAddr = (ULONG_PTR)pAddress;
@@ -112,8 +113,10 @@ static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAlloc
 
     return NULL;
 }
+#endif
 
 //-------------------------------------------------------------------------
+#ifdef _M_X64
 static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAllocationGranularity)
 {
     ULONG_PTR tryAddr = (ULONG_PTR)pAddress;
@@ -142,6 +145,7 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
 
     return NULL;
 }
+#endif
 
 //-------------------------------------------------------------------------
 static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
