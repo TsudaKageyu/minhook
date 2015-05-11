@@ -548,11 +548,11 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                         PHOOK_ENTRY pHook = NewHookEntry();
                         if (pHook != NULL)
                         {
-                            pHook->pTarget = ct.pTarget;
+                            pHook->pTarget     = ct.pTarget;
 #ifdef _M_X64
-                            pHook->pDetour = ct.pRelay;
+                            pHook->pDetour     = ct.pRelay;
 #else
-                            pHook->pDetour = ct.pDetour;
+                            pHook->pDetour     = ct.pDetour;
 #endif
                             pHook->pTrampoline = ct.pTrampoline;
                             pHook->patchAbove  = ct.patchAbove;
