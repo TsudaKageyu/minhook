@@ -112,7 +112,7 @@ static UINT FindHookEntry(LPVOID pTarget)
 }
 
 //-------------------------------------------------------------------------
-static PHOOK_ENTRY NewHookEntry()
+static PHOOK_ENTRY AddHookEntry()
 {
     if (g_hooks.pItems == NULL)
     {
@@ -137,7 +137,7 @@ static PHOOK_ENTRY NewHookEntry()
 }
 
 //-------------------------------------------------------------------------
-static void DelHookEntry(UINT pos)
+static void DeleteHookEntry(UINT pos)
 {
     if (pos < g_hooks.size - 1)
         g_hooks.pItems[pos] = g_hooks.pItems[g_hooks.size - 1];
@@ -545,7 +545,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                     ct.pTrampoline = pBuffer;
                     if (CreateTrampolineFunction(&ct))
                     {
-                        PHOOK_ENTRY pHook = NewHookEntry();
+                        PHOOK_ENTRY pHook = AddHookEntry();
                         if (pHook != NULL)
                         {
                             pHook->pTarget     = ct.pTarget;
@@ -639,7 +639,7 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
             }
 
             FreeBuffer(g_hooks.pItems[pos].pTrampoline);
-            DelHookEntry(pos);
+            DeleteHookEntry(pos);
         }
         else
         {
