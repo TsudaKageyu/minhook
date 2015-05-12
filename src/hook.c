@@ -581,15 +581,15 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                         }
                         else
                         {
-                            FreeBuffer(pBuffer);
                             status = MH_ERROR_MEMORY_ALLOC;
                         }
                     }
                     else
                     {
-                        FreeBuffer(pBuffer);
                         status= MH_ERROR_UNSUPPORTED_FUNCTION;
                     }
+
+                    FreeBuffer(pBuffer);
                 }
                 else
                 {
