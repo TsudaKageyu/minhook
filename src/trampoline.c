@@ -230,7 +230,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
             {
                 UINT8 cond = ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
 #ifdef _M_X64
-                // Invert the condition.
+                // Invert the condition in x64 mode to simplify the conditional jump logic.
                 jcc.opcode  = 0x71 ^ cond;
                 jcc.address = dest;
 #else
@@ -253,9 +253,11 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         if (pOldInst < jmpDest && copySize != hs.len)
             return FALSE;
 
+        // Trampoline function is too large.
         if ((newPos + copySize) > TRAMPOLINE_MAX_SIZE)
             return FALSE;
 
+        // Trampoline function has too many instructions.
         if (ct->nIP >= ARRAYSIZE(ct->oldIPs))
             return FALSE;
 
