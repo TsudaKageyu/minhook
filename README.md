@@ -12,6 +12,11 @@ Need some funds to continue developing this library. All contributions gratefull
 
 ### Version history
 
+- ####v1.3.2-beta1 - 
+  * Fixed a possible deadlock in x64 mode. (Thanks to Aleh Kazakevich)
+  * Reduced the footprint a little more.
+  * Support Visual Studio 2015 RC. (Experimental)
+
 - ####v1.3.1 - 19 Mar 2015
   * No major changes from v1.3.1-beta.
 
