@@ -31,7 +31,7 @@
 #include <intrin.h>
 #include <xmmintrin.h>
 
-#include "MinHook.h"
+#include "../include/MinHook.h"
 #include "buffer.h"
 #include "trampoline.h"
 
