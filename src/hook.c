@@ -397,27 +397,33 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 static MH_STATUS EnableAllHooksLL(BOOL enable)
 {
     MH_STATUS status = MH_OK;
-    UINT i;
+    UINT i, first = INVALID_HOOK_POS;
 
     for (i = 0; i < g_hooks.size; ++i)
     {
         if (g_hooks.pItems[i].isEnabled != enable)
         {
-            FROZEN_THREADS threads;
-            Freeze(&threads, ALL_HOOKS_POS, enable ? ACTION_ENABLE : ACTION_DISABLE);
-
-            for (; i < g_hooks.size; ++i)
-            {
-                if (g_hooks.pItems[i].isEnabled != enable)
-                {
-                    status = EnableHookLL(i, enable);
-                    if (status != MH_OK)
-                        break;
-                }
-            }
-
-            Unfreeze(&threads);
+            first = i;
+            break;
         }
+    }
+
+    if (first != INVALID_HOOK_POS)
+    {
+        FROZEN_THREADS threads;
+        Freeze(&threads, ALL_HOOKS_POS, enable ? ACTION_ENABLE : ACTION_DISABLE);
+
+        for (i = first; i < g_hooks.size; ++i)
+        {
+            if (g_hooks.pItems[i].isEnabled != enable)
+            {
+                status = EnableHookLL(i, enable);
+                if (status != MH_OK)
+                    break;
+            }
+        }
+
+        Unfreeze(&threads);
     }
 
     return status;
@@ -581,14 +587,17 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                         }
                         else
                         {
-                            FreeBuffer(pBuffer);
                             status = MH_ERROR_MEMORY_ALLOC;
                         }
                     }
                     else
                     {
+                        status = MH_ERROR_UNSUPPORTED_FUNCTION;
+                    }
+
+                    if (status != MH_OK)
+                    {
                         FreeBuffer(pBuffer);
-                        status= MH_ERROR_UNSUPPORTED_FUNCTION;
                     }
                 }
                 else
@@ -638,8 +647,11 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
                 Unfreeze(&threads);
             }
 
-            FreeBuffer(g_hooks.pItems[pos].pTrampoline);
-            DeleteHookEntry(pos);
+            if (status == MH_OK)
+            {
+                FreeBuffer(g_hooks.pItems[pos].pTrampoline);
+                DeleteHookEntry(pos);
+            }
         }
         else
         {
@@ -770,7 +782,7 @@ MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget)
 MH_STATUS WINAPI MH_ApplyQueued(VOID)
 {
     MH_STATUS status = MH_OK;
-    UINT i;
+    UINT i, first = INVALID_HOOK_POS;
 
     EnterSpinLock();
 
@@ -780,22 +792,28 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
         {
             if (g_hooks.pItems[i].isEnabled != g_hooks.pItems[i].queueEnable)
             {
-                FROZEN_THREADS threads;
-                Freeze(&threads, ALL_HOOKS_POS, ACTION_APPLY_QUEUED);
-
-                for (; i < g_hooks.size; ++i)
-                {
-                    PHOOK_ENTRY pHook = &g_hooks.pItems[i];
-                    if (pHook->isEnabled != pHook->queueEnable)
-                    {
-                        status = EnableHookLL(i, pHook->queueEnable);
-                        if (status != MH_OK)
-                            break;
-                    }
-                }
-
-                Unfreeze(&threads);
+                first = i;
+                break;
             }
+        }
+
+        if (first != INVALID_HOOK_POS)
+        {
+            FROZEN_THREADS threads;
+            Freeze(&threads, ALL_HOOKS_POS, ACTION_APPLY_QUEUED);
+
+            for (i = first; i < g_hooks.size; ++i)
+            {
+                PHOOK_ENTRY pHook = &g_hooks.pItems[i];
+                if (pHook->isEnabled != pHook->queueEnable)
+                {
+                    status = EnableHookLL(i, pHook->queueEnable);
+                    if (status != MH_OK)
+                        break;
+                }
+            }
+
+            Unfreeze(&threads);
         }
     }
     else
