@@ -843,3 +843,30 @@ MH_STATUS WINAPI MH_CreateHookApi(
 
     return MH_CreateHook(pTarget, pDetour, ppOriginal);
 }
+
+//-------------------------------------------------------------------------
+const char * WINAPI MH_StatusToString(MH_STATUS status)
+{
+    #define MH_ST2STR(x) \
+    case x: \
+        return #x;
+
+    switch (status) {
+        MH_ST2STR(MH_UNKNOWN)
+        MH_ST2STR(MH_OK)
+        MH_ST2STR(MH_ERROR_ALREADY_INITIALIZED)
+        MH_ST2STR(MH_ERROR_NOT_INITIALIZED)
+        MH_ST2STR(MH_ERROR_ALREADY_CREATED)
+        MH_ST2STR(MH_ERROR_NOT_CREATED)
+        MH_ST2STR(MH_ERROR_ENABLED)
+        MH_ST2STR(MH_ERROR_DISABLED)
+        MH_ST2STR(MH_ERROR_NOT_EXECUTABLE)
+        MH_ST2STR(MH_ERROR_UNSUPPORTED_FUNCTION)
+        MH_ST2STR(MH_ERROR_MEMORY_ALLOC)
+        MH_ST2STR(MH_ERROR_MEMORY_PROTECT)
+    }
+
+#undef MH_ST2STR
+
+    return "(unknown)";
+}
