@@ -10,3 +10,4 @@ EXPORTS
     MH_QueueEnableHook
     MH_QueueDisableHook
     MH_ApplyQueued
+    MH_StatusToString
