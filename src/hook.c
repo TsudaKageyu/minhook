@@ -847,8 +847,8 @@ MH_STATUS WINAPI MH_CreateHookApi(
 //-------------------------------------------------------------------------
 const char * WINAPI MH_StatusToString(MH_STATUS status)
 {
-    #define MH_ST2STR(x) \
-    case x: \
+#define MH_ST2STR(x)    \
+    case x:             \
         return #x;
 
     switch (status) {
