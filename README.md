@@ -12,6 +12,10 @@ Need some funds to continue developing this library. All contributions gratefull
 
 ### Version history
 
+- ####v1.3.2-beta2 - ?? May 2015
+  * Fixed some subtle bugs. (Thanks to RaMMicHaeL)
+  * Added a helper function ```MH_MH_StatusToString```. (Thanks to Jan Klass)
+
 - ####v1.3.2-beta - 12 May 2015
   * Fixed a possible thread deadlock in x64 mode. (Thanks to Aleh Kazakevich)
   * Reduced the footprint a little more.
@@ -21,7 +25,7 @@ Need some funds to continue developing this library. All contributions gratefull
   * No major changes from v1.3.1-beta.
 
 - ####v1.3.1-beta - 11 Mar 2015
-  * Added the ```MH_CreateHookApi``` function.
+  * Added a helper function ```MH_CreateHookApi```. (Thanks to uniskz).
   * Fixed a false memory leak reported by some tools.
   * Fixed a degradated compatibility issue. 
 
