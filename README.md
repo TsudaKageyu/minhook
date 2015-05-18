@@ -14,7 +14,7 @@ Need some funds to continue developing this library. All contributions gratefull
 
 - ####v1.3.2-beta2 - 18 May 2015
   * Fixed some subtle bugs. (Thanks to RaMMicHaeL)
-  * Added a helper function ```MH_MH_StatusToString```. (Thanks to Jan Klass)
+  * Added a helper function ```MH_StatusToString```. (Thanks to Jan Klass)
 
 - ####v1.3.2-beta - 12 May 2015
   * Fixed a possible thread deadlock in x64 mode. (Thanks to Aleh Kazakevich)
