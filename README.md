@@ -12,7 +12,7 @@ Need some funds to continue developing this library. All contributions gratefull
 
 ### Version history
 
-- ####v1.3.2-beta2 - ?? May 2015
+- ####v1.3.2-beta2 - 18 May 2015
   * Fixed some subtle bugs. (Thanks to RaMMicHaeL)
   * Added a helper function ```MH_MH_StatusToString```. (Thanks to Jan Klass)
 
