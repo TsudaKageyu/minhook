@@ -29,7 +29,7 @@
 #include <Windows.h>
 #ifndef _MSC_VER
 #ifndef ARRAYSIZE
-  #define ARRAYSIZE sizeof
+  #define ARRAYSIZE(x) sizeof(x)/sizeof(*x)
 #endif
 #endif
 

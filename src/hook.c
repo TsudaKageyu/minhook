@@ -36,7 +36,7 @@
 #include <x86intrin.h>
 #include <limits.h>
 #ifndef ARRAYSIZE
-  #define ARRAYSIZE sizeof
+  #define ARRAYSIZE(x) sizeof(x)/sizeof(*x)
 #endif
 #include <unistd.h>
 #else
