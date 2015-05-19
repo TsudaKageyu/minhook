@@ -12,6 +12,9 @@ Need some funds to continue developing this library. All contributions gratefull
 
 ### Version history
 
+- ####v1.3.2-beta3
+  * Support MinGW. (Experimental)
+
 - ####v1.3.2-beta2 - 18 May 2015
   * Fixed some subtle bugs. (Thanks to RaMMicHaeL)
   * Added a helper function ```MH_StatusToString```. (Thanks to Jan Klass)
