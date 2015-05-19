@@ -38,7 +38,6 @@
 #ifndef ARRAYSIZE
   #define ARRAYSIZE(x) sizeof(x)/sizeof(*x)
 #endif
-#include <unistd.h>
 #else
 #include <intrin.h>
 #include <xmmintrin.h>
@@ -457,17 +456,14 @@ static VOID EnterSpinLock(VOID)
         _ReadWriteBarrier();
 #endif
         // Prevent the loop from being too busy.
+        if (spinCount < 16)
 #ifndef _MSC_VER
-        if (spinCount < 16)
-            usleep(250);
-        else if (spinCount < 32)
-            usleep(500);
+            Sleep(0);
 #else
-        if (spinCount < 16)
             _mm_pause();
+#endif
         else if (spinCount < 32)
             Sleep(0);
-#endif
         else
             Sleep(1);
 
