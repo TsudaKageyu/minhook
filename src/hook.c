@@ -26,13 +26,13 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef MINGW
+#ifndef _MSC_VER
 #define  _WIN32_WINNT 0x0501
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <Windows.h>
 #include <TlHelp32.h>
-#ifdef MINGW
+#ifndef _MSC_VER
 #include <x86intrin.h>
 #include <limits.h>
 #ifndef ARRAYSIZE
@@ -448,7 +448,7 @@ static VOID EnterSpinLock(VOID)
     SIZE_T spinCount = 0;
 
     // Wait until the flag is FALSE.
-#ifdef MINGW
+#ifndef _MSC_VER
     while (InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
 #else
@@ -457,7 +457,7 @@ static VOID EnterSpinLock(VOID)
         _ReadWriteBarrier();
 #endif
         // Prevent the loop from being too busy.
-#ifdef MINGW
+#ifndef _MSC_VER
         if (spinCount < 16)
             usleep(250);
         else if (spinCount < 32)
@@ -478,7 +478,7 @@ static VOID EnterSpinLock(VOID)
 //-------------------------------------------------------------------------
 static VOID LeaveSpinLock(VOID)
 {
-#ifdef MINGW
+#ifndef _MSC_VER
     InterlockedExchange(&g_isLocked, FALSE);
 #else
     _ReadWriteBarrier();

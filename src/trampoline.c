@@ -27,7 +27,7 @@
  */
 
 #include <Windows.h>
-#ifdef MINGW
+#ifndef _MSC_VER
 #ifndef ARRAYSIZE
   #define ARRAYSIZE sizeof
 #endif
@@ -149,7 +149,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
             PUINT32 pRelAddr;
 
             // Avoid using memcpy to reduce the footprint.
-#ifdef MINGW
+#ifndef _MSC_VER
             memcpy(instBuf, (LPBYTE)pOldInst, copySize);
 #else
             __movsb(instBuf, (LPBYTE)pOldInst, copySize);
@@ -274,7 +274,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         ct->nIP++;
 
         // Avoid using memcpy to reduce the footprint.
-#ifdef MINGW
+#ifndef _MSC_VER
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
         __movsb((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
