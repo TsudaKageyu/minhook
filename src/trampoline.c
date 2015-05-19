@@ -27,7 +27,6 @@
  */
 
 #include <Windows.h>
-#include <intrin.h>
 
 #ifdef _M_X64
     #include "./hde/hde64.h"

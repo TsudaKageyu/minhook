@@ -5,7 +5,6 @@
  *
  */
 
-#include <intrin.h>
 #include "hde64.h"
 #include "table64.h"
 

@@ -5,7 +5,6 @@
  *
  */
 
-#include <intrin.h>
 #include "hde32.h"
 #include "table32.h"
 
