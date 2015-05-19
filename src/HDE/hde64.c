@@ -5,7 +5,6 @@
  *
  */
 
-#include <intrin.h>
 #include "hde64.h"
 #include "table64.h"
 
@@ -16,7 +15,11 @@ unsigned int hde64_disasm(const void *code, hde64s *hs)
     uint8_t op64 = 0;
 
     // Avoid using memset to reduce the footprint.
+#ifdef MINGW
+    memset((LPBYTE)hs, 0, sizeof(hde64s));
+#else
     __stosb((LPBYTE)hs, 0, sizeof(hde64s));
+#endif
 
     for (x = 16; x; x--)
         switch (c = *p++) {

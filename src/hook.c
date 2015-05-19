@@ -26,10 +26,23 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef MINGW
+#define  _WIN32_WINNT 0x0501
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <Windows.h>
 #include <TlHelp32.h>
+#ifdef MINGW
+#include <x86intrin.h>
+#include <limits.h>
+#ifndef ARRAYSIZE
+  #define ARRAYSIZE sizeof
+#endif
+#include <unistd.h>
+#else
 #include <intrin.h>
 #include <xmmintrin.h>
+#endif
 
 #include "../include/MinHook.h"
 #include "buffer.h"
@@ -435,15 +448,26 @@ static VOID EnterSpinLock(VOID)
     SIZE_T spinCount = 0;
 
     // Wait until the flag is FALSE.
+#ifdef MINGW
+    while (InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
+    {
+#else
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
         _ReadWriteBarrier();
-
+#endif
         // Prevent the loop from being too busy.
+#ifdef MINGW
+        if (spinCount < 16)
+            usleep(250);
+        else if (spinCount < 32)
+            usleep(500);
+#else
         if (spinCount < 16)
             _mm_pause();
         else if (spinCount < 32)
             Sleep(0);
+#endif
         else
             Sleep(1);
 
@@ -454,8 +478,12 @@ static VOID EnterSpinLock(VOID)
 //-------------------------------------------------------------------------
 static VOID LeaveSpinLock(VOID)
 {
+#ifdef MINGW
+    InterlockedExchange(&g_isLocked, FALSE);
+#else
     _ReadWriteBarrier();
     _InterlockedExchange(&g_isLocked, FALSE);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -837,7 +865,7 @@ MH_STATUS WINAPI MH_CreateHookApi(
     if (hModule == NULL)
         return MH_ERROR_MODULE_NOT_FOUND;
 
-    pTarget = GetProcAddress(hModule, pszProcName);
+    pTarget = (LPVOID)GetProcAddress(hModule, pszProcName);
     if (pTarget == NULL)
         return MH_ERROR_FUNCTION_NOT_FOUND;
 
@@ -864,6 +892,8 @@ const char * WINAPI MH_StatusToString(MH_STATUS status)
         MH_ST2STR(MH_ERROR_UNSUPPORTED_FUNCTION)
         MH_ST2STR(MH_ERROR_MEMORY_ALLOC)
         MH_ST2STR(MH_ERROR_MEMORY_PROTECT)
+        MH_ST2STR(MH_ERROR_MODULE_NOT_FOUND)
+        MH_ST2STR(MH_ERROR_FUNCTION_NOT_FOUND)
     }
 
 #undef MH_ST2STR
