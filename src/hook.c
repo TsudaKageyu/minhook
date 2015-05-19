@@ -852,13 +852,19 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHookApi(
-    LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal)
+    LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal, bool autoLoad)
 {
     HMODULE hModule;
     LPVOID  pTarget;
 
     hModule = GetModuleHandleW(pszModule);
-    if (hModule == NULL)
+    if (hModule == NULL && autoLoad)
+    {
+        hModule = LoadLibraryW(pszModule);
+        if (hModule == NULL)
+            return MH_ERROR_MODULE_NOT_FOUND;
+    }
+    else
         return MH_ERROR_MODULE_NOT_FOUND;
 
     pTarget = (LPVOID)GetProcAddress(hModule, pszProcName);
