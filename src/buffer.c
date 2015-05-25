@@ -29,6 +29,11 @@
 #include <Windows.h>
 #include "buffer.h"
 
+#ifndef max
+#define max(a,b) (((a) > (b)) ? (a) : (b))
+#define min(a,b) (((a) < (b)) ? (a) : (b))
+#endif
+
 // Size of each memory block. (= page size of VirtualAlloc)
 #define MEMORY_BLOCK_SIZE 0x1000
 

@@ -26,8 +26,22 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef _MSC_VER
+#define  _WIN32_WINNT 0x0501
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <Windows.h>
 #include <TlHelp32.h>
+#ifndef _MSC_VER
+#include <x86intrin.h>
+#include <limits.h>
+#ifndef ARRAYSIZE
+  #define ARRAYSIZE(x) sizeof(x)/sizeof(*x)
+#endif
+#else
+#include <intrin.h>
+#include <xmmintrin.h>
+#endif
 
 #include "../include/MinHook.h"
 #include "buffer.h"
@@ -433,13 +447,21 @@ static VOID EnterSpinLock(VOID)
     SIZE_T spinCount = 0;
 
     // Wait until the flag is FALSE.
+#ifndef _MSC_VER
+    while (InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
+    {
+#else
     while (_InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
         _ReadWriteBarrier();
-
+#endif
         // Prevent the loop from being too busy.
         if (spinCount < 16)
+#ifndef _MSC_VER
+            Sleep(0);
+#else
             _mm_pause();
+#endif
         else if (spinCount < 32)
             Sleep(0);
         else
@@ -452,8 +474,12 @@ static VOID EnterSpinLock(VOID)
 //-------------------------------------------------------------------------
 static VOID LeaveSpinLock(VOID)
 {
+#ifndef _MSC_VER
+    InterlockedExchange(&g_isLocked, FALSE);
+#else
     _ReadWriteBarrier();
     _InterlockedExchange(&g_isLocked, FALSE);
+#endif
 }
 
 //-------------------------------------------------------------------------
@@ -826,16 +852,22 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHookApi(
-    LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal)
+    LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal, bool autoLoad)
 {
     HMODULE hModule;
     LPVOID  pTarget;
 
     hModule = GetModuleHandleW(pszModule);
-    if (hModule == NULL)
+    if (hModule == NULL && autoLoad)
+    {
+        hModule = LoadLibraryW(pszModule);
+        if (hModule == NULL)
+            return MH_ERROR_MODULE_NOT_FOUND;
+    }
+    else
         return MH_ERROR_MODULE_NOT_FOUND;
 
-    pTarget = GetProcAddress(hModule, pszProcName);
+    pTarget = (LPVOID)GetProcAddress(hModule, pszProcName);
     if (pTarget == NULL)
         return MH_ERROR_FUNCTION_NOT_FOUND;
 
