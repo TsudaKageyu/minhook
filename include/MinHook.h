@@ -121,9 +121,8 @@ extern "C" {
     //   ppOriginal [out] A pointer to the trampoline function, which will be
     //                    used to call the original target function.
     //                    This parameter can be NULL.
-    //   autoLoad   [in]  Will load module if not loaded
     MH_STATUS WINAPI MH_CreateHookApi(
-        LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal, bool autoLoad = false);
+        LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal);
 
     // Removes an already created hook.
     // Parameters:
