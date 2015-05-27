@@ -26,13 +26,11 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define STRICT
+#define NOMINMAX
+#define _WIN32_WINNT 0x0501
 #include <Windows.h>
 #include "buffer.h"
-
-#ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
-#define min(a,b) (((a) < (b)) ? (a) : (b))
-#endif
 
 // Size of each memory block. (= page size of VirtualAlloc)
 #define MEMORY_BLOCK_SIZE 0x1000
@@ -166,10 +164,11 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
     maxAddr = (ULONG_PTR)si.lpMaximumApplicationAddress;
 
     // pOrigin ± 512MB
-    if ((ULONG_PTR)pOrigin > MAX_MEMORY_RANGE)
-        minAddr = max(minAddr, (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE);
+    if ((ULONG_PTR)pOrigin > MAX_MEMORY_RANGE && minAddr < (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE)
+        minAddr = (ULONG_PTR)pOrigin - MAX_MEMORY_RANGE;
 
-    maxAddr = min(maxAddr, (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE);
+    if (maxAddr > (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE)
+        maxAddr = (ULONG_PTR)pOrigin + MAX_MEMORY_RANGE;
 
     // Make room for MEMORY_BLOCK_SIZE bytes.
     maxAddr -= MEMORY_BLOCK_SIZE - 1;
