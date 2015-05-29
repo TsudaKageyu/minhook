@@ -435,18 +435,6 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
 }
 
 //-------------------------------------------------------------------------
-static FORCEINLINE VOID MemoryBarrierEx()
-{
-#if _MSC_VER
-    MemoryBarrier();
-#elif (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
-    __sync_synchronize();
-#else
-    __asm__ __volatile__("" : : : "memory");
-#endif
-}
-
-//-------------------------------------------------------------------------
 static VOID EnterSpinLock(VOID)
 {
     SIZE_T spinCount = 0;
@@ -454,8 +442,6 @@ static VOID EnterSpinLock(VOID)
     // Wait until the flag is FALSE.
     while (InterlockedCompareExchange(&g_isLocked, TRUE, FALSE) != FALSE)
     {
-        MemoryBarrierEx();
-
         // Prevent the loop from being too busy.
         if (spinCount < 32)
             Sleep(0);
@@ -469,7 +455,6 @@ static VOID EnterSpinLock(VOID)
 //-------------------------------------------------------------------------
 static VOID LeaveSpinLock(VOID)
 {
-    MemoryBarrierEx();
     InterlockedExchange(&g_isLocked, FALSE);
 }
 
