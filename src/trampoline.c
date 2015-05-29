@@ -27,10 +27,9 @@
  */
 
 #include <Windows.h>
-#ifndef _MSC_VER
+
 #ifndef ARRAYSIZE
-  #define ARRAYSIZE(x) sizeof(x)/sizeof(*x)
-#endif
+    #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 #endif
 
 #ifdef _M_X64
