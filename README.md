@@ -1,3 +1,5 @@
+[![endorse](https://api.coderwall.com/TsudaKageyu/endorsecount.png)](https://coderwall.com/TsudaKageyu)
+
 # MinHook
 
 The Minimalistic x86/x64 API Hooking Library for Windows
