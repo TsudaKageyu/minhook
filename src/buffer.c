@@ -29,7 +29,7 @@
 #define STRICT
 #define NOMINMAX
 #define _WIN32_WINNT 0x0501
-#include <Windows.h>
+#include <windows.h>
 #include "buffer.h"
 
 // Size of each memory block. (= page size of VirtualAlloc)
