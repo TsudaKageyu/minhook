@@ -30,3 +30,10 @@ obj/
 [Dd]ebug*/
 [Rr]elease*/
 Ankh.NoLoad
+
+#GCC files
+*.o
+*.d
+*.res
+*.dll
+*.a
