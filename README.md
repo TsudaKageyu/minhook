@@ -12,7 +12,7 @@ Need some funds to continue developing this library. All contributions gratefull
 
 ### Version history
 
-- ####v1.3.2-beta3
+- ####v1.3.2-beta3 - 21 Jul 2015  (Nuget package only)
   * Support MinGW. (Experimental)
 
 - ####v1.3.2-beta2 - 18 May 2015
