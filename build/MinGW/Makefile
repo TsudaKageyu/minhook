@@ -7,7 +7,7 @@ SRCS:=$(wildcard src/*.c src/HDE/*.c)
 OBJS:=$(SRCS:%.c=%.o)
 DEPS:=$(SRCS:%.c=%.d)
 INCS:=-Isrc -Iinclude
-CFLAGS:=-masm=intel -Wall -Werror -std=c11 -funsigned-bitfields
+CFLAGS:=-masm=intel -Wall -Werror -std=c11
 LDFLAGS:=-Wl,-enable-stdcall-fixup -s -static-libgcc
 
 all: MinHook.dll libMinHook.dll.a libMinHook.a
