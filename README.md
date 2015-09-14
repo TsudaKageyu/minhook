@@ -12,7 +12,7 @@ Need some funds to continue developing this library. All contributions gratefull
 
 ### Version history
 
-- ####v1.3.2 - 13 Sep 2015
+- ####v1.3.2 - 20 Sep 2015
   * Support Visual Studio 2015.
   * Support MinGW.
 
