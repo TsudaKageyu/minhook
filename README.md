@@ -12,6 +12,9 @@ Need some funds to continue developing this library. All contributions gratefull
 
 ### Version history
 
+- ####v1.3.2.1 - 9 Nov 2015  (Nuget package only)
+  * Fixed an insufficient support for Visual Studio 2015.
+
 - ####v1.3.2 - 1 Nov 2015
   * Support Visual Studio 2015.
   * Support MinGW.
