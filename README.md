@@ -28,6 +28,9 @@ Need some funds to continue developing this library. All contributions gratefull
   * Reduced the footprint a little more.
   * Support Visual Studio 2015 RC. (Experimental)
 
+- ####v1.3.1.1 - 7 Apr 2015  (Nuget package only)
+  * Support for WDK8.0 and 8.1.
+
 - ####v1.3.1 - 19 Mar 2015
   * No major changes from v1.3.1-beta.
 
