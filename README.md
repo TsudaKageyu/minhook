@@ -6,7 +6,7 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
 ### Donation please
 
-Need some funds to continue developing this library. All contributions gratefully accepted.
+I need some funds to continue developing this library. All contributions gratefully accepted.
 
 <a href='https://pledgie.com/campaigns/27314'><img alt='Click here to lend your support to: MinHook - Help me continue to develop this library and make a donation at pledgie.com !' src='https://pledgie.com/campaigns/27314.png?skin_name=chrome' border='0' ></a>
 
