@@ -124,6 +124,23 @@ extern "C" {
     MH_STATUS WINAPI MH_CreateHookApi(
         LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal);
 
+    // Creates a Hook for the specified API function, in disabled state.
+    // Parameters:
+    //   pszModule  [in]  A pointer to the loaded module name which contains the
+    //                    target function.
+    //   pszTarget  [in]  A pointer to the target function name, which will be
+    //                    overridden by the detour function.
+    //   pDetour    [in]  A pointer to the detour function, which will override
+    //                    the target function.
+    //   ppOriginal [out] A pointer to the trampoline function, which will be
+    //                    used to call the original target function.
+    //                    This parameter can be NULL.
+    //   ppTarget   [out] A pointer to the target function, which will be used
+    //                    with other functions.
+    //                    This parameter can be NULL.
+    MH_STATUS WINAPI MH_CreateHookApiEx(
+        LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal, LPVOID *ppTarget);
+
     // Removes an already created hook.
     // Parameters:
     //   pTarget [in] A pointer to the target function.
