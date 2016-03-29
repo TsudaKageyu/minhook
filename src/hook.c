@@ -67,9 +67,9 @@ typedef struct _HOOK_ENTRY
     LPVOID pTrampoline;         // Address of the trampoline function.
     UINT8  backup[8];           // Original prologue of the target function.
 
-    BOOL   patchAbove  : 1;     // Uses the hot patch area.
-    BOOL   isEnabled   : 1;     // Enabled.
-    BOOL   queueEnable : 1;     // Queued for enabling/disabling when != isEnabled.
+    UINT8  patchAbove  : 1;     // Uses the hot patch area.
+    UINT8  isEnabled   : 1;     // Enabled.
+    UINT8  queueEnable : 1;     // Queued for enabling/disabling when != isEnabled.
 
     UINT   nIP : 4;             // Count of the instruction boundaries.
     UINT8  oldIPs[8];           // Instruction boundaries of the target function.
