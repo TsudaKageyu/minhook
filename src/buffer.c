@@ -93,7 +93,7 @@ static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAlloc
 {
     ULONG_PTR tryAddr = (ULONG_PTR)pAddress;
 
-    // Round down to the next allocation granularity.
+    // Round down to the allocation granularity.
     tryAddr -= tryAddr % dwAllocationGranularity;
 
     // Start from the previous allocation granularity multiply.
@@ -124,7 +124,7 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
 {
     ULONG_PTR tryAddr = (ULONG_PTR)pAddress;
 
-    // Round down to the next allocation granularity.
+    // Round down to the allocation granularity.
     tryAddr -= tryAddr % dwAllocationGranularity;
 
     // Start from the next allocation granularity multiply.
