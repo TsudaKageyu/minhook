@@ -102,7 +102,7 @@ static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAlloc
     while (tryAddr >= (ULONG_PTR)pMinAddr)
     {
         MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0)
             break;
 
         if (mbi.State == MEM_FREE)
@@ -133,7 +133,7 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
     while (tryAddr <= (ULONG_PTR)pMaxAddr)
     {
         MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
+        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0)
             break;
 
         if (mbi.State == MEM_FREE)
@@ -279,7 +279,7 @@ VOID FreeBuffer(LPVOID pBuffer)
             PMEMORY_SLOT pSlot = (PMEMORY_SLOT)pBuffer;
 #ifdef _DEBUG
             // Clear the released slot for debugging.
-            memset(pSlot, 0x00, sizeof(MEMORY_SLOT));
+            memset(pSlot, 0x00, sizeof(*pSlot));
 #endif
             // Restore the released slot to the list.
             pSlot->pNext = pBlock->pFree;
@@ -309,7 +309,7 @@ VOID FreeBuffer(LPVOID pBuffer)
 BOOL IsExecutableAddress(LPVOID pAddress)
 {
     MEMORY_BASIC_INFORMATION mi;
-    VirtualQuery(pAddress, &mi, sizeof(MEMORY_BASIC_INFORMATION));
+    VirtualQuery(pAddress, &mi, sizeof(mi));
 
     return (mi.State == MEM_COMMIT && (mi.Protect & PAGE_EXECUTE_FLAGS));
 }
