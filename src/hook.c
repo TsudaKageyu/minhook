@@ -552,8 +552,8 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                 {
                     TRAMPOLINE ct;
 
-                    ct.pTarget = pTarget;
-                    ct.pDetour = pDetour;
+                    ct.pTarget     = pTarget;
+                    ct.pDetour     = pDetour;
                     ct.pTrampoline = pBuffer;
                     if (CreateTrampolineFunction(&ct))
                     {
