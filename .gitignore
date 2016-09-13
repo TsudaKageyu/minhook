@@ -37,3 +37,6 @@ Ankh.NoLoad
 *.res
 *.dll
 *.a
+
+#Visual Studio Code files
+.vscode/
