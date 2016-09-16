@@ -3,7 +3,7 @@ DLLTOOL:=$(CROSS_PREFIX)dlltool
 AR:=$(CROSS_PREFIX)ar
 CC:=$(CROSS_PREFIX)gcc
 CCLD:=$(CC)
-SRCS:=$(wildcard src/*.c src/HDE/*.c)
+SRCS:=$(wildcard src/*.c src/hde/*.c)
 OBJS:=$(SRCS:%.c=%.o)
 DEPS:=$(SRCS:%.c=%.d)
 INCS:=-Isrc -Iinclude
