@@ -26,8 +26,12 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifndef STRICT
 #define STRICT
+#endif
+#ifndef NOMINMAX
 #define NOMINMAX
+#endif
 #define _WIN32_WINNT 0x0501
 #include <windows.h>
 #include "buffer.h"
