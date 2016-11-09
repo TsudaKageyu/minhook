@@ -26,7 +26,6 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define _WIN32_WINNT 0x0501
 #include <windows.h>
 #include "buffer.h"
 
