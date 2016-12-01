@@ -239,7 +239,7 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
             enable = TRUE;
             break;
 
-        case ACTION_APPLY_QUEUED:
+        default: // ACTION_APPLY_QUEUED
             enable = pHook->queueEnable;
             break;
         }
