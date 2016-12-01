@@ -5,6 +5,8 @@
  *
  */
 
+#ifdef _M_IX86
+
 #include "hde32.h"
 #include "table32.h"
 
@@ -320,3 +322,5 @@ unsigned int hde32_disasm(const void *code, hde32s *hs)
 
     return (unsigned int)hs->len;
 }
+
+#endif // _M_IX86
