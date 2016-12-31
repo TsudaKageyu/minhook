@@ -12,7 +12,7 @@ I need some funds to continue developing this library. All contributions gratefu
 
 ### Version history
 
-- ####v1.3.3 - ?? ??? 2016
+- ####v1.3.3 - ?? Jan 2017 (Probably 7 or 8)
   * Added a helper function ```MH_CreateHookApiEx```. (Thanks to asm256)
 
 - ####v1.3.2.1 - 9 Nov 2015  (Nuget package only)
