@@ -93,7 +93,7 @@ typedef struct _TRAMPOLINE
     LPVOID pDetour;         // [In] Address of the detour function.
     LPVOID pTrampoline;     // [In] Buffer address for the trampoline and relay function.
 
-#ifdef _M_X64
+#if defined(_M_X64) || defined(__x86_64__)
     LPVOID pRelay;          // [Out] Address of the relay function.
 #endif
     BOOL   patchAbove;      // [Out] Should use the hot patch area?

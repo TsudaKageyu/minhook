@@ -1,5 +1,7 @@
 # MinHook
 
+[![License](https://img.shields.io/badge/License-BSD%202--Clause-orange.svg)](https://opensource.org/licenses/BSD-2-Clause)
+
 The Minimalistic x86/x64 API Hooking Library for Windows
 
 http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
@@ -14,6 +16,7 @@ I need some funds to continue developing this library. All contributions gratefu
 
 - ####v1.3.3 - ?? Jan 2017 (Probably 7 or 8)
   * Added a helper function ```MH_CreateHookApiEx```. (Thanks to asm256)
+  * Support Visual Studio 2017 RC.
 
 - ####v1.3.2.1 - 9 Nov 2015  (Nuget package only)
   * Fixed an insufficient support for Visual Studio 2015.
