@@ -14,7 +14,7 @@ I need some funds to continue developing this library. All contributions gratefu
 
 ### Version history
 
-- ####v1.3.3 - ?? Jan 2017 (Probably 7 or 8)
+- ####v1.3.3 - 8 Jan 2017
   * Added a helper function ```MH_CreateHookApiEx```. (Thanks to asm256)
   * Support Visual Studio 2017 RC.
 
