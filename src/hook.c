@@ -860,6 +860,26 @@ MH_STATUS WINAPI MH_CreateHookApi(
 }
 
 //-------------------------------------------------------------------------
+MH_STATUS WINAPI MH_CreateHookVirtualEx(
+    LPVOID pInstance, UINT methodPos, LPVOID pDetour, LPVOID *ppOriginal, LPVOID *ppTarget)
+{
+    LPVOID* pVMT = *((LPVOID**)pInstance);
+    LPVOID  pTarget = pVMT[methodPos];
+
+    if (ppTarget != NULL)
+        *ppTarget = pTarget;
+
+    return MH_CreateHook(pTarget, pDetour, ppOriginal);
+}
+
+//-------------------------------------------------------------------------
+MH_STATUS WINAPI MH_CreateHookVirtual(
+    LPVOID pInstance, UINT methodPos, LPVOID pDetour, LPVOID *ppOriginal)
+{
+    return MH_CreateHookVirtualEx(pInstance, methodPos, pDetour, ppOriginal, NULL);
+}
+
+//-------------------------------------------------------------------------
 const char * WINAPI MH_StatusToString(MH_STATUS status)
 {
 #define MH_ST2STR(x)    \
