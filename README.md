@@ -6,7 +6,7 @@ The Minimalistic x86/x64 API Hooking Library for Windows
 
 http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
-### Donation please
+### Donation please No thanks
 
 I need some funds to continue developing this library. All contributions gratefully accepted.
 
