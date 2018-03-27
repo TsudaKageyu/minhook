@@ -46,6 +46,14 @@ typedef struct _JMP_REL
     UINT32 operand;     // Relative destination address
 } JMP_REL, *PJMP_REL, CALL_REL;
 
+// 32-bit direct relative jump/call.
+typedef struct _PUSH_RET
+{
+    UINT8  push;      // 68 xxxxxxxx: PUSH 00000000xxxxxxxx
+    UINT32 operand;   // Absolute 32-bit destination address
+    UINT8  ret;       // C3: RET
+} PUSH_RET, *PPUSH_RET;
+
 // 64-bit indirect absolute jump.
 typedef struct _JMP_ABS
 {

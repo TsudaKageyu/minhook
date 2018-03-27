@@ -16,11 +16,11 @@
     <ClCompile Include="..\..\src\HDE\hde64.c">
       <Filter>HDE</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\api.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\trampoline.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -39,6 +39,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\HDE\table64.h">
       <Filter>HDE</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\trampoline.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\api.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

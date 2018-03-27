@@ -41,3 +41,4 @@ Ankh.NoLoad
 
 #Visual Studio Code files
 .vscode/
+*.opendb

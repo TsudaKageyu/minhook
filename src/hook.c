@@ -30,6 +30,7 @@
 #include <tlhelp32.h>
 #include <limits.h>
 
+#include "api.h"
 #include "../include/MinHook.h"
 #include "buffer.h"
 #include "trampoline.h"
@@ -120,14 +121,14 @@ static PHOOK_ENTRY AddHookEntry()
     if (g_hooks.pItems == NULL)
     {
         g_hooks.capacity = INITIAL_HOOK_CAPACITY;
-        g_hooks.pItems = (PHOOK_ENTRY)HeapAlloc(
+        g_hooks.pItems = (PHOOK_ENTRY)MyHeapAlloc(
             g_hHeap, 0, g_hooks.capacity * sizeof(HOOK_ENTRY));
         if (g_hooks.pItems == NULL)
             return NULL;
     }
     else if (g_hooks.size >= g_hooks.capacity)
     {
-        PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
+        PHOOK_ENTRY p = (PHOOK_ENTRY)MyHeapReAlloc(
             g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity * 2) * sizeof(HOOK_ENTRY));
         if (p == NULL)
             return NULL;
@@ -149,7 +150,7 @@ static void DeleteHookEntry(UINT pos)
 
     if (g_hooks.capacity / 2 >= INITIAL_HOOK_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
     {
-        PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
+        PHOOK_ENTRY p = (PHOOK_ENTRY)MyHeapReAlloc(
             g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity / 2) * sizeof(HOOK_ENTRY));
         if (p == NULL)
             return;
@@ -210,7 +211,7 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
     UINT count;
 
     c.ContextFlags = CONTEXT_CONTROL;
-    if (!GetThreadContext(hThread, &c))
+    if (!MyGetThreadContext(hThread, &c))
         return;
 
     if (pos == ALL_HOOKS_POS)
@@ -254,7 +255,7 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
         if (ip != 0)
         {
             *pIP = ip;
-            SetThreadContext(hThread, &c);
+            MySetThreadContext(hThread, &c);
         }
     }
 }
@@ -262,30 +263,30 @@ static void ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
 //-------------------------------------------------------------------------
 static VOID EnumerateThreads(PFROZEN_THREADS pThreads)
 {
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
+    HANDLE hSnapshot = MyCreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
     if (hSnapshot != INVALID_HANDLE_VALUE)
     {
         THREADENTRY32 te;
         te.dwSize = sizeof(THREADENTRY32);
-        if (Thread32First(hSnapshot, &te))
+        if (MyThread32First(hSnapshot, &te))
         {
             do
             {
                 if (te.dwSize >= (FIELD_OFFSET(THREADENTRY32, th32OwnerProcessID) + sizeof(DWORD))
-                    && te.th32OwnerProcessID == GetCurrentProcessId()
-                    && te.th32ThreadID != GetCurrentThreadId())
+                    && te.th32OwnerProcessID == MyGetCurrentProcessId()
+                    && te.th32ThreadID != MyGetCurrentThreadId())
                 {
                     if (pThreads->pItems == NULL)
                     {
                         pThreads->capacity = INITIAL_THREAD_CAPACITY;
                         pThreads->pItems
-                            = (LPDWORD)HeapAlloc(g_hHeap, 0, pThreads->capacity * sizeof(DWORD));
+                            = (LPDWORD)MyHeapAlloc(g_hHeap, 0, pThreads->capacity * sizeof(DWORD));
                         if (pThreads->pItems == NULL)
                             break;
                     }
                     else if (pThreads->size >= pThreads->capacity)
                     {
-                        LPDWORD p = (LPDWORD)HeapReAlloc(
+                        LPDWORD p = (LPDWORD)MyHeapReAlloc(
                             g_hHeap, 0, pThreads->pItems, (pThreads->capacity * 2) * sizeof(DWORD));
                         if (p == NULL)
                             break;
@@ -297,9 +298,9 @@ static VOID EnumerateThreads(PFROZEN_THREADS pThreads)
                 }
 
                 te.dwSize = sizeof(THREADENTRY32);
-            } while (Thread32Next(hSnapshot, &te));
+            } while (MyThread32Next(hSnapshot, &te));
         }
-        CloseHandle(hSnapshot);
+        MyCloseHandle(hSnapshot);
     }
 }
 
@@ -316,12 +317,12 @@ static VOID Freeze(PFROZEN_THREADS pThreads, UINT pos, UINT action)
         UINT i;
         for (i = 0; i < pThreads->size; ++i)
         {
-            HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
+            HANDLE hThread = MyOpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
             if (hThread != NULL)
             {
-                SuspendThread(hThread);
+                MySuspendThread(hThread);
                 ProcessThreadIPs(hThread, pos, action);
-                CloseHandle(hThread);
+                MyCloseHandle(hThread);
             }
         }
     }
@@ -335,15 +336,15 @@ static VOID Unfreeze(PFROZEN_THREADS pThreads)
         UINT i;
         for (i = 0; i < pThreads->size; ++i)
         {
-            HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
+            HANDLE hThread = MyOpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
             if (hThread != NULL)
             {
-                ResumeThread(hThread);
-                CloseHandle(hThread);
+                MyResumeThread(hThread);
+                MyCloseHandle(hThread);
             }
         }
 
-        HeapFree(g_hHeap, 0, pThreads->pItems);
+        MyHeapFree(g_hHeap, 0, pThreads->pItems);
     }
 }
 
@@ -352,7 +353,7 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 {
     PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
     DWORD  oldProtect;
-    SIZE_T patchSize    = sizeof(JMP_REL);
+    SIZE_T patchSize    = sizeof(PUSH_RET);
     LPBYTE pPatchTarget = (LPBYTE)pHook->pTarget;
 
     if (pHook->patchAbove)
@@ -361,14 +362,19 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
         patchSize    += sizeof(JMP_REL_SHORT);
     }
 
-    if (!VirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect))
+    if (!MyVirtualProtect(pPatchTarget, patchSize, PAGE_EXECUTE_READWRITE, &oldProtect))
         return MH_ERROR_MEMORY_PROTECT;
 
     if (enable)
     {
-        PJMP_REL pJmp = (PJMP_REL)pPatchTarget;
+        PPUSH_RET pJmp = (PPUSH_RET)pPatchTarget;
+        pJmp->push = 0x68;
+        pJmp->operand = (UINT32)((LPBYTE)pHook->pDetour);
+        pJmp->ret = 0xC3;
+
+        /*PJMP_REL pJmp = (PJMP_REL)pPatchTarget;
         pJmp->opcode = 0xE9;
-        pJmp->operand = (UINT32)((LPBYTE)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
+        pJmp->operand = (UINT32)((LPBYTE)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));*/
 
         if (pHook->patchAbove)
         {
@@ -380,15 +386,15 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
     else
     {
         if (pHook->patchAbove)
-            memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
+            my_memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
         else
-            memcpy(pPatchTarget, pHook->backup, sizeof(JMP_REL));
+            my_memcpy(pPatchTarget, pHook->backup, sizeof(PUSH_RET));
     }
 
-    VirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
+    MyVirtualProtect(pPatchTarget, patchSize, oldProtect, &oldProtect);
 
     // Just-in-case measure.
-    FlushInstructionCache(GetCurrentProcess(), pPatchTarget, patchSize);
+    MyFlushInstructionCache(MyGetCurrentProcess(), pPatchTarget, patchSize);
 
     pHook->isEnabled   = enable;
     pHook->queueEnable = enable;
@@ -445,9 +451,9 @@ static VOID EnterSpinLock(VOID)
 
         // Prevent the loop from being too busy.
         if (spinCount < 32)
-            Sleep(0);
+            MySleep(0);
         else
-            Sleep(1);
+            MySleep(1);
 
         spinCount++;
     }
@@ -471,7 +477,7 @@ MH_STATUS WINAPI MH_Initialize(VOID)
 
     if (g_hHeap == NULL)
     {
-        g_hHeap = HeapCreate(0, 0, 0);
+        g_hHeap = MyHeapCreate(0, 0, 0);
         if (g_hHeap != NULL)
         {
             // Initialize the internal function buffer.
@@ -511,8 +517,8 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
 
             UninitializeBuffer();
 
-            HeapFree(g_hHeap, 0, g_hooks.pItems);
-            HeapDestroy(g_hHeap);
+            MyHeapFree(g_hHeap, 0, g_hooks.pItems);
+            MyHeapDestroy(g_hHeap);
 
             g_hHeap = NULL;
 
@@ -569,21 +575,21 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                             pHook->isEnabled   = FALSE;
                             pHook->queueEnable = FALSE;
                             pHook->nIP         = ct.nIP;
-                            memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
-                            memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
+                            my_memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
+                            my_memcpy(pHook->newIPs, ct.newIPs, ARRAYSIZE(ct.newIPs));
 
                             // Back up the target function.
 
                             if (ct.patchAbove)
                             {
-                                memcpy(
+                                my_memcpy(
                                     pHook->backup,
                                     (LPBYTE)pTarget - sizeof(JMP_REL),
                                     sizeof(JMP_REL) + sizeof(JMP_REL_SHORT));
                             }
                             else
                             {
-                                memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
+                                my_memcpy(pHook->backup, pTarget, sizeof(JMP_REL));
                             }
 
                             if (ppOriginal != NULL)
@@ -838,11 +844,11 @@ MH_STATUS WINAPI MH_CreateHookApiEx(
     HMODULE hModule;
     LPVOID  pTarget;
 
-    hModule = GetModuleHandleW(pszModule);
+    hModule = MyGetModuleHandleW(pszModule);
     if (hModule == NULL)
         return MH_ERROR_MODULE_NOT_FOUND;
 
-    pTarget = (LPVOID)GetProcAddress(hModule, pszProcName);
+    pTarget = (LPVOID)MyGetProcAddress(hModule, pszProcName);
     if (pTarget == NULL)
         return MH_ERROR_FUNCTION_NOT_FOUND;
 

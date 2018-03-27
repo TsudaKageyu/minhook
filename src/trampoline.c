@@ -31,7 +31,6 @@
 #ifndef ARRAYSIZE
     #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 #endif
-
 #if defined(_M_X64) || defined(__x86_64__)
     #include "./hde/hde64.h"
     typedef hde64s HDE;
@@ -149,7 +148,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
             // Avoid using memcpy to reduce the footprint.
 #ifndef _MSC_VER
-            memcpy(instBuf, (LPBYTE)pOldInst, copySize);
+            my_memcpy(instBuf, (LPBYTE)pOldInst, copySize);
 #else
             __movsb(instBuf, (LPBYTE)pOldInst, copySize);
 #endif
@@ -274,7 +273,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
         // Avoid using memcpy to reduce the footprint.
 #ifndef _MSC_VER
-        memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
+        my_memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
         __movsb((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #endif
@@ -309,7 +308,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     jmp.address = (ULONG_PTR)ct->pDetour;
 
     ct->pRelay = (LPBYTE)ct->pTrampoline + newPos;
-    memcpy(ct->pRelay, &jmp, sizeof(jmp));
+    my_memcpy(ct->pRelay, &jmp, sizeof(jmp));
 #endif
 
     return TRUE;
