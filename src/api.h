@@ -3,6 +3,9 @@
 #include <windows.h>
 #include <TlHelp32.h>
 
+void * my_memset(void *s, int c, size_t n);
+void* my_memcpy(void* destination, void* source, size_t num);
+
 BOOL WINAPI MyHeapFree(
     _In_ HANDLE hHeap,
     _In_ DWORD  dwFlags,
