@@ -352,7 +352,7 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 {
     PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
     DWORD  oldProtect;
-    SIZE_T patchSize    = sizeof(JMP_REL);
+    SIZE_T patchSize    = sizeof(PUSH_RET);
     LPBYTE pPatchTarget = (LPBYTE)pHook->pTarget;
 
     if (pHook->patchAbove)
@@ -366,9 +366,14 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 
     if (enable)
     {
-        PJMP_REL pJmp = (PJMP_REL)pPatchTarget;
+        PPUSH_RET pJmp = (PPUSH_RET)pPatchTarget;
+        pJmp->push = 0x68;
+        pJmp->operand = (UINT32)((LPBYTE)pHook->pDetour);
+        pJmp->ret = 0xC3;
+
+        /*PJMP_REL pJmp = (PJMP_REL)pPatchTarget;
         pJmp->opcode = 0xE9;
-        pJmp->operand = (UINT32)((LPBYTE)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));
+        pJmp->operand = (UINT32)((LPBYTE)pHook->pDetour - (pPatchTarget + sizeof(JMP_REL)));*/
 
         if (pHook->patchAbove)
         {
