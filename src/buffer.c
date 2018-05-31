@@ -62,7 +62,7 @@ typedef struct _MEMORY_BLOCK
 //-------------------------------------------------------------------------
 
 // First element of the memory block list.
-PMEMORY_BLOCK g_pMemoryBlocks;
+PMEMORY_BLOCK g_pMemoryBlocks = NULL;
 
 //-------------------------------------------------------------------------
 VOID InitializeBuffer(VOID)
