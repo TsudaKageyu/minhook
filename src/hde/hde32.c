@@ -10,6 +10,10 @@
 #include "hde32.h"
 #include "table32.h"
 
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
+
 unsigned int hde32_disasm(const void *code, hde32s *hs)
 {
     uint8_t x, c, *p = (uint8_t *)code, cflags, opcode, pref = 0;
