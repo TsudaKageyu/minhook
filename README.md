@@ -86,3 +86,15 @@ I need some funds to continue developing this library. All contributions gratefu
 - **v1.0 - 22 Nov 2009**
  
   * Initial release.
+
+### Building minhook - Using vcpkg
+
+You can download and install minhook using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
+
+    git clone https://github.com/Microsoft/vcpkg.git
+    cd vcpkg
+    ./bootstrap-vcpkg.sh
+    ./vcpkg integrate install
+    ./vcpkg install minhook
+
+The minhook port in vcpkg is kept up to date by Microsoft team members and community contributors. If the version is out of date, please [create an issue or pull request](https://github.com/Microsoft/vcpkg) on the vcpkg repository.
