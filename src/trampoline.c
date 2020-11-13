@@ -28,6 +28,10 @@
 
 #include <windows.h>
 
+#ifdef _MSC_VER
+    #include <intrin.h>
+#endif
+
 #ifndef ARRAYSIZE
     #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 #endif
