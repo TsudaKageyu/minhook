@@ -208,7 +208,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
                 pCopySrc = &jmp;
                 copySize = sizeof(jmp);
 
-                // Exit the function If it is not in the branch
+                // Exit the function if it is not in the branch.
                 finished = (pOldInst >= jmpDest);
             }
         }
