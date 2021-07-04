@@ -280,7 +280,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #ifndef _MSC_VER
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
-        __movsb((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
+        __movsb((LPBYTE)ct->pTrampoline + newPos, (BYTE*)pCopySrc, copySize);
 #endif
         newPos += copySize;
         oldPos += hs.len;
