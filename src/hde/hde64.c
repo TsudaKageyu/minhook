@@ -232,20 +232,14 @@ unsigned int hde64_disasm(const void *code, hde64s *hs)
 
         switch (m_mod) {
             case 0:
-                if (pref & PRE_67) {
-                    if (m_rm == 6)
-                        disp_size = 2;
-                } else
-                    if (m_rm == 5)
-                        disp_size = 4;
+                if (m_rm == 5)
+                    disp_size = 4;
                 break;
             case 1:
                 disp_size = 1;
                 break;
             case 2:
-                disp_size = 2;
-                if (!(pref & PRE_67))
-                    disp_size <<= 1;
+                disp_size = 4;
         }
 
         if (m_mod != 3 && m_rm == 4) {
