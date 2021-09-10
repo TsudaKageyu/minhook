@@ -195,7 +195,7 @@ unsigned int hde64_disasm(const void *code, hde64s *hs)
             }
             for (; ht != table_end; ht += 2)
                 if (*ht++ == opcode) {
-                    if (*ht++ & pref && !((*ht << m_reg) & 0x80))
+                    if ((*ht++ & pref) && !((*ht << m_reg) & 0x80))
                         goto error_operand;
                     else
                         break;
@@ -246,6 +246,7 @@ unsigned int hde64_disasm(const void *code, hde64s *hs)
                 disp_size = 2;
                 if (!(pref & PRE_67))
                     disp_size <<= 1;
+                break;
         }
 
         if (m_mod != 3 && m_rm == 4) {
@@ -271,6 +272,7 @@ unsigned int hde64_disasm(const void *code, hde64s *hs)
             case 4:
                 hs->flags |= F_DISP32;
                 hs->disp.disp32 = *(uint32_t *)p;
+                break;
         }
         p += disp_size;
     } else if (pref & PRE_LOCK)
