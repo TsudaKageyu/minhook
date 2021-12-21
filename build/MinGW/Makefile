@@ -17,7 +17,7 @@ all: MinHook.dll libMinHook.dll.a libMinHook.a
 libMinHook.a: $(OBJS)
 	$(AR) r $@ $^
 libMinHook.dll.a: MinHook.dll dll_resources/MinHook.def
-	$(DLLTOOL) --dllname MinHook.dll --def dll_resources/MinHook.def --output-lib $@
+	$(DLLTOOL) -D MinHook.dll -d dll_resources/MinHook.def -l $@
 MinHook.dll: $(OBJS) dll_resources/MinHook.res dll_resources/MinHook.def
 	$(CCLD) -o $@ -shared $(LDFLAGS) $^
 
