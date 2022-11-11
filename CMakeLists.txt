@@ -55,8 +55,8 @@ endif()
 
 if(BUILD_SHARED_LIBS)
   set(RESOURCES 
-    "dll_resources/minhook.rc"
-    "dll_resources/minhook.def"
+    "dll_resources/MinHook.rc"
+    "dll_resources/MinHook.def"
   )
 endif()
 
