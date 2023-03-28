@@ -152,7 +152,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
             PUINT32 pRelAddr;
 
             // Avoid using memcpy to reduce the footprint.
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(__clang__)
             memcpy(instBuf, (LPBYTE)pOldInst, copySize);
 #else
             __movsb(instBuf, (LPBYTE)pOldInst, copySize);
@@ -277,7 +277,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         ct->nIP++;
 
         // Avoid using memcpy to reduce the footprint.
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(__clang__)
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
         __movsb((LPBYTE)ct->pTrampoline + newPos, (LPBYTE)pCopySrc, copySize);
