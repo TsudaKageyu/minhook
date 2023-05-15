@@ -28,7 +28,8 @@
 
 #include <windows.h>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(MINHOOK_DISABLE_INTRINSICS)
+    #define ALLOW_INTRINSICS
     #include <intrin.h>
 #endif
 
@@ -152,7 +153,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
             PUINT32 pRelAddr;
 
             // Avoid using memcpy to reduce the footprint.
-#ifndef _MSC_VER
+#ifndef ALLOW_INTRINSICS
             memcpy(instBuf, (LPBYTE)pOldInst, copySize);
 #else
             __movsb(instBuf, (LPBYTE)pOldInst, copySize);
@@ -277,7 +278,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         ct->nIP++;
 
         // Avoid using memcpy to reduce the footprint.
-#ifndef _MSC_VER
+#ifndef ALLOW_INTRINSICS
         memcpy((LPBYTE)ct->pTrampoline + newPos, pCopySrc, copySize);
 #else
         __movsb((LPBYTE)ct->pTrampoline + newPos, (LPBYTE)pCopySrc, copySize);
