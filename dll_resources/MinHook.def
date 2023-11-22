@@ -12,3 +12,5 @@ EXPORTS
     MH_QueueDisableHook
     MH_ApplyQueued
     MH_StatusToString
+    MH_InstantHook
+    MH_InstantHookApi
