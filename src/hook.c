@@ -921,3 +921,31 @@ const char *WINAPI MH_StatusToString(MH_STATUS status)
 
     return "(unknown)";
 }
+
+//-------------------------------------------------------------------------
+MH_STATUS WINAPI MH_InstantHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal)
+{
+    MH_STATUS status = MH_CreateHook(pTarget, pDetour, ppOriginal);
+    if (status != MH_OK)
+        return status;
+        
+    return MH_EnableHook(pTarget);
+}
+
+ //-------------------------------------------------------------------------
+MH_STATUS WINAPI MH_InstantHookApi(LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal)
+{
+    MH_STATUS status = MH_CreateHookApi(pszModule, pszProcName, pDetour, ppOriginal);
+    if (status != MH_OK)
+        return status;
+        
+    HMODULE hModule = GetModuleHandleW(pszModule);
+    if (hModule == NULL)
+        return MH_ERROR_MODULE_NOT_FOUND;
+
+    LPVOID pTarget = (LPVOID)GetProcAddress(hModule, pszProcName);
+    if (pTarget == NULL)
+        return MH_ERROR_FUNCTION_NOT_FOUND;
+    
+    return MH_EnableHook(pTarget);
+}
