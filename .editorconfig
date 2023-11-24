@@ -20,3 +20,7 @@ trim_trailing_whitespace = true
 # UTF-8 with BOM
 [*.{c,h,def,txt}]
 charset=utf-8-bom
+
+# C/C++ code formatting
+[*.{c,h}]
+cpp_space_pointer_reference_alignment = right

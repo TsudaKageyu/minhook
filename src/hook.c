@@ -880,7 +880,7 @@ MH_STATUS WINAPI MH_CreateHookApiEx(
     if (pTarget == NULL)
         return MH_ERROR_FUNCTION_NOT_FOUND;
 
-    if(ppTarget != NULL)
+    if (ppTarget != NULL)
         *ppTarget = pTarget;
 
     return MH_CreateHook(pTarget, pDetour, ppOriginal);
@@ -890,11 +890,11 @@ MH_STATUS WINAPI MH_CreateHookApiEx(
 MH_STATUS WINAPI MH_CreateHookApi(
     LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal)
 {
-   return MH_CreateHookApiEx(pszModule, pszProcName, pDetour, ppOriginal, NULL);
+    return MH_CreateHookApiEx(pszModule, pszProcName, pDetour, ppOriginal, NULL);
 }
 
 //-------------------------------------------------------------------------
-const char * WINAPI MH_StatusToString(MH_STATUS status)
+const char *WINAPI MH_StatusToString(MH_STATUS status)
 {
 #define MH_ST2STR(x)    \
     case x:             \
