@@ -262,7 +262,6 @@ static VOID ProcessThreadIPs(HANDLE hThread, UINT pos, UINT action)
 //-------------------------------------------------------------------------
 static BOOL EnumerateThreads(PFROZEN_THREADS pThreads)
 {
-	LPDWORD p;
     BOOL succeeded = FALSE;
 
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPTHREAD, 0);
@@ -292,6 +291,7 @@ static BOOL EnumerateThreads(PFROZEN_THREADS pThreads)
                     }
                     else if (pThreads->size >= pThreads->capacity)
                     {
+                        LPDWORD p;
                         pThreads->capacity *= 2;
                         p = (LPDWORD)HeapReAlloc(
                             g_hHeap, 0, pThreads->pItems, pThreads->capacity * sizeof(DWORD));
