@@ -342,7 +342,12 @@ static MH_STATUS Freeze(PFROZEN_THREADS pThreads, UINT pos, UINT action)
         for (i = 0; i < pThreads->size; ++i)
         {
             HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
-            if (hThread != NULL)
+            if (hThread == NULL)
+            {
+                // Mark thread as not suspended, so it's not resumed later on.
+                pThreads->pItems[i] = 0;
+            }
+            else
             {
                 DWORD result = SuspendThread(hThread);
                 if (result == 0xFFFFFFFF)
