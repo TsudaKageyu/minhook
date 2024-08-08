@@ -338,15 +338,16 @@ static MH_STATUS Freeze(PFROZEN_THREADS pThreads, UINT pos, UINT action)
     }
     else if (pThreads->pItems != NULL)
     {
-        for (UINT i = 0; i < pThreads->size; ++i)
+        UINT i;
+        for (i = 0; i < pThreads->size; ++i)
         {
             HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, pThreads->pItems[i]);
             if (hThread != NULL)
             {
                 DWORD result = SuspendThread(hThread);
-                if(result == 0xFFFFFFFF)
+                if (result == 0xFFFFFFFF)
                 {
-                    // mark thread as not suspended, so it's not resumed later on.
+                    // Mark thread as not suspended, so it's not resumed later on.
                     pThreads->pItems[i] = 0;
                 }
                 else
@@ -366,13 +367,14 @@ static VOID Unfreeze(PFROZEN_THREADS pThreads)
 {
     if (pThreads->pItems != NULL)
     {
-        for (UINT i = 0; i < pThreads->size; ++i)
+        UINT i;
+        for (i = 0; i < pThreads->size; ++i)
         {
             DWORD threadId = pThreads->pItems[i];
-            if(threadId > 0)
+            if (threadId != 0)
             {
                 HANDLE hThread = OpenThread(THREAD_ACCESS, FALSE, threadId);
-                if(hThread != NULL)
+                if (hThread != NULL)
                 {
                     ResumeThread(hThread);
                     CloseHandle(hThread);
