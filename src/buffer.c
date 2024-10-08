@@ -265,6 +265,8 @@ LPVOID AllocateBuffer(LPVOID pOrigin)
 //-------------------------------------------------------------------------
 VOID FreeBuffer(LPVOID pBuffer)
 {
+    if (pBuffer == NULL)
+        return;
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
     PMEMORY_BLOCK pPrev = NULL;
     ULONG_PTR pTargetBlock = ((ULONG_PTR)pBuffer / MEMORY_BLOCK_SIZE) * MEMORY_BLOCK_SIZE;

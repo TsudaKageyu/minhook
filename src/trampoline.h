@@ -91,11 +91,8 @@ typedef struct _TRAMPOLINE
 {
     LPVOID pTarget;         // [In] Address of the target function.
     LPVOID pDetour;         // [In] Address of the detour function.
-    LPVOID pTrampoline;     // [In] Buffer address for the trampoline and relay function.
-
-#if defined(_M_X64) || defined(__x86_64__)
-    LPVOID pRelay;          // [Out] Address of the relay function.
-#endif
+    LPVOID pTrampoline;     // [In] Buffer address for the trampoline.
+    LPVOID pRelay;          // [In] Buffer address for the relay function.
     BOOL   patchAbove;      // [Out] Should use the hot patch area?
     UINT   nIP;             // [Out] Number of the instruction boundaries.
     UINT8  oldIPs[8];       // [Out] Instruction boundaries of the target function.
@@ -103,3 +100,6 @@ typedef struct _TRAMPOLINE
 } TRAMPOLINE, *PTRAMPOLINE;
 
 BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
+BOOL CreateRelayFunction(PTRAMPOLINE ct);
+VOID DisableRelayFunction(LPBYTE pRelay);
+VOID EnableRelayFunction(LPBYTE pRelay);

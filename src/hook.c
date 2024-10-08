@@ -173,11 +173,9 @@ static DWORD_PTR FindOldIP(PHOOK_ENTRY pHook, DWORD_PTR ip)
             return (DWORD_PTR)pHook->pTarget + pHook->oldIPs[i];
     }
 
-#if defined(_M_X64) || defined(__x86_64__)
     // Check relay function.
     if (ip == (DWORD_PTR)pHook->pDetour)
         return (DWORD_PTR)pHook->pTarget;
-#endif
 
     return 0;
 }
@@ -589,25 +587,23 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
             UINT pos = FindHookEntry(pTarget);
             if (pos == INVALID_HOOK_POS)
             {
-                LPVOID pBuffer = AllocateBuffer(pTarget);
-                if (pBuffer != NULL)
+                LPVOID pTrampoline = AllocateBuffer(pTarget);
+                LPVOID pRelay      = AllocateBuffer(pTarget);
+                if (pTrampoline != NULL && pRelay != NULL)
                 {
                     TRAMPOLINE ct;
 
                     ct.pTarget     = pTarget;
                     ct.pDetour     = pDetour;
-                    ct.pTrampoline = pBuffer;
-                    if (CreateTrampolineFunction(&ct))
+                    ct.pTrampoline = pTrampoline;
+                    ct.pRelay      = pRelay;
+                    if (CreateTrampolineFunction(&ct) && CreateRelayFunction(&ct))
                     {
                         PHOOK_ENTRY pHook = AddHookEntry();
                         if (pHook != NULL)
                         {
                             pHook->pTarget     = ct.pTarget;
-#if defined(_M_X64) || defined(__x86_64__)
                             pHook->pDetour     = ct.pRelay;
-#else
-                            pHook->pDetour     = ct.pDetour;
-#endif
                             pHook->pTrampoline = ct.pTrampoline;
                             pHook->patchAbove  = ct.patchAbove;
                             pHook->isEnabled   = FALSE;
@@ -645,11 +641,14 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
 
                     if (status != MH_OK)
                     {
-                        FreeBuffer(pBuffer);
+                        FreeBuffer(pTrampoline);
+                        FreeBuffer(pRelay);
                     }
                 }
                 else
                 {
+                    FreeBuffer(pTrampoline);
+                    FreeBuffer(pRelay);
                     status = MH_ERROR_MEMORY_ALLOC;
                 }
             }
