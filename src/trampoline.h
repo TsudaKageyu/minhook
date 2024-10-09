@@ -100,6 +100,5 @@ typedef struct _TRAMPOLINE
 } TRAMPOLINE, *PTRAMPOLINE;
 
 BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
-BOOL CreateRelayFunction(PTRAMPOLINE ct);
-VOID DisableRelayFunction(LPBYTE pRelay);
-VOID EnableRelayFunction(LPBYTE pRelay);
+VOID DisableRelayFunction(LPVOID pRelay, LPVOID pTrampoline);
+VOID EnableRelayFunction(LPVOID pRelay, LPVOID pDetour);

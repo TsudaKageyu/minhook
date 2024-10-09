@@ -62,6 +62,7 @@ typedef struct _HOOK_ENTRY
 {
     LPVOID pTarget;             // Address of the target function.
     LPVOID pDetour;             // Address of the detour or relay function.
+    LPVOID pDetour2;            // Address of the detour function.
     LPVOID pTrampoline;         // Address of the trampoline function.
     UINT8  backup[8];           // Original prologue of the target function.
 
@@ -588,25 +589,24 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
             if (pos == INVALID_HOOK_POS)
             {
                 LPVOID pTrampoline = AllocateBuffer(pTarget);
-                LPVOID pRelay      = AllocateBuffer(pTarget);
-                if (pTrampoline != NULL && pRelay != NULL)
+                if (pTrampoline != NULL)
                 {
                     TRAMPOLINE ct;
 
                     ct.pTarget     = pTarget;
                     ct.pDetour     = pDetour;
                     ct.pTrampoline = pTrampoline;
-                    ct.pRelay      = pRelay;
-                    if (CreateTrampolineFunction(&ct) && CreateRelayFunction(&ct))
+                    if (CreateTrampolineFunction(&ct))
                     {
                         PHOOK_ENTRY pHook = AddHookEntry();
                         if (pHook != NULL)
                         {
                             pHook->pTarget     = ct.pTarget;
                             pHook->pDetour     = ct.pRelay;
+                            pHook->pDetour2    = ct.pDetour;
                             pHook->pTrampoline = ct.pTrampoline;
                             pHook->patchAbove  = ct.patchAbove;
-                            pHook->isEnabled   = FALSE;
+                            pHook->isEnabled   = -1;
                             pHook->queueEnable = FALSE;
                             pHook->nIP         = ct.nIP;
                             memcpy(pHook->oldIPs, ct.oldIPs, ARRAYSIZE(ct.oldIPs));
@@ -642,13 +642,10 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                     if (status != MH_OK)
                     {
                         FreeBuffer(pTrampoline);
-                        FreeBuffer(pRelay);
                     }
                 }
                 else
                 {
-                    FreeBuffer(pTrampoline);
-                    FreeBuffer(pRelay);
                     status = MH_ERROR_MEMORY_ALLOC;
                 }
             }
