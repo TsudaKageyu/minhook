@@ -52,9 +52,9 @@
 
 // Maximum size of a trampoline function.
 #if defined(_M_X64) || defined(__x86_64__)
-    #define TRAMPOLINE_MAX_SIZE (MEMORY_SLOT_SIZE - sizeof(JMP_ABS))
+#define TRAMPOLINE_MAX_SIZE (MEMORY_SLOT_SIZE - sizeof(JMP_ABS))
 #else
-    #define TRAMPOLINE_MAX_SIZE MEMORY_SLOT_SIZE
+#define TRAMPOLINE_MAX_SIZE (MEMORY_SLOT_SIZE - sizeof(JMP_REL))
 #endif
 
 //-------------------------------------------------------------------------
@@ -308,13 +308,32 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         ct->patchAbove = TRUE;
     }
 
-#if defined(_M_X64) || defined(__x86_64__)
     // Create a relay function.
+#if defined(_M_X64) || defined(__x86_64__)
     jmp.address = (ULONG_PTR)ct->pDetour;
-
     ct->pRelay = (LPBYTE)ct->pTrampoline + newPos;
+    memcpy(ct->pRelay, &jmp, sizeof(jmp));
+#else
+    ct->pRelay = (LPBYTE)ct->pTrampoline + newPos;
+    jmp.operand = (UINT32)((LPBYTE)ct->pDetour - ((LPBYTE)ct->pRelay + sizeof(jmp)));
     memcpy(ct->pRelay, &jmp, sizeof(jmp));
 #endif
 
     return TRUE;
+}
+
+VOID DisableRelayFunction(LPVOID pRelay, LPVOID pTrampoline) {
+#if defined(_M_X64) || defined(__x86_64__)
+    ((PJMP_ABS)pRelay)->address = pTrampoline;
+#else
+    ((PJMP_REL)pRelay)->opcode = (UINT32)((LPBYTE)pTrampoline - ((LPBYTE)pRelay + sizeof(JMP_REL)));
+#endif
+}
+
+VOID EnableRelayFunction(LPVOID pRelay, LPVOID pDetour) {
+#if defined(_M_X64) || defined(__x86_64__)
+    ((PJMP_ABS)pRelay)->address = pDetour;
+#else
+    ((PJMP_REL)pRelay)->opcode = (UINT32)((LPBYTE)pDetour - ((LPBYTE)pRelay + sizeof(JMP_REL)));
+#endif
 }
