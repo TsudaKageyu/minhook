@@ -13,7 +13,7 @@
 
 unsigned int hde64_disasm(const void *code, hde64s *hs)
 {
-    uint8_t x, c, *p = (uint8_t *)code, cflags, opcode, pref = 0;
+    uint8_t x, c = 0, *p = (uint8_t *)code, cflags, opcode, pref = 0;
     uint8_t *ht = hde64_table, m_mod, m_reg, m_rm, disp_size = 0;
     uint8_t op64 = 0;
 
