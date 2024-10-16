@@ -93,11 +93,11 @@ extern "C" {
 
     // Initialize the MinHook library. You must call this function EXACTLY ONCE
     // at the beginning of your program.
-    MH_STATUS WINAPI MH_Initialize(VOID);
+    MH_STATUS WINAPI MH_Initialize(LPCSTR stateKey);
 
     // Uninitialize the MinHook library. You must call this function EXACTLY
     // ONCE at the end of your program.
-    MH_STATUS WINAPI MH_Uninitialize(VOID);
+    MH_STATUS WINAPI MH_Uninitialize(LPCSTR stateKey);
 
     // Creates a hook for the specified target function, in disabled state.
     // Parameters:

@@ -39,24 +39,6 @@
 #define PAGE_EXECUTE_FLAGS \
     (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)
 
-// Memory slot.
-typedef struct _MEMORY_SLOT
-{
-    union
-    {
-        struct _MEMORY_SLOT *pNext;
-        UINT8 buffer[MEMORY_SLOT_SIZE];
-    };
-} MEMORY_SLOT, *PMEMORY_SLOT;
-
-// Memory block info. Placed at the head of each block.
-typedef struct _MEMORY_BLOCK
-{
-    struct _MEMORY_BLOCK *pNext;
-    PMEMORY_SLOT pFree;         // First element of the free slot list.
-    UINT usedCount;
-} MEMORY_BLOCK, *PMEMORY_BLOCK;
-
 //-------------------------------------------------------------------------
 // Global Variables:
 //-------------------------------------------------------------------------
@@ -64,24 +46,14 @@ typedef struct _MEMORY_BLOCK
 // First element of the memory block list.
 PMEMORY_BLOCK g_pMemoryBlocks;
 
-//-------------------------------------------------------------------------
-VOID InitializeBuffer(VOID)
+PMEMORY_BLOCK GetMemoryBlocksPtr()
 {
-    // Nothing to do for now.
+    return g_pMemoryBlocks;
 }
 
-//-------------------------------------------------------------------------
-VOID UninitializeBuffer(VOID)
+VOID SetMemoryBlocksPtr(LPVOID ptr)
 {
-    PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
-    g_pMemoryBlocks = NULL;
-
-    while (pBlock)
-    {
-        PMEMORY_BLOCK pNext = pBlock->pNext;
-        VirtualFree(pBlock, 0, MEM_RELEASE);
-        pBlock = pNext;
-    }
+    g_pMemoryBlocks = (PMEMORY_BLOCK)ptr;
 }
 
 //-------------------------------------------------------------------------

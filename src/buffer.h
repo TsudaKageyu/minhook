@@ -35,8 +35,23 @@
     #define MEMORY_SLOT_SIZE 32
 #endif
 
-VOID   InitializeBuffer(VOID);
-VOID   UninitializeBuffer(VOID);
-LPVOID AllocateBuffer(LPVOID pOrigin);
-VOID   FreeBuffer(LPVOID pBuffer);
-BOOL   IsExecutableAddress(LPVOID pAddress);
+// Memory slot.
+typedef struct _MEMORY_SLOT {
+    union {
+        struct _MEMORY_SLOT *pNext;
+        UINT8 buffer[MEMORY_SLOT_SIZE];
+    };
+} MEMORY_SLOT, *PMEMORY_SLOT;
+
+// Memory block info. Placed at the head of each block.
+typedef struct _MEMORY_BLOCK {
+    struct _MEMORY_BLOCK *pNext;
+    PMEMORY_SLOT pFree;         // First element of the free slot list.
+    UINT usedCount;
+} MEMORY_BLOCK, *PMEMORY_BLOCK;
+
+PMEMORY_BLOCK   GetMemoryBlocksPtr();
+VOID            SetMemoryBlocksPtr(LPVOID ptr);
+LPVOID          AllocateBuffer(LPVOID pOrigin);
+VOID            FreeBuffer(LPVOID pBuffer);
+BOOL            IsExecutableAddress(LPVOID pAddress);

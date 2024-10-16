@@ -57,6 +57,16 @@
 #define THREAD_ACCESS \
     (THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_QUERY_INFORMATION | THREAD_SET_CONTEXT)
 
+#if defined(_M_X64) || defined(__x86_64__)
+#define ptr2str _ui64toa
+#define str2ptr strtoull
+#else
+#define ptr2str _ultoa
+#define str2ptr strtoul
+#endif
+#define uint2str _ultoa
+#define str2uint strtoul
+
 // Hook information.
 typedef struct _HOOK_ENTRY
 {
@@ -509,7 +519,7 @@ static VOID LeaveSpinLock(VOID)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_Initialize(VOID)
+MH_STATUS WINAPI MH_Initialize(LPCSTR stateKey)
 {
     MH_STATUS status = MH_OK;
 
@@ -517,15 +527,42 @@ MH_STATUS WINAPI MH_Initialize(VOID)
 
     if (g_hHeap == NULL)
     {
-        g_hHeap = HeapCreate(0, 0, 0);
-        if (g_hHeap != NULL)
+        CHAR state[
+            sizeof(g_hHeap) * 2 +
+            1 +
+            sizeof(g_hHeap) * 2 +
+            1 +
+            sizeof(g_hooks.pItems) * 2 +
+            1 +
+            sizeof(g_hooks.capacity) * 2 +
+            1 +
+            sizeof(g_hooks.size) * 2 +
+            1
+        ];
+        PCHAR stateIter = state;
+        if (GetEnvironmentVariableA(stateKey, state, ARRAYSIZE(state)) != 0)
         {
-            // Initialize the internal function buffer.
-            InitializeBuffer();
+            PMEMORY_BLOCK memoryBlockPtr = (LPVOID)str2ptr(stateIter, NULL, 16);
+            stateIter += sizeof(memoryBlockPtr) * 2 + 1;
+
+            g_hHeap = (LPVOID)str2ptr(stateIter, NULL, 16);
+            stateIter += sizeof(g_hHeap) * 2 + 1;
+
+            g_hooks.pItems = (LPVOID)str2ptr(stateIter, NULL, 16);
+            stateIter += sizeof(g_hooks.pItems) * 2 + 1;
+
+            g_hooks.capacity = str2uint(stateIter, NULL, 16);
+            stateIter += sizeof(g_hooks.capacity) * 2 + 1;
+
+            g_hooks.size = str2uint(stateIter, NULL, 16);
+            stateIter += sizeof(g_hooks.size) * 2 + 1;
         }
         else
         {
-            status = MH_ERROR_MEMORY_ALLOC;
+            g_hHeap = HeapCreate(0, 0, 0);
+            if (g_hHeap == NULL) {
+                status = MH_ERROR_MEMORY_ALLOC;
+            }
         }
     }
     else
@@ -539,7 +576,7 @@ MH_STATUS WINAPI MH_Initialize(VOID)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_Uninitialize(VOID)
+MH_STATUS WINAPI MH_Uninitialize(LPCSTR stateKey)
 {
     MH_STATUS status = MH_OK;
 
@@ -550,21 +587,52 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
         status = EnableAllHooksLL(FALSE);
         if (status == MH_OK)
         {
-            // Free the internal function buffer.
+            PMEMORY_BLOCK memoryBlockPtr = GetMemoryBlocksPtr();
+            CHAR state[
+                sizeof(memoryBlockPtr) * 2 +
+                    1 +
+                sizeof(g_hHeap) * 2 +
+                    1 +
+                sizeof(g_hooks.pItems) * 2 +
+                    1 +
+                sizeof(g_hooks.capacity) * 2 +
+                    1 +
+                sizeof(g_hooks.size) * 2 +
+                    1
+            ];
+            memset(state, ' ', sizeof(state));
+            state[ARRAYSIZE(state) - 1] = 0;
+            PCHAR stateIter = state;
 
-            // HeapFree is actually not required, but some tools detect a false
-            // memory leak without HeapFree.
+            ptr2str((UINT_PTR)memoryBlockPtr, stateIter, 16);
+            stateIter += sizeof(memoryBlockPtr) * 2;
+            *stateIter = ' ';
+            stateIter += 1;
 
-            UninitializeBuffer();
+            ptr2str((UINT_PTR)g_hHeap, stateIter, 16);
+            stateIter += sizeof(g_hHeap) * 2;
+            *stateIter = ' ';
+            stateIter += 1;
 
-            HeapFree(g_hHeap, 0, g_hooks.pItems);
-            HeapDestroy(g_hHeap);
+            ptr2str((UINT_PTR)g_hooks.pItems, stateIter, 16);
+            stateIter += sizeof(g_hooks.pItems) * 2;
+            *stateIter = ' ';
+            stateIter += 1;
 
+            uint2str(g_hooks.capacity, stateIter, 16);
+            stateIter += sizeof(g_hooks.capacity) * 2;
+            *stateIter = ' ';
+            stateIter += 1;
+
+            uint2str(g_hooks.size, stateIter, 16);
+            stateIter += sizeof(g_hooks.size) * 2;
+
+            SetEnvironmentVariableA(stateKey, state);
             g_hHeap = NULL;
-
             g_hooks.pItems   = NULL;
             g_hooks.capacity = 0;
             g_hooks.size     = 0;
+            SetMemoryBlocksPtr(NULL);
         }
     }
     else
@@ -641,6 +709,9 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
             }
             else
             {
+                PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
+                pHook->pDetour = pDetour;
+                *ppOriginal = pHook->pTrampoline;
                 status = MH_ERROR_ALREADY_CREATED;
             }
         }
