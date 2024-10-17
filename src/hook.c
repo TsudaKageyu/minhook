@@ -70,6 +70,7 @@
 // Hook information.
 typedef struct _HOOK_ENTRY
 {
+    CHAR   discriminator[32];   // For multiple hooks on the same target.
     LPVOID pTarget;             // Address of the target function.
     LPVOID pRelay;              // Address of the detour or relay function.
     LPVOID pDetour;             // Address of the detour function.
@@ -113,12 +114,15 @@ struct
 
 //-------------------------------------------------------------------------
 // Returns INVALID_HOOK_POS if not found.
-static UINT FindHookEntry(LPVOID pTarget)
+static UINT FindHookEntry(LPVOID pTarget, LPCSTR discriminator)
 {
     UINT i;
+    if (discriminator == NULL)
+        discriminator = "";
     for (i = 0; i < g_hooks.size; ++i)
     {
-        if ((ULONG_PTR)pTarget == (ULONG_PTR)g_hooks.pItems[i].pTarget)
+        if ((ULONG_PTR)pTarget == (ULONG_PTR)g_hooks.pItems[i].pTarget &&
+            strcmp(discriminator, g_hooks.pItems[i].discriminator) == 0)
             return i;
     }
 
@@ -132,14 +136,14 @@ static PHOOK_ENTRY AddHookEntry()
     {
         g_hooks.capacity = INITIAL_HOOK_CAPACITY;
         g_hooks.pItems = (PHOOK_ENTRY)HeapAlloc(
-            g_hHeap, 0, g_hooks.capacity * sizeof(HOOK_ENTRY));
+            g_hHeap, HEAP_ZERO_MEMORY, g_hooks.capacity * sizeof(HOOK_ENTRY));
         if (g_hooks.pItems == NULL)
             return NULL;
     }
     else if (g_hooks.size >= g_hooks.capacity)
     {
         PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
-            g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity * 2) * sizeof(HOOK_ENTRY));
+            g_hHeap, HEAP_ZERO_MEMORY, g_hooks.pItems, (g_hooks.capacity * 2) * sizeof(HOOK_ENTRY));
         if (p == NULL)
             return NULL;
 
@@ -161,7 +165,7 @@ static VOID DeleteHookEntry(UINT pos)
     if (g_hooks.capacity / 2 >= INITIAL_HOOK_CAPACITY && g_hooks.capacity / 2 >= g_hooks.size)
     {
         PHOOK_ENTRY p = (PHOOK_ENTRY)HeapReAlloc(
-            g_hHeap, 0, g_hooks.pItems, (g_hooks.capacity / 2) * sizeof(HOOK_ENTRY));
+            g_hHeap, HEAP_ZERO_MEMORY, g_hooks.pItems, (g_hooks.capacity / 2) * sizeof(HOOK_ENTRY));
         if (p == NULL)
             return;
 
@@ -291,7 +295,7 @@ static BOOL EnumerateThreads(PFROZEN_THREADS pThreads)
                     {
                         pThreads->capacity = INITIAL_THREAD_CAPACITY;
                         pThreads->pItems
-                            = (LPDWORD)HeapAlloc(g_hHeap, 0, pThreads->capacity * sizeof(DWORD));
+                            = (LPDWORD)HeapAlloc(g_hHeap, HEAP_ZERO_MEMORY, pThreads->capacity * sizeof(DWORD));
                         if (pThreads->pItems == NULL)
                         {
                             succeeded = FALSE;
@@ -303,7 +307,7 @@ static BOOL EnumerateThreads(PFROZEN_THREADS pThreads)
                         LPDWORD p;
                         pThreads->capacity *= 2;
                         p = (LPDWORD)HeapReAlloc(
-                            g_hHeap, 0, pThreads->pItems, pThreads->capacity * sizeof(DWORD));
+                            g_hHeap, HEAP_ZERO_MEMORY, pThreads->pItems, pThreads->capacity * sizeof(DWORD));
                         if (p == NULL)
                         {
                             succeeded = FALSE;
@@ -637,7 +641,7 @@ MH_STATUS WINAPI MH_Uninitialize(LPCSTR stateKey)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal)
+MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal, LPCSTR discriminator)
 {
     MH_STATUS status = MH_OK;
 
@@ -647,7 +651,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
     {
         if (IsExecutableAddress(pTarget) && IsExecutableAddress(pDetour))
         {
-            UINT pos = FindHookEntry(pTarget);
+            UINT pos = FindHookEntry(pTarget, discriminator);
             if (pos == INVALID_HOOK_POS)
             {
                 LPVOID pTrampoline = AllocateBuffer(pTarget);
@@ -663,6 +667,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                         PHOOK_ENTRY pHook = AddHookEntry();
                         if (pHook != NULL)
                         {
+                            memcpy(pHook->discriminator, discriminator, sizeof(pHook->discriminator) - 1);
                             pHook->pTarget     = ct.pTarget;
                             pHook->pRelay      = ct.pRelay;
                             pHook->pDetour     = ct.pDetour;
@@ -722,7 +727,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
 }
 
 //-------------------------------------------------------------------------
-static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
+static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable, LPCSTR discriminator)
 {
     MH_STATUS status = MH_OK;
 
@@ -736,7 +741,7 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
         }
         else
         {
-            UINT pos = FindHookEntry(pTarget);
+            UINT pos = FindHookEntry(pTarget, discriminator);
             if (pos != INVALID_HOOK_POS)
             {
                 if (g_hooks.pItems[pos].isEnabled != enable)
@@ -772,19 +777,19 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_EnableHook(LPVOID pTarget)
+MH_STATUS WINAPI MH_EnableHook(LPVOID pTarget, LPCSTR discriminator)
 {
-    return EnableHook(pTarget, TRUE);
+    return EnableHook(pTarget, TRUE, discriminator);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_DisableHook(LPVOID pTarget)
+MH_STATUS WINAPI MH_DisableHook(LPVOID pTarget, LPCSTR discriminator)
 {
-    return EnableHook(pTarget, FALSE);
+    return EnableHook(pTarget, FALSE, discriminator);
 }
 
 //-------------------------------------------------------------------------
-static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
+static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable, LPCSTR discriminator)
 {
     MH_STATUS status = MH_OK;
 
@@ -800,7 +805,7 @@ static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
         }
         else
         {
-            UINT pos = FindHookEntry(pTarget);
+            UINT pos = FindHookEntry(pTarget, discriminator);
             if (pos != INVALID_HOOK_POS)
             {
                 g_hooks.pItems[pos].queueEnable = queueEnable;
@@ -822,15 +827,15 @@ static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_QueueEnableHook(LPVOID pTarget)
+MH_STATUS WINAPI MH_QueueEnableHook(LPVOID pTarget, LPCSTR discriminator)
 {
-    return QueueHook(pTarget, TRUE);
+    return QueueHook(pTarget, TRUE, discriminator);
 }
 
 //-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget)
+MH_STATUS WINAPI MH_QueueDisableHook(LPVOID pTarget, LPCSTR discriminator)
 {
-    return QueueHook(pTarget, FALSE);
+    return QueueHook(pTarget, FALSE, discriminator);
 }
 
 //-------------------------------------------------------------------------
@@ -886,7 +891,7 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHookApiEx(
     LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour,
-    LPVOID *ppOriginal, LPVOID *ppTarget)
+    LPVOID *ppOriginal, LPVOID *ppTarget, LPCSTR discriminator)
 {
     HMODULE hModule;
     LPVOID  pTarget;
@@ -902,14 +907,14 @@ MH_STATUS WINAPI MH_CreateHookApiEx(
     if (ppTarget != NULL)
         *ppTarget = pTarget;
 
-    return MH_CreateHook(pTarget, pDetour, ppOriginal);
+    return MH_CreateHook(pTarget, pDetour, ppOriginal, discriminator);
 }
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHookApi(
-    LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal)
+    LPCWSTR pszModule, LPCSTR pszProcName, LPVOID pDetour, LPVOID *ppOriginal, LPCSTR discriminator)
 {
-    return MH_CreateHookApiEx(pszModule, pszProcName, pDetour, ppOriginal, NULL);
+    return MH_CreateHookApiEx(pszModule, pszProcName, pDetour, ppOriginal, NULL, discriminator);
 }
 
 //-------------------------------------------------------------------------
