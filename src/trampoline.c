@@ -326,7 +326,7 @@ VOID DisableRelayFunction(LPVOID pRelay, LPVOID pTrampoline) {
 #if defined(_M_X64) || defined(__x86_64__)
     ((PJMP_ABS)pRelay)->address = (ULONG_PTR)pTrampoline;
 #else
-    ((PJMP_REL)pRelay)->opcode = (UINT32)((LPBYTE)pTrampoline - ((LPBYTE)pRelay + sizeof(JMP_REL)));
+    ((PJMP_REL)pRelay)->operand = (UINT32)((LPBYTE)pTrampoline - ((LPBYTE)pRelay + sizeof(JMP_REL)));
 #endif
 }
 
@@ -334,6 +334,6 @@ VOID EnableRelayFunction(LPVOID pRelay, LPVOID pDetour) {
 #if defined(_M_X64) || defined(__x86_64__)
     ((PJMP_ABS)pRelay)->address = (ULONG_PTR)pDetour;
 #else
-    ((PJMP_REL)pRelay)->opcode = (UINT32)((LPBYTE)pDetour - ((LPBYTE)pRelay + sizeof(JMP_REL)));
+    ((PJMP_REL)pRelay)->operand = (UINT32)((LPBYTE)pDetour - ((LPBYTE)pRelay + sizeof(JMP_REL)));
 #endif
 }

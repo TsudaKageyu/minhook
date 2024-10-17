@@ -555,7 +555,6 @@ MH_STATUS WINAPI MH_Initialize(LPCSTR stateKey)
             stateIter += sizeof(g_hooks.capacity) * 2 + 1;
 
             g_hooks.size = str2uint(stateIter, NULL, 16);
-            stateIter += sizeof(g_hooks.size) * 2 + 1;
         }
         else
         {
@@ -589,43 +588,35 @@ MH_STATUS WINAPI MH_Uninitialize(LPCSTR stateKey)
         {
             PMEMORY_BLOCK memoryBlockPtr = GetMemoryBlocksPtr();
             CHAR state[
-                sizeof(memoryBlockPtr) * 2 +
-                    1 +
-                sizeof(g_hHeap) * 2 +
-                    1 +
-                sizeof(g_hooks.pItems) * 2 +
-                    1 +
-                sizeof(g_hooks.capacity) * 2 +
-                    1 +
-                sizeof(g_hooks.size) * 2 +
-                    1
+                sizeof(memoryBlockPtr)   * 2    + 1 +
+                sizeof(g_hHeap)          * 2    + 1 +
+                sizeof(g_hooks.pItems)   * 2    + 1 +
+                sizeof(g_hooks.capacity) * 2    + 1 +
+                sizeof(g_hooks.size)     * 2    + 1
             ];
-            memset(state, ' ', sizeof(state));
-            state[ARRAYSIZE(state) - 1] = 0;
+            memset(state, 0, sizeof(state));
             PCHAR stateIter = state;
 
             ptr2str((UINT_PTR)memoryBlockPtr, stateIter, 16);
-            stateIter += sizeof(memoryBlockPtr) * 2;
-            *stateIter = ' ';
-            stateIter += 1;
+            stateIter += sizeof(memoryBlockPtr) * 2 + 1;
 
             ptr2str((UINT_PTR)g_hHeap, stateIter, 16);
-            stateIter += sizeof(g_hHeap) * 2;
-            *stateIter = ' ';
-            stateIter += 1;
+            stateIter += sizeof(g_hHeap) * 2 + 1;
 
             ptr2str((UINT_PTR)g_hooks.pItems, stateIter, 16);
-            stateIter += sizeof(g_hooks.pItems) * 2;
-            *stateIter = ' ';
-            stateIter += 1;
+            stateIter += sizeof(g_hooks.pItems) * 2 + 1;
 
             uint2str(g_hooks.capacity, stateIter, 16);
-            stateIter += sizeof(g_hooks.capacity) * 2;
-            *stateIter = ' ';
-            stateIter += 1;
+            stateIter += sizeof(g_hooks.capacity) * 2 + 1;
 
             uint2str(g_hooks.size, stateIter, 16);
-            stateIter += sizeof(g_hooks.size) * 2;
+
+            for (int i = 0; i < ARRAYSIZE(state); i++)
+            {
+                if (state[i] == 0)
+                    state[i] = ' ';
+            }
+            state[ARRAYSIZE(state) - 1] = 0;
 
             SetEnvironmentVariableA(stateKey, state);
             g_hHeap = NULL;
