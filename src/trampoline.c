@@ -26,7 +26,7 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <windows.h>
+#include <Windows.h>
 
 #if defined(_MSC_VER) && !defined(MINHOOK_DISABLE_INTRINSICS)
     #define ALLOW_INTRINSICS
@@ -60,12 +60,10 @@
 //-------------------------------------------------------------------------
 static BOOL IsCodePadding(LPBYTE pInst, UINT size)
 {
-    UINT i;
-
     if (pInst[0] != 0x00 && pInst[0] != 0x90 && pInst[0] != 0xCC)
         return FALSE;
 
-    for (i = 1; i < size; ++i)
+    for (UINT i = 1; i < size; ++i)
     {
         if (pInst[i] != pInst[0])
             return FALSE;
