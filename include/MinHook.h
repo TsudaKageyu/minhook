@@ -178,7 +178,7 @@ extern "C" {
     MH_STATUS WINAPI MH_ApplyQueued(VOID);
 
     // Translates the MH_STATUS to its name as a string.
-    const char * WINAPI MH_StatusToString(MH_STATUS status);
+    const char *WINAPI MH_StatusToString(MH_STATUS status);
 
 #ifdef __cplusplus
 }
