@@ -283,7 +283,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #else
         __movsb((LPBYTE)ct->pTrampoline + newPos, (LPBYTE)pCopySrc, copySize);
 #endif
-        newPos += copySize;
+        newPos += (UINT8)copySize;
         oldPos += hs.len;
     } while (!finished);
 
