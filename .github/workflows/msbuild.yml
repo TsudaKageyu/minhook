@@ -1,0 +1,59 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: build/VC17/MinHookVC17.sln
+
+  # Configuration type to build.
+  # You can convert this to a build matrix if you need coverage of multiple configuration types.
+  # https://docs.github.com/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+  BUILD_CONFIGURATION: Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build Win32
+        # Add additional options to the MSBuild command line here (like platform or verbosity level).
+        # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+        run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform="Win32" ${{ env.SOLUTION_FILE_PATH }}
+
+      - name: Build x64
+        # Add additional options to the MSBuild command line here (like platform or verbosity level).
+        # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
+        run: msbuild /m /p:Configuration=${{ env.BUILD_CONFIGURATION }} /p:Platform="x64" ${{ env.SOLUTION_FILE_PATH }}
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir "${{ runner.temp }}/artifacts"
+          mv "build/VC17/bin/${{ env.BUILD_CONFIGURATION }}" "${{ runner.temp }}/artifacts/bin"
+          mv "build/VC17/lib/${{ env.BUILD_CONFIGURATION }}" "${{ runner.temp }}/artifacts/lib"
+          cp -r include "${{ runner.temp }}/artifacts/include"
+
+      - name: Package bin
+        uses: actions/upload-artifact@v4
+        with:
+          name: MinHook_bin
+          path: |
+            ${{ runner.temp }}/artifacts/bin/
+            ${{ runner.temp }}/artifacts/include/
+
+      - name: Package lib
+        uses: actions/upload-artifact@v4
+        with:
+          name: MinHook_lib
+          path: |
+            ${{ runner.temp }}/artifacts/lib/
+            ${{ runner.temp }}/artifacts/include/
