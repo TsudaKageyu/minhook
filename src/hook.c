@@ -416,7 +416,7 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
         {
             PJMP_REL_SHORT pShortJmp = (PJMP_REL_SHORT)pHook->pTarget;
             pShortJmp->opcode = 0xEB;
-            pShortJmp->operand = (UINT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
+            pShortJmp->operand = (UINT8)(UCHAR_MAX + 1ULL - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
         }
     }
     else
@@ -432,8 +432,8 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
     // Just-in-case measure.
     FlushInstructionCache(GetCurrentProcess(), pPatchTarget, patchSize);
 
-    pHook->isEnabled   = enable;
-    pHook->queueEnable = enable;
+    pHook->isEnabled   = (UINT8)enable;
+    pHook->queueEnable = (UINT8)enable;
 
     return MH_OK;
 }
@@ -609,7 +609,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                             pHook->pDetour     = ct.pDetour;
 #endif
                             pHook->pTrampoline = ct.pTrampoline;
-                            pHook->patchAbove  = ct.patchAbove;
+                            pHook->patchAbove  = (UINT8)ct.patchAbove;
                             pHook->isEnabled   = FALSE;
                             pHook->queueEnable = FALSE;
                             pHook->nIP         = ct.nIP;
@@ -793,14 +793,14 @@ static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
         {
             UINT i;
             for (i = 0; i < g_hooks.size; ++i)
-                g_hooks.pItems[i].queueEnable = queueEnable;
+                g_hooks.pItems[i].queueEnable = (UINT8)queueEnable;
         }
         else
         {
             UINT pos = FindHookEntry(pTarget);
             if (pos != INVALID_HOOK_POS)
             {
-                g_hooks.pItems[pos].queueEnable = queueEnable;
+                g_hooks.pItems[pos].queueEnable = (UINT8)queueEnable;
             }
             else
             {
