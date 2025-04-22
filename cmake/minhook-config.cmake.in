@@ -36,4 +36,4 @@ set(MINHOOK_FOUND ON)
 set_and_check(MINHOOK_INCLUDE_DIRS  "${PACKAGE_PREFIX_DIR}/include/")
 set_and_check(MINHOOK_LIBRARY_DIRS  "${PACKAGE_PREFIX_DIR}/lib")
  
-include("${PACKAGE_PREFIX_DIR}/lib/minhook/minhook-targets.cmake")
+include("${PACKAGE_PREFIX_DIR}/share/minhook/minhook-targets.cmake")
