@@ -97,7 +97,7 @@ configure_package_config_file(
     "cmake/minhook-config.cmake.in"
     "minhook-config.cmake"
   INSTALL_DESTINATION 
-    "lib/minhook"
+    "share/minhook"
 )
 
 write_basic_package_version_file(
@@ -113,7 +113,7 @@ install(
     "${CMAKE_CURRENT_BINARY_DIR}/minhook-config.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/minhook-config-version.cmake"
   DESTINATION 
-    "lib/minhook"
+    "share/minhook"
 )
 
 ###################
@@ -133,7 +133,7 @@ install(
   NAMESPACE 
     minhook::
   DESTINATION 
-    "lib/minhook"
+    "share/minhook"
 )
 
 install(
