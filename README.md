@@ -10,7 +10,7 @@ http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
 
 - **v1.3.4 - 28 Mar 2025**
   * Improved error handling for enumerating and suspending threads.
-  * Visual Studio VS2022 support.
+  * Visual Studio 2022 support.
   * CMake support.
   * Fixed compilation with Clang.
   * Fixed compilation as C++ code.
