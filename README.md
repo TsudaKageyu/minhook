@@ -4,7 +4,7 @@
 
 The Minimalistic x86/x64 API Hooking Library for Windows
 
-http://www.codeproject.com/KB/winsdk/LibMinHook.aspx
+https://www.codeproject.com/articles/MinHook-The-Minimalistic-x-x-API-Hooking-Libra
 
 ### Version history
 
