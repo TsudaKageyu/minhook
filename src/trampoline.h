@@ -36,14 +36,14 @@
 typedef struct _JMP_REL_SHORT
 {
     UINT8  opcode;      // EB xx: JMP +2+xx
-    UINT8  operand;
+    INT8  operand;
 } JMP_REL_SHORT, *PJMP_REL_SHORT;
 
 // 32-bit direct relative jump/call.
 typedef struct _JMP_REL
 {
     UINT8  opcode;      // E9/E8 xxxxxxxx: JMP/CALL +5+xxxxxxxx
-    UINT32 operand;     // Relative destination address
+    INT32 operand;     // Relative destination address
 } JMP_REL, *PJMP_REL, CALL_REL;
 
 // 64-bit indirect absolute jump.
@@ -71,7 +71,7 @@ typedef struct _JCC_REL
 {
     UINT8  opcode0;     // 0F8* xxxxxxxx: J** +6+xxxxxxxx
     UINT8  opcode1;
-    UINT32 operand;     // Relative destination address
+    INT32 operand;     // Relative destination address
 } JCC_REL;
 
 // 64bit indirect absolute conditional jumps that x64 lacks.

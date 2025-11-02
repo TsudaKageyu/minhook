@@ -137,7 +137,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #if defined(_M_X64) || defined(__x86_64__)
             jmp.address = pOldInst;
 #else
-            jmp.operand = (UINT32)(pOldInst - (pNewInst + sizeof(jmp)));
+            jmp.operand = (INT32)(pOldInst - (pNewInst + sizeof(jmp)));
 #endif
             pCopySrc = &jmp;
             copySize = sizeof(jmp);
@@ -177,7 +177,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #if defined(_M_X64) || defined(__x86_64__)
             call.address = dest;
 #else
-            call.operand = (UINT32)(dest - (pNewInst + sizeof(call)));
+            call.operand = (INT32)(dest - (pNewInst + sizeof(call)));
 #endif
             pCopySrc = &call;
             copySize = sizeof(call);
@@ -204,7 +204,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #if defined(_M_X64) || defined(__x86_64__)
                 jmp.address = dest;
 #else
-                jmp.operand = (UINT32)(dest - (pNewInst + sizeof(jmp)));
+                jmp.operand = (INT32)(dest - (pNewInst + sizeof(jmp)));
 #endif
                 pCopySrc = &jmp;
                 copySize = sizeof(jmp);
@@ -247,7 +247,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
                 jcc.address = dest;
 #else
                 jcc.opcode1 = 0x80 | cond;
-                jcc.operand = (UINT32)(dest - (pNewInst + sizeof(jcc)));
+                jcc.operand = (INT32)(dest - (pNewInst + sizeof(jcc)));
 #endif
                 pCopySrc = &jcc;
                 copySize = sizeof(jcc);
