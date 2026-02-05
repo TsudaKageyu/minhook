@@ -1,5 +1,5 @@
 ﻿/*
- *  MinHook - The Minimalistic API Hooking Library for x64/x86
+ *  DarkHook - The Minimalistic API Hooking Library for x64/x86
  *  Copyright (C) 2009-2017 Tsuda Kageyu.
  *  All rights reserved.
  *
@@ -33,30 +33,30 @@
 // Structs for writing x86/x64 instructions.
 
 // 8-bit relative jump.
-typedef struct _JMP_REL_SHORT
+typedef struct _jmp_rel_short
 {
     UINT8  opcode;      // EB xx: JMP +2+xx
     INT8   operand;     // Relative destination address
-} JMP_REL_SHORT, *PJMP_REL_SHORT;
+} jmp_rel_short, *pjmp_rel_short;
 
 // 32-bit direct relative jump/call.
-typedef struct _JMP_REL
+typedef struct _jmp_rel
 {
     UINT8  opcode;      // E9/E8 xxxxxxxx: JMP/CALL +5+xxxxxxxx
     INT32  operand;     // Relative destination address
-} JMP_REL, *PJMP_REL, CALL_REL;
+} jmp_rel, *pjmp_rel, call_rel;
 
 // 64-bit indirect absolute jump.
-typedef struct _JMP_ABS
+typedef struct _jmp_abs
 {
     UINT8  opcode0;     // FF25 00000000: JMP [+6]
     UINT8  opcode1;
     UINT32 dummy;
     UINT64 address;     // Absolute destination address
-} JMP_ABS, *PJMP_ABS;
+} jmp_abs, *pjmp_abs;
 
 // 64-bit indirect absolute call.
-typedef struct _CALL_ABS
+typedef struct _call_abs
 {
     UINT8  opcode0;     // FF15 00000002: CALL [+6]
     UINT8  opcode1;
@@ -64,18 +64,18 @@ typedef struct _CALL_ABS
     UINT8  dummy1;      // EB 08:         JMP +10
     UINT8  dummy2;
     UINT64 address;     // Absolute destination address
-} CALL_ABS;
+} call_abs;
 
 // 32-bit direct relative conditional jumps.
-typedef struct _JCC_REL
+typedef struct _jcc_rel
 {
     UINT8  opcode0;     // 0F8* xxxxxxxx: J** +6+xxxxxxxx
     UINT8  opcode1;
     INT32  operand;     // Relative destination address
-} JCC_REL;
+} jcc_rel;
 
 // 64bit indirect absolute conditional jumps that x64 lacks.
-typedef struct _JCC_ABS
+typedef struct _jcc_abs
 {
     UINT8  opcode;      // 7* 0E:         J** +16
     UINT8  dummy0;
@@ -83,23 +83,23 @@ typedef struct _JCC_ABS
     UINT8  dummy2;
     UINT32 dummy3;
     UINT64 address;     // Absolute destination address
-} JCC_ABS;
+} jcc_abs;
 
 #pragma pack(pop)
 
-typedef struct _TRAMPOLINE
+typedef struct _trampoline
 {
-    LPVOID pTarget;         // [In] Address of the target function.
-    LPVOID pDetour;         // [In] Address of the detour function.
-    LPVOID pTrampoline;     // [In] Buffer address for the trampoline and relay function.
+    LPVOID target;         // [In] Address of the target function.
+    LPVOID detour;         // [In] Address of the detour function.
+    LPVOID trampoline;     // [In] Buffer address for the trampoline and relay function.
 
 #if defined(_M_X64) || defined(__x86_64__)
-    LPVOID pRelay;          // [Out] Address of the relay function.
+    LPVOID relay;          // [Out] Address of the relay function.
 #endif
-    BOOL   patchAbove;      // [Out] Should use the hot patch area?
-    UINT   nIP;             // [Out] Number of the instruction boundaries.
-    UINT8  oldIPs[8];       // [Out] Instruction boundaries of the target function.
-    UINT8  newIPs[8];       // [Out] Instruction boundaries of the trampoline function.
-} TRAMPOLINE, *PTRAMPOLINE;
+    BOOL   patch_above;      // [Out] Should use the hot patch area?
+    UINT   instruction_count;             // [Out] Number of the instruction boundaries.
+    UINT8  old_ips[8];       // [Out] Instruction boundaries of the target function.
+    UINT8  new_ips[8];       // [Out] Instruction boundaries of the trampoline function.
+} trampoline, *ptrampoline;
 
-BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
+BOOL create_trampoline_function(ptrampoline trampoline_data);

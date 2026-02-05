@@ -1,4 +1,4 @@
-#  MinHook - The Minimalistic API Hooking Library for x64/x86
+#  DarkHook - The Minimalistic API Hooking Library for x64/x86
 #  Copyright (C) 2009-2017 Tsuda Kageyu.
 #  All rights reserved.
 #
@@ -24,16 +24,20 @@
 #  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 #  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-cmake_minimum_required(VERSION 3.0...3.5)
+cmake_minimum_required(VERSION 3.20)
 
-project(minhook LANGUAGES C)
+project(darkhook LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 
 include(CMakePackageConfigHelpers)
 
-set(MINHOOK_MAJOR_VERSION 1)
-set(MINHOOK_MINOR_VERSION 3)
-set(MINHOOK_PATCH_VERSION 3)
-set(MINHOOK_VERSION ${MINHOOK_MAJOR_VERSION}.${MINHOOK_MINOR_VERSION}.${MINHOOK_PATCH_VERSION})
+set(DARKHOOK_MAJOR_VERSION 1)
+set(DARKHOOK_MINOR_VERSION 3)
+set(DARKHOOK_PATCH_VERSION 3)
+set(DARKHOOK_VERSION ${DARKHOOK_MAJOR_VERSION}.${DARKHOOK_MINOR_VERSION}.${DARKHOOK_PATCH_VERSION})
 
 ################
 #    BUILD     # 
@@ -41,52 +45,52 @@ set(MINHOOK_VERSION ${MINHOOK_MAJOR_VERSION}.${MINHOOK_MINOR_VERSION}.${MINHOOK_
 
 option(BUILD_SHARED_LIBS "build shared version" OFF)
 
-set(SOURCES_MINHOOK 
-  "src/buffer.c"
-  "src/hook.c"
-  "src/trampoline.c"
+set(SOURCES_DARKHOOK 
+  "src/buffer.cpp"
+  "src/hook.cpp"
+  "src/trampoline.cpp"
 )
 
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(SOURCES_HDE "src/hde/hde64.c")
+  set(SOURCES_HDE "src/hde/hde64.cpp")
 else()
-  set(SOURCES_HDE "src/hde/hde32.c")
+  set(SOURCES_HDE "src/hde/hde32.cpp")
 endif()
 
 if(BUILD_SHARED_LIBS)
   set(RESOURCES 
-    "dll_resources/MinHook.rc"
-    "dll_resources/MinHook.def"
+    "dll_resources/darkhook.rc"
+    "dll_resources/darkhook.def"
   )
 endif()
 
-add_library(minhook ${SOURCES_MINHOOK} ${SOURCES_HDE} ${RESOURCES})
+add_library(darkhook ${SOURCES_DARKHOOK} ${SOURCES_HDE} ${RESOURCES})
 
-target_include_directories(minhook PUBLIC
+target_include_directories(darkhook PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
   $<INSTALL_INTERFACE:include>
 )
 
-target_include_directories(minhook PRIVATE "src/")
-target_include_directories(minhook PRIVATE "src/hde/")
+target_include_directories(darkhook PRIVATE "src/")
+target_include_directories(darkhook PRIVATE "src/hde/")
 
 if(WIN32)
-  set_target_properties(minhook PROPERTIES PREFIX "")
+  set_target_properties(darkhook PROPERTIES PREFIX "")
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)   
-    set_target_properties(minhook PROPERTIES DEBUG_POSTFIX ".x64d")
-    set_target_properties(minhook PROPERTIES RELEASE_POSTFIX ".x64")
-    set_target_properties(minhook PROPERTIES RELWITHDEBINFO_POSTFIX ".x64")
-    set_target_properties(minhook PROPERTIES MINSIZEREL_POSTFIX ".x64")
+    set_target_properties(darkhook PROPERTIES DEBUG_POSTFIX ".x64d")
+    set_target_properties(darkhook PROPERTIES RELEASE_POSTFIX ".x64")
+    set_target_properties(darkhook PROPERTIES RELWITHDEBINFO_POSTFIX ".x64")
+    set_target_properties(darkhook PROPERTIES MINSIZEREL_POSTFIX ".x64")
   else()
-    set_target_properties(minhook PROPERTIES DEBUG_POSTFIX ".x32d")
-    set_target_properties(minhook PROPERTIES RELEASE_POSTFIX ".x32")
-    set_target_properties(minhook PROPERTIES RELWITHDEBINFO_POSTFIX ".x32")
-    set_target_properties(minhook PROPERTIES MINSIZEREL_POSTFIX ".x32")
+    set_target_properties(darkhook PROPERTIES DEBUG_POSTFIX ".x32d")
+    set_target_properties(darkhook PROPERTIES RELEASE_POSTFIX ".x32")
+    set_target_properties(darkhook PROPERTIES RELWITHDEBINFO_POSTFIX ".x32")
+    set_target_properties(darkhook PROPERTIES MINSIZEREL_POSTFIX ".x32")
   endif()
 else()
-  set_target_properties(minhook PROPERTIES PREFIX "lib")
-  set_target_properties(minhook PROPERTIES POSTFIX "")
-  set_target_properties(minhook PROPERTIES DEBUG_POSTFIX "d")
+  set_target_properties(darkhook PROPERTIES PREFIX "lib")
+  set_target_properties(darkhook PROPERTIES POSTFIX "")
+  set_target_properties(darkhook PROPERTIES DEBUG_POSTFIX "d")
 endif()
 
 ################
@@ -94,34 +98,34 @@ endif()
 ################
 
 configure_package_config_file(
-    "cmake/minhook-config.cmake.in"
-    "minhook-config.cmake"
+    "cmake/darkhook-config.cmake.in"
+    "darkhook-config.cmake"
   INSTALL_DESTINATION 
-    "share/minhook"
+    "share/darkhook"
 )
 
 write_basic_package_version_file(
-  "minhook-config-version.cmake"
+  "darkhook-config-version.cmake"
 VERSION 
-  ${MINHOOK_VERSION}
+  ${DARKHOOK_VERSION}
 COMPATIBILITY
   AnyNewerVersion
 )
 
 install(
   FILES 
-    "${CMAKE_CURRENT_BINARY_DIR}/minhook-config.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/minhook-config-version.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/darkhook-config.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/darkhook-config-version.cmake"
   DESTINATION 
-    "share/minhook"
+    "share/darkhook"
 )
 
 ###################
 #     INSTALL     #
 ###################
 
-install(TARGETS minhook
-        EXPORT minhook-targets
+install(TARGETS darkhook
+        EXPORT darkhook-targets
         RUNTIME DESTINATION "bin"
         ARCHIVE DESTINATION "lib"
         LIBRARY DESTINATION "lib"
@@ -129,11 +133,11 @@ install(TARGETS minhook
 
 install(
   EXPORT
-    minhook-targets
+    darkhook-targets
   NAMESPACE 
-    minhook::
+    darkhook::
   DESTINATION 
-    "share/minhook"
+    "share/darkhook"
 )
 
 install(

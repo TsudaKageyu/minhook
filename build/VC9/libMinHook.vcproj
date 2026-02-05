@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="libMinHook"
+	Name="libDarkHook"
 	ProjectGUID="{F142A341-5EE0-442D-A15F-98AE9B48DBAE}"
-	RootNamespace="libMinHook"
+	RootNamespace="libDarkHook"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -294,11 +294,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\buffer.c"
+				RelativePath="..\..\src\buffer.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\hook.c"
+				RelativePath="..\..\src\hook.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -318,7 +318,7 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\..\src\trampoline.c"
+				RelativePath="..\..\src\trampoline.cpp"
 				>
 			</File>
 		</Filter>
@@ -340,7 +340,7 @@
 			Name="HDE"
 			>
 			<File
-				RelativePath="..\..\src\HDE\hde32.c"
+				RelativePath="..\..\src\HDE\hde32.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|x64"
@@ -364,7 +364,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\HDE\hde64.c"
+				RelativePath="..\..\src\HDE\hde64.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -401,7 +401,7 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\..\include\MinHook.h"
+			RelativePath="..\..\include\darkhook.h"
 			>
 		</File>
 	</Files>

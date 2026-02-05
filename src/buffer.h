@@ -1,5 +1,5 @@
 ﻿/*
- *  MinHook - The Minimalistic API Hooking Library for x64/x86
+ *  DarkHook - The Minimalistic API Hooking Library for x64/x86
  *  Copyright (C) 2009-2017 Tsuda Kageyu.
  *  All rights reserved.
  *
@@ -35,8 +35,8 @@
     #define MEMORY_SLOT_SIZE 32
 #endif
 
-VOID   InitializeBuffer(VOID);
-VOID   UninitializeBuffer(VOID);
-LPVOID AllocateBuffer(LPVOID pOrigin);
-VOID   FreeBuffer(LPVOID pBuffer);
-BOOL   IsExecutableAddress(LPVOID pAddress);
+VOID   initialize_buffer(VOID);
+VOID   uninitialize_buffer(VOID);
+LPVOID allocate_buffer(LPVOID origin);
+VOID   free_buffer(LPVOID buffer);
+BOOL   is_executable_address(LPVOID address);

@@ -1,0 +1,14 @@
+EXPORTS
+    dh_initialize
+    dh_uninitialize
+
+    dh_create_hook
+    dh_create_hook_api
+    dh_create_hook_api_ex
+    dh_remove_hook
+    dh_enable_hook
+    dh_disable_hook
+    dh_queue_enable_hook
+    dh_queue_disable_hook
+    dh_apply_queued
+    dh_status_to_string
