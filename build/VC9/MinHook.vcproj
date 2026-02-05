@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="MinHook"
+	Name="DarkHook"
 	ProjectGUID="{027FAC75-3FDB-4044-8DD0-BC297BD4C461}"
-	RootNamespace="MinHook"
+	RootNamespace="DarkHook"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -65,7 +65,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x86.dll"
 				LinkIncremental="2"
-				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\darkhook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				TargetMachine="1"
@@ -139,7 +139,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x64.dll"
 				LinkIncremental="2"
-				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\darkhook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				TargetMachine="17"
@@ -214,7 +214,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x86.dll"
 				LinkIncremental="1"
-				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\darkhook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -294,7 +294,7 @@
 				Name="VCLinkerTool"
 				OutputFile="$(OutDir)\$(ProjectName).x64.dll"
 				LinkIncremental="1"
-				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\MinHook.def"
+				ModuleDefinitionFile="$(SolutionDir)..\..\dll_resources\darkhook.def"
 				GenerateDebugInformation="false"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -330,11 +330,11 @@
 	</References>
 	<Files>
 		<File
-			RelativePath="..\..\dll_resources\MinHook.def"
+			RelativePath="..\..\dll_resources\darkhook.def"
 			>
 		</File>
 		<File
-			RelativePath="..\..\dll_resources\MinHook.rc"
+			RelativePath="..\..\dll_resources\darkhook.rc"
 			>
 		</File>
 	</Files>

@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{F142A341-5EE0-442D-A15F-98AE9B48DBAE}</ProjectGuid>
-    <RootNamespace>libMinHook</RootNamespace>
+    <RootNamespace>libDarkHook</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -145,20 +145,20 @@
     <Lib />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\buffer.c" />
-    <ClCompile Include="..\..\src\HDE\hde32.c">
+    <ClCompile Include="..\..\src\buffer.cpp" />
+    <ClCompile Include="..\..\src\HDE\hde32.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\HDE\hde64.c">
+    <ClCompile Include="..\..\src\HDE\hde64.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\hook.c" />
-    <ClCompile Include="..\..\src\trampoline.c" />
+    <ClCompile Include="..\..\src\hook.cpp" />
+    <ClCompile Include="..\..\src\trampoline.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\MinHook.h" />
+    <ClInclude Include="..\..\include\darkhook.h" />
     <ClInclude Include="..\..\src\buffer.h" />
     <ClInclude Include="..\..\src\HDE\hde32.h" />
     <ClInclude Include="..\..\src\HDE\hde64.h" />

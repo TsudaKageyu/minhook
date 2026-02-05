@@ -20,7 +20,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{027FAC75-3FDB-4044-8DD0-BC297BD4C461}</ProjectGuid>
-    <RootNamespace>MinHook</RootNamespace>
+    <RootNamespace>DarkHook</RootNamespace>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -91,11 +91,11 @@
       </DebugInformationFormat>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\MinHook.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\darkhook.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libDarkHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -115,11 +115,11 @@
       </DebugInformationFormat>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\MinHook.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\darkhook.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libMinHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libDarkHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -137,13 +137,13 @@
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\MinHook.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\darkhook.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libMinHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libDarkHook.x86.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <NoEntryPoint>true</NoEntryPoint>
       <MergeSections>.CRT=.text</MergeSections>
     </Link>
@@ -166,22 +166,22 @@
       <MinimalRebuild>false</MinimalRebuild>
     </ClCompile>
     <Link>
-      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\MinHook.def</ModuleDefinitionFile>
+      <ModuleDefinitionFile>$(SolutionDir)..\..\dll_resources\darkhook.def</ModuleDefinitionFile>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <TargetMachine>MachineX64</TargetMachine>
-      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libMinHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>$(SolutionDir)lib\$(Configuration)\libDarkHook.x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <NoEntryPoint>true</NoEntryPoint>
       <MergeSections>.CRT=.text</MergeSections>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\..\dll_resources\MinHook.def" />
+    <None Include="..\..\dll_resources\darkhook.def" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="..\..\dll_resources\MinHook.rc" />
+    <ResourceCompile Include="..\..\dll_resources\darkhook.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

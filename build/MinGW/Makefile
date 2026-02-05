@@ -1,33 +1,33 @@
 WINDRES:=$(CROSS_PREFIX)windres
 DLLTOOL:=$(CROSS_PREFIX)dlltool
 AR:=$(CROSS_PREFIX)ar
-CC:=$(CROSS_PREFIX)gcc
+CC:=$(CROSS_PREFIX)g++
 CCLD:=$(CC)
-SRCS:=$(wildcard src/*.c src/hde/*.c)
-OBJS:=$(SRCS:%.c=%.o)
-DEPS:=$(SRCS:%.c=%.d)
+SRCS:=$(wildcard src/*.cpp src/hde/*.cpp)
+OBJS:=$(SRCS:%.cpp=%.o)
+DEPS:=$(SRCS:%.cpp=%.d)
 INCS:=-Isrc -Iinclude
-CFLAGS:=-masm=intel -Wall -Werror -std=c11
+CFLAGS:=-masm=intel -Wall -Werror -std=c++23
 LDFLAGS:=-Wl,-enable-stdcall-fixup -s -static-libgcc
 
-all: MinHook.dll libMinHook.dll.a libMinHook.a
+all: DarkHook.dll libDarkHook.dll.a libDarkHook.a
 
 -include $(DEPS)
 
-libMinHook.a: $(OBJS)
+libDarkHook.a: $(OBJS)
 	$(AR) r $@ $^
-libMinHook.dll.a: MinHook.dll dll_resources/MinHook.def
-	$(DLLTOOL) --dllname MinHook.dll --input-def dll_resources/MinHook.def --output-lib $@
-MinHook.dll: $(OBJS) dll_resources/MinHook.res dll_resources/MinHook.def
+libDarkHook.dll.a: DarkHook.dll dll_resources/darkhook.def
+	$(DLLTOOL) --dllname DarkHook.dll --input-def dll_resources/darkhook.def --output-lib $@
+DarkHook.dll: $(OBJS) dll_resources/darkhook.res dll_resources/darkhook.def
 	$(CCLD) -o $@ -shared $(LDFLAGS) $^
 
 .rc.res:
 	$(WINDRES) -o $@ --input-format=rc --output-format=coff $<
-.c.o:
+.cpp.o:
 	$(CC) -o $@ -c -MMD -MP $(INCS) $(CFLAGS) $<
 
 clean:
-	rm -f $(OBJS) $(DEPS) MinHook.dll libMinHook.dll.a libMinHook.a dll_resources/MinHook.res
+	rm -f $(OBJS) $(DEPS) DarkHook.dll libDarkHook.dll.a libDarkHook.a dll_resources/darkhook.res
 
 .PHONY: clean
 .SUFFIXES: .rc .res
