@@ -46,7 +46,7 @@ typedef struct _MEMORY_SLOT
     {
         struct _MEMORY_SLOT *pNext;
         UINT8 buffer[MEMORY_SLOT_SIZE];
-    };
+    } data;
 } MEMORY_SLOT, *PMEMORY_SLOT;
 
 // Memory block info. Placed at the head of each block.
@@ -231,7 +231,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
         pBlock->usedCount = 0;
         do
         {
-            pSlot->pNext = pBlock->pFree;
+            pSlot->data.pNext = pBlock->pFree;
             pBlock->pFree = pSlot;
             pSlot++;
         } while ((ULONG_PTR)pSlot - (ULONG_PTR)pBlock <= MEMORY_BLOCK_SIZE - MEMORY_SLOT_SIZE);
@@ -253,7 +253,7 @@ LPVOID AllocateBuffer(LPVOID pOrigin)
 
     // Remove an unused slot from the list.
     pSlot = pBlock->pFree;
-    pBlock->pFree = pSlot->pNext;
+    pBlock->pFree = pSlot->data.pNext;
     pBlock->usedCount++;
 #ifdef _DEBUG
     // Fill the slot with INT3 for debugging.
@@ -279,7 +279,7 @@ VOID FreeBuffer(LPVOID pBuffer)
             memset(pSlot, 0x00, sizeof(MEMORY_SLOT));
 #endif
             // Restore the released slot to the list.
-            pSlot->pNext = pBlock->pFree;
+            pSlot->data.pNext = pBlock->pFree;
             pBlock->pFree = pSlot;
             pBlock->usedCount--;
 
