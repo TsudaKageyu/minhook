@@ -62,3 +62,10 @@ separate gates. Wine and injected peers do not prove native Windows acceptance.
 Externally suspended real-peer fixtures exercise owned thread contexts; fixture
 instruction bytes are never executed and arbitrary live target-call retirement
 is outside that fixture's evidence.
+
+The separate live-caller regression executes real leaf functions through both
+the patched target and the original trampoline, including Win32 WINAPI stack
+cleanup and x64 argument passing. It checks direct/queued transitions under
+active calls, then joins the caller before removal or uninitialization. This
+proves the owned fixture's calling behavior, not arbitrary application unload
+or deep-stack return-address rewriting. No application call-gate is imported.

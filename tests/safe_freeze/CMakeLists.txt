@@ -27,3 +27,13 @@ if(BUILD_SHARED_LIBS)
 endif()
 add_test(NAME minhook_safe_freeze_real_peer COMMAND minhook_safe_freeze_real_peer)
 set_tests_properties(minhook_safe_freeze_real_peer PROPERTIES TIMEOUT 45)
+add_executable(minhook_safe_freeze_live_calls live_calls.c)
+set_target_properties(minhook_safe_freeze_live_calls PROPERTIES C_STANDARD 17)
+target_link_libraries(minhook_safe_freeze_live_calls PRIVATE minhook)
+if(BUILD_SHARED_LIBS)
+  add_custom_command(TARGET minhook_safe_freeze_live_calls POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+      "$<TARGET_FILE:minhook>" "$<TARGET_FILE_DIR:minhook_safe_freeze_live_calls>")
+endif()
+add_test(NAME minhook_safe_freeze_live_calls COMMAND minhook_safe_freeze_live_calls)
+set_tests_properties(minhook_safe_freeze_live_calls PROPERTIES TIMEOUT 45)
