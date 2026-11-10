@@ -166,9 +166,25 @@ public:
             std::memcpy(hook.original.data(), hook.patch(), hook.patch_size());
             create(hook);
         }
+#if defined(_M_X64) || defined(__x86_64__)
         check(call.trampoline[0] == 0xff && call.trampoline[1] == 0x15 &&
               call.trampoline[16] == 0xff && call.trampoline[17] == 0x25,
               "expected CALL expansion/jump-back boundaries differ");
+#else
+        check(call.trampoline[0] == 0xe8 && call.trampoline[5] == 0xe9,
+              "expected x86 relative CALL/jump-back boundaries differ");
+        std::int32_t call_distance = 0, return_distance = 0;
+        std::memcpy(&call_distance, call.trampoline + 1, sizeof call_distance);
+        std::memcpy(&return_distance, call.trampoline + 6, sizeof return_distance);
+        check(reinterpret_cast<std::uintptr_t>(call.trampoline + 5) +
+                  static_cast<std::uintptr_t>(static_cast<std::intptr_t>(call_distance)) ==
+                  reinterpret_cast<std::uintptr_t>(call.target + 32),
+              "x86 trampoline CALL target differs");
+        check(reinterpret_cast<std::uintptr_t>(call.trampoline + 10) +
+                  static_cast<std::uintptr_t>(static_cast<std::intptr_t>(return_distance)) ==
+                  reinterpret_cast<std::uintptr_t>(call.target + 5),
+              "x86 trampoline jump-back target differs");
+#endif
         check(hot.trampoline[0] == 0xc3, "expected hotpatch trampoline differs");
         ready_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
         stop_ = CreateEventW(nullptr, TRUE, FALSE, nullptr);
