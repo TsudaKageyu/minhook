@@ -345,6 +345,128 @@ typedef NTSTATUS (NTAPI *PFN_NT_GET_NEXT_THREAD)(
 #define STATUS_NO_MORE_ENTRIES ((NTSTATUS)0x8000001AL)
 #endif
 
+/* Completion records outlive failed API calls. No allocation is needed while
+ * peers are suspended. A seven-byte hotpatch can touch at most two pages. */
+typedef struct _PATCH_PAGE
+{
+    LPVOID address;
+    DWORD protection;
+    BOOL pending;
+} PATCH_PAGE;
+static struct
+{
+    BOOL active, cachePending;
+    LPBYTE target;
+    SIZE_T size, pageSize;
+    UINT count;
+    PATCH_PAGE pages[2];
+} g_patchCompletion;
+static LPVOID g_retainedBuffer;
+static BOOL g_shutdownPending;
+static LPVOID g_retiringBuffer;
+#define ACTION_RETIRE 3
+
+static BOOL RetryPatchCompletion(VOID)
+{
+    UINT i;
+    BOOL complete = TRUE;
+    if (!g_patchCompletion.active)
+        return TRUE;
+    if (g_patchCompletion.cachePending)
+    {
+        if (FlushInstructionCache(GetCurrentProcess(), g_patchCompletion.target, g_patchCompletion.size))
+            g_patchCompletion.cachePending = FALSE;
+        else
+            complete = FALSE;
+    }
+    for (i = 0; i < g_patchCompletion.count; ++i)
+    {
+        PATCH_PAGE *page = &g_patchCompletion.pages[i];
+        if (page->pending)
+        {
+            DWORD ignored;
+            if (VirtualProtect(page->address, g_patchCompletion.pageSize, page->protection, &ignored))
+                page->pending = FALSE;
+            else
+                complete = FALSE;
+        }
+    }
+    if (complete)
+        memset(&g_patchCompletion, 0, sizeof(g_patchCompletion));
+    return complete;
+}
+
+static BOOL IsRetiringAddress(DWORD_PTR address)
+{
+    if (g_retiringBuffer != NULL)
+        return address >= (ULONG_PTR)g_retiringBuffer &&
+            address - (ULONG_PTR)g_retiringBuffer < MEMORY_SLOT_SIZE;
+    return IsBufferAddress((ULONG_PTR)address);
+}
+
+static PEER_PREPARATION_RESULT CheckRetiringThread(HANDLE thread)
+{
+    CONTEXT context;
+    MEMORY_BASIC_INFORMATION first;
+    ULONG_PTR cursor, allocation;
+    SIZE_T scanned = 0;
+    DWORD_PTR registers[17];
+    UINT i, count;
+    context.ContextFlags = CONTEXT_FULL;
+    if (!GetThreadContext(thread, &context))
+        return ThreadNoLongerLive(thread) ? PEER_TERMINATED : PEER_UNRESOLVED;
+#if defined(_M_X64) || defined(__x86_64__)
+    registers[0]=context.Rip; registers[1]=context.Rax; registers[2]=context.Rbx;
+    registers[3]=context.Rcx; registers[4]=context.Rdx; registers[5]=context.Rsi;
+    registers[6]=context.Rdi; registers[7]=context.Rbp; registers[8]=context.Rsp;
+    registers[9]=context.R8; registers[10]=context.R9; registers[11]=context.R10;
+    registers[12]=context.R11; registers[13]=context.R12; registers[14]=context.R13;
+    registers[15]=context.R14; registers[16]=context.R15;
+    count = 17;
+    cursor = (ULONG_PTR)context.Rsp;
+#else
+    registers[0]=context.Eip; registers[1]=context.Eax; registers[2]=context.Ebx;
+    registers[3]=context.Ecx; registers[4]=context.Edx; registers[5]=context.Esi;
+    registers[6]=context.Edi; registers[7]=context.Ebp; registers[8]=context.Esp;
+    count = 9;
+    cursor = (ULONG_PTR)context.Esp;
+#endif
+    for (i = 0; i < count; ++i)
+        if (IsRetiringAddress(registers[i]))
+            return PEER_UNRESOLVED;
+    if (!VirtualQuery((LPCVOID)cursor, &first, sizeof(first)))
+        return PEER_UNRESOLVED;
+    allocation = (ULONG_PTR)first.AllocationBase;
+    while (scanned < 64 * 1024 * 1024)
+    {
+        MEMORY_BASIC_INFORMATION region;
+        ULONG_PTR limit;
+        if (!VirtualQuery((LPCVOID)cursor, &region, sizeof(region)))
+            return PEER_UNRESOLVED;
+        if ((ULONG_PTR)region.AllocationBase != allocation)
+            return PEER_PREPARED;
+        limit = (ULONG_PTR)region.BaseAddress + region.RegionSize;
+        if (limit <= cursor || limit - cursor > 64 * 1024 * 1024 - scanned ||
+            region.State != MEM_COMMIT || (region.Protect & (PAGE_NOACCESS | PAGE_GUARD)))
+            return PEER_UNRESOLVED;
+        while (cursor < limit)
+        {
+            DWORD_PTR words[64];
+            SIZE_T copied = 0, bytes = limit - cursor;
+            if (bytes > sizeof(words)) bytes = sizeof(words);
+            if (bytes % sizeof(words[0]) != 0 ||
+                !ReadProcessMemory(GetCurrentProcess(), (LPCVOID)cursor, words, bytes, &copied) || copied != bytes)
+                return PEER_UNRESOLVED;
+            for (i = 0; i < bytes / sizeof(words[0]); ++i)
+                if (IsRetiringAddress(words[i]))
+                    return PEER_UNRESOLVED;
+            cursor += bytes;
+            scanned += bytes;
+        }
+    }
+    return PEER_UNRESOLVED;
+}
+
 static FROZEN_THREADS g_retainedThreads = { NULL, 0, 0 };
 static FROZEN_THREAD_ITEM g_emergencyThread = { NULL, FALSE };
 static FROZEN_THREAD_ITEM g_emergencyNextThread = { NULL, FALSE };
@@ -522,9 +644,18 @@ static BOOL PreserveFrozenThreadOwnership(PFROZEN_THREADS pThreads)
 
 static BOOL RetryRetainedThreadOwnership(VOID)
 {
-    if (!ReleaseEmergencyThreadOwnership())
+    /* Never resume peers into an instruction stream whose completion failed. */
+    if (!RetryPatchCompletion())
         return FALSE;
-    return ReleaseFrozenThreadOwnership(&g_retainedThreads);
+    if (!ReleaseEmergencyThreadOwnership() || !ReleaseFrozenThreadOwnership(&g_retainedThreads))
+        return FALSE;
+    if (g_retainedBuffer != NULL)
+    {
+        if (!FreeBuffer(g_retainedBuffer))
+            return FALSE;
+        g_retainedBuffer = NULL;
+    }
+    return TRUE;
 }
 
 static BOOL HasRetainedThreadOwnership(VOID)
@@ -760,7 +891,7 @@ static VOID Unfreeze(PFROZEN_THREADS pThreads)
 #if defined(MH_SAFE_FREEZE)
                 PEER_PREPARATION_RESULT peerResult;
                 pItem->suspended = TRUE;
-                peerResult = ProcessThreadIPs(pItem->handle, pos, action);
+                peerResult = action == ACTION_RETIRE ? CheckRetiringThread(pItem->handle) : ProcessThreadIPs(pItem->handle, pos, action);
                 if (peerResult == PEER_UNRESOLVED)
                     status = MH_ERROR_MEMORY_PROTECT;
             }
@@ -796,7 +927,15 @@ static MH_STATUS Unfreeze(PFROZEN_THREADS pThreads)
 
 static MH_STATUS FinishFreeze(PFROZEN_THREADS pThreads, MH_STATUS status)
 {
-    MH_STATUS cleanupStatus = Unfreeze(pThreads);
+    MH_STATUS cleanupStatus;
+    if (g_patchCompletion.active)
+    {
+        /* Freeze entered with no retained set. Transfer without resuming. */
+        g_retainedThreads = *pThreads;
+        memset(pThreads, 0, sizeof(*pThreads));
+        return MH_ERROR_MEMORY_PROTECT;
+    }
+    cleanupStatus = Unfreeze(pThreads);
     return status == MH_OK ? cleanupStatus : status;
 #else
         HeapFree(g_hHeap, 0, pThreads->pItems);
@@ -805,6 +944,102 @@ static MH_STATUS FinishFreeze(PFROZEN_THREADS pThreads, MH_STATUS status)
 }
 
 //-------------------------------------------------------------------------
+#if defined(MH_SAFE_FREEZE)
+static MH_STATUS RetireHookEntry(UINT pos)
+{
+    FROZEN_THREADS threads;
+    MH_STATUS status;
+    g_retiringBuffer = g_hooks.pItems[pos].pTrampoline;
+    status = Freeze(&threads, ALL_HOOKS_POS, ACTION_RETIRE);
+    if (status == MH_OK)
+    {
+        if (FreeBuffer(g_hooks.pItems[pos].pTrampoline))
+            DeleteHookEntry(pos);
+        else
+            status = MH_ERROR_MEMORY_PROTECT;
+        status = FinishFreeze(&threads, status);
+    }
+    g_retiringBuffer = NULL;
+    return status;
+}
+
+static MH_STATUS RetireAllBuffers(VOID)
+{
+    FROZEN_THREADS threads;
+    MH_STATUS status;
+    g_retiringBuffer = NULL;
+    status = Freeze(&threads, ALL_HOOKS_POS, ACTION_RETIRE);
+    if (status == MH_OK)
+    {
+        /* Some blocks may be released before a later release fails. */
+        g_shutdownPending = TRUE;
+        if (!UninitializeBuffer())
+            status = MH_ERROR_MEMORY_PROTECT;
+        status = FinishFreeze(&threads, status);
+    }
+    return status;
+}
+#endif
+
+#if defined(MH_SAFE_FREEZE)
+static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
+{
+    PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
+    SIZE_T patchSize = sizeof(JMP_REL);
+    LPBYTE target = (LPBYTE)pHook->pTarget;
+    SYSTEM_INFO info;
+    ULONG_PTR first, last;
+    UINT i;
+    if (g_patchCompletion.active)
+        return MH_ERROR_MEMORY_PROTECT;
+    if (pHook->patchAbove)
+    {
+        target -= sizeof(JMP_REL);
+        patchSize += sizeof(JMP_REL_SHORT);
+    }
+    GetSystemInfo(&info);
+    if (!info.dwPageSize || patchSize > info.dwPageSize || (ULONG_PTR)target > (ULONG_PTR)-1 - patchSize)
+        return MH_ERROR_MEMORY_PROTECT;
+    first = (ULONG_PTR)target / info.dwPageSize * info.dwPageSize;
+    last = ((ULONG_PTR)target + patchSize - 1) / info.dwPageSize * info.dwPageSize;
+    memset(&g_patchCompletion, 0, sizeof(g_patchCompletion));
+    g_patchCompletion.active = TRUE;
+    g_patchCompletion.target = target;
+    g_patchCompletion.size = patchSize;
+    g_patchCompletion.pageSize = info.dwPageSize;
+    g_patchCompletion.count = first == last ? 1 : 2;
+    for (i = 0; i < g_patchCompletion.count; ++i)
+    {
+        PATCH_PAGE *page = &g_patchCompletion.pages[i];
+        page->address = (LPVOID)(first + i * info.dwPageSize);
+        if (!VirtualProtect(page->address, info.dwPageSize, PAGE_EXECUTE_READWRITE, &page->protection))
+        {
+            (void)RetryPatchCompletion();
+            return MH_ERROR_MEMORY_PROTECT;
+        }
+        page->pending = TRUE;
+    }
+    if (enable)
+    {
+        PJMP_REL jump = (PJMP_REL)target;
+        jump->opcode = 0xE9;
+        jump->operand = (INT32)((LPBYTE)pHook->pDetour - (target + sizeof(JMP_REL)));
+        if (pHook->patchAbove)
+        {
+            PJMP_REL_SHORT shortJump = (PJMP_REL_SHORT)pHook->pTarget;
+            shortJump->opcode = 0xEB;
+            shortJump->operand = (INT8)(0 - (sizeof(JMP_REL_SHORT) + sizeof(JMP_REL)));
+        }
+    }
+    else
+        memcpy(target, pHook->backup, patchSize);
+    /* Reflect the bytes already written even if subsequent completion fails. */
+    pHook->isEnabled = enable;
+    pHook->queueEnable = enable;
+    g_patchCompletion.cachePending = TRUE;
+    return RetryPatchCompletion() ? MH_OK : MH_ERROR_MEMORY_PROTECT;
+}
+#else
 static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 {
     PHOOK_ENTRY pHook = &g_hooks.pItems[pos];
@@ -852,6 +1087,7 @@ static MH_STATUS EnableHookLL(UINT pos, BOOL enable)
 
     return MH_OK;
 }
+#endif
 
 //-------------------------------------------------------------------------
 static MH_STATUS EnableAllHooksLL(BOOL enable)
@@ -960,6 +1196,37 @@ MH_STATUS WINAPI MH_Initialize(VOID)
 }
 
 //-------------------------------------------------------------------------
+#if defined(MH_SAFE_FREEZE)
+MH_STATUS WINAPI MH_Uninitialize(VOID)
+{
+    MH_STATUS status = MH_ERROR_NOT_INITIALIZED;
+    EnterSpinLock();
+    if (g_hHeap != NULL)
+    {
+        status = RetryRetainedThreadOwnership() ? MH_OK : MH_ERROR_MEMORY_PROTECT;
+        if (status == MH_OK && !g_shutdownPending)
+            status = EnableAllHooksLL(FALSE);
+        if (status == MH_OK)
+            status = RetireAllBuffers();
+        /* Frozen arrays belong to this heap: finish/retry their cleanup before
+         * destroying it. HeapDestroy also owns the hook-entry allocation. */
+        if (status == MH_OK)
+        {
+            if (!HeapDestroy(g_hHeap))
+                status = MH_ERROR_MEMORY_PROTECT;
+            else
+            {
+                g_hHeap = NULL;
+                g_hooks.pItems = NULL;
+                g_hooks.size = g_hooks.capacity = 0;
+                g_shutdownPending = FALSE;
+            }
+        }
+    }
+    LeaveSpinLock();
+    return status;
+}
+#else
 MH_STATUS WINAPI MH_Uninitialize(VOID)
 {
     MH_STATUS status = MH_OK;
@@ -997,6 +1264,7 @@ MH_STATUS WINAPI MH_Uninitialize(VOID)
 
     return status;
 }
+#endif
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOriginal)
@@ -1006,7 +1274,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
     EnterSpinLock();
 
 #if defined(MH_SAFE_FREEZE)
-    if (g_hHeap != NULL && !RetryRetainedThreadOwnership())
+    if (g_hHeap != NULL && (g_shutdownPending || !RetryRetainedThreadOwnership()))
     {
         LeaveSpinLock();
         return MH_ERROR_MEMORY_PROTECT;
@@ -1030,7 +1298,15 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                     ct.pTrampoline = pBuffer;
                     if (CreateTrampolineFunction(&ct))
                     {
+                        #if defined(MH_SAFE_FREEZE)
+                        PHOOK_ENTRY pHook = NULL;
+                        if (FlushInstructionCache(GetCurrentProcess(), pBuffer, MEMORY_SLOT_SIZE))
+                            pHook = AddHookEntry();
+                        else
+                            status = MH_ERROR_MEMORY_PROTECT;
+#else
                         PHOOK_ENTRY pHook = AddHookEntry();
+#endif
                         if (pHook != NULL)
                         {
                             pHook->pTarget     = ct.pTarget;
@@ -1066,6 +1342,9 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
                         }
                         else
                         {
+                            #if defined(MH_SAFE_FREEZE)
+                            if (status == MH_OK)
+#endif
                             status = MH_ERROR_MEMORY_ALLOC;
                         }
                     }
@@ -1076,7 +1355,15 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
 
                     if (status != MH_OK)
                     {
-                        FreeBuffer(pBuffer);
+                        #if defined(MH_SAFE_FREEZE)
+if (!FreeBuffer(pBuffer))
+                        {
+                            g_retainedBuffer = pBuffer;
+                            status = MH_ERROR_MEMORY_PROTECT;
+                        }
+#else
+FreeBuffer(pBuffer);
+#endif
                     }
                 }
                 else
@@ -1112,7 +1399,7 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
     EnterSpinLock();
 
 #if defined(MH_SAFE_FREEZE)
-    if (g_hHeap != NULL && !RetryRetainedThreadOwnership())
+    if (g_hHeap != NULL && (g_shutdownPending || !RetryRetainedThreadOwnership()))
     {
         LeaveSpinLock();
         return MH_ERROR_MEMORY_PROTECT;
@@ -1142,8 +1429,12 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
 
             if (status == MH_OK)
             {
-                FreeBuffer(g_hooks.pItems[pos].pTrampoline);
+                #if defined(MH_SAFE_FREEZE)
+status = RetireHookEntry(pos);
+#else
+FreeBuffer(g_hooks.pItems[pos].pTrampoline);
                 DeleteHookEntry(pos);
+#endif
             }
         }
         else
@@ -1169,7 +1460,7 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
     EnterSpinLock();
 
 #if defined(MH_SAFE_FREEZE)
-    if (g_hHeap != NULL && !RetryRetainedThreadOwnership())
+    if (g_hHeap != NULL && (g_shutdownPending || !RetryRetainedThreadOwnership()))
     {
         LeaveSpinLock();
         return MH_ERROR_MEMORY_PROTECT;
@@ -1247,7 +1538,7 @@ static MH_STATUS QueueHook(LPVOID pTarget, BOOL queueEnable)
     EnterSpinLock();
 #if defined(MH_SAFE_FREEZE)
 
-    if (g_hHeap != NULL && !RetryRetainedThreadOwnership())
+    if (g_hHeap != NULL && (g_shutdownPending || !RetryRetainedThreadOwnership()))
     {
         LeaveSpinLock();
         return MH_ERROR_MEMORY_PROTECT;
@@ -1306,7 +1597,7 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
     EnterSpinLock();
 
 #if defined(MH_SAFE_FREEZE)
-    if (g_hHeap != NULL && !RetryRetainedThreadOwnership())
+    if (g_hHeap != NULL && (g_shutdownPending || !RetryRetainedThreadOwnership()))
     {
         LeaveSpinLock();
         return MH_ERROR_MEMORY_PROTECT;

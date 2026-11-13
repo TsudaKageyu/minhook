@@ -10,8 +10,10 @@
 
 #if defined(_M_X64) || defined(__x86_64__)
 #define PEER_CONTEXT_IP(c) ((c)->Rip)
+#define PEER_CONTEXT_SP(c) ((c)->Rsp)
 #else
 #define PEER_CONTEXT_IP(c) ((c)->Eip)
+#define PEER_CONTEXT_SP(c) ((c)->Esp)
 #endif
 static BOOL fail_enumeration, fail_duplicate, peer_dead, peer_invalid, include_current, fail_reallocate, return_second_cursor, fail_second_cursor;
 static int checks, enumeration, resumes, closes, cursor_closes;
@@ -21,6 +23,14 @@ static HANDLE peer_handle = (HANDLE)(ULONG_PTR)0x4322;
 static HANDLE second_cursor_handle = (HANDLE)(ULONG_PTR)0x4323;
 static DWORD_PTR peer_ip;
 static int context_writes;
+static DWORD_PTR peer_stack[4];
+static SIZE_T WINAPI query_peer_stack(LPCVOID address,PMEMORY_BASIC_INFORMATION out,SIZE_T size) {
+    ULONG_PTR at=(ULONG_PTR)address,start=(ULONG_PTR)peer_stack,end=start+sizeof(peer_stack);
+    if(at>=start && at<=end){memset(out,0,sizeof(*out));out->BaseAddress=(LPVOID)(at==end?end:start);
+        out->AllocationBase=out->BaseAddress;out->RegionSize=at==end?8:sizeof(peer_stack);
+        out->State=MEM_COMMIT;out->Protect=PAGE_READWRITE;return sizeof(*out);}
+    return VirtualQuery(address,out,size);
+}
 static void require(BOOL ok, const char* message) {
     ++checks;
     if (!ok) { fprintf(stderr, "FAIL: %s\n", message); exit(1); }
@@ -59,7 +69,9 @@ static BOOL WINAPI close_peer(HANDLE thread) {
     return CloseHandle(thread);
 }
 static BOOL WINAPI context_peer(HANDLE thread,LPCONTEXT context) {
-    if(thread==peer_handle){if(fail_context){SetLastError(ERROR_ACCESS_DENIED);return FALSE;}PEER_CONTEXT_IP(context)=peer_ip;return TRUE;}
+    if(thread==peer_handle){DWORD flags=context->ContextFlags;if(fail_context){SetLastError(ERROR_ACCESS_DENIED);return FALSE;}
+        memset(context,0,sizeof(*context));context->ContextFlags=flags;PEER_CONTEXT_SP(context)=(DWORD_PTR)(ULONG_PTR)peer_stack;
+        PEER_CONTEXT_IP(context)=peer_ip;return TRUE;}
     return GetThreadContext(thread,context);
 }
 static BOOL WINAPI update_context_peer(HANDLE thread,const CONTEXT* context) {
@@ -94,7 +106,8 @@ static LPVOID WINAPI reallocate_heap(HANDLE heap,DWORD flags,LPVOID memory,SIZE_
 #define GetExitCodeThread exit_code
 #define HeapFree release_heap
 #define HeapAlloc allocate_heap
-/* CMake's include path names the verified build copy, never the original. */
+#define VirtualQuery query_peer_stack
+/* CMake selects the exact candidate source or an isolated negative control. */
 #include "hook.c"
 
 static void reset_faults(void) {
@@ -258,7 +271,7 @@ int main(void) {
     require(Freeze(&threads,ALL_HOOKS_POS,ACTION_ENABLE)==MH_OK,"own peer before injected cleanup fault");
     fail_resume=TRUE;require(Unfreeze(&threads)==MH_ERROR_MEMORY_PROTECT,"retain failed resume");
     require(MH_ApplyQueued()==MH_ERROR_MEMORY_PROTECT&&HasRetainedThreadOwnership(),"no-op apply must not hide unresolved owner");
-    require(MH_RemoveHook(target)==MH_ERROR_MEMORY_PROTECT&&FindHookEntry(target)!=INVALID_HOOK_POS,"disabled removal cannot retire trampoline under unresolved ownership");
+    require(MH_RemoveHook(target+48)==MH_ERROR_MEMORY_PROTECT&&FindHookEntry(target)!=INVALID_HOOK_POS,"disabled removal cannot retire trampoline under unresolved ownership");
     require(MH_Uninitialize()==MH_ERROR_MEMORY_PROTECT&&g_hHeap==heap,"incomplete cleanup keeps same engine heap");
     fail_resume=FALSE;require(MH_ApplyQueued()==MH_OK&&!HasRetainedThreadOwnership(),"no-op apply retries retained cleanup");
     require(MH_RemoveHook(target)==MH_OK,"remove after exact owner recovery");
