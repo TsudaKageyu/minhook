@@ -36,7 +36,16 @@
 #endif
 
 VOID   InitializeBuffer(VOID);
+#if defined(MH_SAFE_FREEZE)
+BOOL   UninitializeBuffer(VOID);
+#else
 VOID   UninitializeBuffer(VOID);
+#endif
 LPVOID AllocateBuffer(LPVOID pOrigin);
+#if defined(MH_SAFE_FREEZE)
+BOOL   FreeBuffer(LPVOID pBuffer);
+BOOL   IsBufferAddress(ULONG_PTR address);
+#else
 VOID   FreeBuffer(LPVOID pBuffer);
+#endif
 BOOL   IsExecutableAddress(LPVOID pAddress);

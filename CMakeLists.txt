@@ -70,6 +70,13 @@ target_include_directories(minhook PUBLIC
 target_include_directories(minhook PRIVATE "src/")
 target_include_directories(minhook PRIVATE "src/hde/")
 
+# Complete strict engine is opt-in; upstream default behavior stays unchanged.
+option(MINHOOK_SAFE_FREEZE "Use strict NtGetNextThread freeze and retained cleanup" OFF)
+if(MINHOOK_SAFE_FREEZE)
+  target_compile_definitions(minhook PRIVATE MH_SAFE_FREEZE=1)
+endif()
+
+
 if(WIN32)
   set_target_properties(minhook PROPERTIES PREFIX "")
   if(CMAKE_SIZEOF_VOID_P EQUAL 8)   
@@ -139,3 +146,16 @@ install(
 install(
   DIRECTORY include DESTINATION .
 )
+
+option(MINHOOK_BUILD_SAFE_FREEZE_TESTS "Build isolated SAFE-FREEZE regressions" OFF)
+if(MINHOOK_BUILD_SAFE_FREEZE_TESTS)
+  if(CMAKE_VERSION VERSION_LESS 3.20)
+    message(FATAL_ERROR "SAFE-FREEZE tests require CMake 3.20 or newer")
+  endif()
+  if(NOT MINHOOK_SAFE_FREEZE)
+    message(FATAL_ERROR "SAFE-FREEZE regression tests require MINHOOK_SAFE_FREEZE=ON")
+  endif()
+  enable_testing()
+  enable_language(CXX)
+  add_subdirectory(tests/safe_freeze)
+endif()

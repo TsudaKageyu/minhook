@@ -71,6 +71,29 @@ VOID InitializeBuffer(VOID)
 }
 
 //-------------------------------------------------------------------------
+#if defined(MH_SAFE_FREEZE)
+BOOL UninitializeBuffer(VOID)
+{
+    while (g_pMemoryBlocks != NULL)
+    {
+        PMEMORY_BLOCK block = g_pMemoryBlocks;
+        PMEMORY_BLOCK next = block->pNext;
+        if (!VirtualFree(block, 0, MEM_RELEASE))
+            return FALSE;
+        g_pMemoryBlocks = next;
+    }
+    return TRUE;
+}
+
+BOOL IsBufferAddress(ULONG_PTR address)
+{
+    PMEMORY_BLOCK block;
+    for (block = g_pMemoryBlocks; block != NULL; block = block->pNext)
+        if (address >= (ULONG_PTR)block && address - (ULONG_PTR)block < MEMORY_BLOCK_SIZE)
+            return TRUE;
+    return FALSE;
+}
+#else
 VOID UninitializeBuffer(VOID)
 {
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
@@ -83,6 +106,7 @@ VOID UninitializeBuffer(VOID)
         pBlock = pNext;
     }
 }
+#endif
 
 //-------------------------------------------------------------------------
 #if defined(_M_X64) || defined(__x86_64__)
@@ -263,6 +287,41 @@ LPVOID AllocateBuffer(LPVOID pOrigin)
 }
 
 //-------------------------------------------------------------------------
+#if defined(MH_SAFE_FREEZE)
+BOOL FreeBuffer(LPVOID pBuffer)
+{
+    PMEMORY_BLOCK block = g_pMemoryBlocks, previous = NULL;
+    ULONG_PTR target = (ULONG_PTR)pBuffer / MEMORY_BLOCK_SIZE * MEMORY_BLOCK_SIZE;
+    while (block != NULL)
+    {
+        if ((ULONG_PTR)block == target)
+        {
+            if (block->usedCount == 1)
+            {
+                PMEMORY_BLOCK next = block->pNext;
+                if (!VirtualFree(block, 0, MEM_RELEASE))
+                    return FALSE;
+                if (previous != NULL) previous->pNext = next;
+                else g_pMemoryBlocks = next;
+            }
+            else
+            {
+                PMEMORY_SLOT slot = (PMEMORY_SLOT)pBuffer;
+#ifdef _DEBUG
+                memset(slot, 0, sizeof(MEMORY_SLOT));
+#endif
+                slot->pNext = block->pFree;
+                block->pFree = slot;
+                --block->usedCount;
+            }
+            return TRUE;
+        }
+        previous = block;
+        block = block->pNext;
+    }
+    return FALSE;
+}
+#else
 VOID FreeBuffer(LPVOID pBuffer)
 {
     PMEMORY_BLOCK pBlock = g_pMemoryBlocks;
@@ -301,6 +360,7 @@ VOID FreeBuffer(LPVOID pBuffer)
         pBlock = pBlock->pNext;
     }
 }
+#endif
 
 //-------------------------------------------------------------------------
 BOOL IsExecutableAddress(LPVOID pAddress)
