@@ -142,3 +142,9 @@ The additional retirement checks perform extra teardown work. Different context
 relocation/original-pointer contracts and unsafe-none are not safety-equivalent,
 and timings do not establish universal superiority or continuous high-water
 resource bounds. Results from earlier candidate revisions are historical.
+
+The [current benchmark tables](BENCHMARK_RESULTS.md) give fresh Win32/x64
+queued-enable and engine-retirement quantiles, plus all nine previous/current
+strict x64 operation medians and p95 values. They explicitly separate the added
+retirement cost from intercepted-call latency and identify the run/revision
+behind each measurement.
