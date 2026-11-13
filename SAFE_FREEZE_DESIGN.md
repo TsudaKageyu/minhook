@@ -7,8 +7,9 @@ See SAFE_FREEZE_LICENSE_NOTICE.md.
 
 ## Selection and compatibility
 
-`MINHOOK_SAFE_FREEZE=OFF` retains the exact original engine source after
-preprocessing. `ON` enables the complete strict engine, not a reduced subset.
+`MINHOOK_SAFE_FREEZE=OFF` retains the original engine's C tokens after selecting
+the strict conditional, including both architecture/debug branches. `ON`
+enables the complete strict engine, not a reduced subset.
 The public header, export definitions, C entry points and status enum are
 unchanged. The option does not change the shipping project's vendor tree.
 
@@ -110,3 +111,34 @@ cleanup and x64 argument passing. It checks direct/queued transitions under
 active calls, then joins the caller before removal or uninitialization. This
 proves the owned fixture's calling behavior, not arbitrary application unload
 or deep-stack return-address rewriting. No application call-gate is imported.
+
+## Current native verification
+
+[Native run 43374271934](https://github.com/cyanoleon/minhook/actions/runs/43374271934)
+passed MSVC Win32/x64 Debug/Release and installed clang-cl x64 Release. Its
+[source manifest at 2557e10](https://github.com/cyanoleon/minhook/blob/2557e10c163e9e2b4e3cfc9070ce97b73da88d8d/SOURCE_MANIFEST.json)
+pins the compiled contribution inputs to code revision
+`a29eaa2aaa6e7eb8e4875c239d9ca861130d4b2a`. This section is a documentation-only
+addition; the validated compiled inputs are unchanged.
+
+The five cells recorded 335 successful positive child-process executions,
+15 precise expected-failure controls and 25 passing standalone CTest entries,
+with no skipped standalone entries. Positive totals include repeated injected
+fault regressions, stress and comparative workloads, not 335 unique defects.
+The completion fixture ran 263 checks per Win32 cell and 199 per x64 cell;
+each cell also ran 27 genuine suspended-peer retirement checks. Injected peers,
+actual context/stack manipulation and live target execution remain distinct.
+
+Strict-ON and default-OFF actual shared DLLs were built in every cell. Ten PE32
+or PE32+ export checks verified the original 12 named function exports. Downloaded
+contribution sources, executable identities, JUnit results and strict/default
+DLL identities were checked against the recorded hashes. The three-file
+strict-OFF source-token comparison also passed against the official base.
+
+The linked run retains fresh Release comparisons with 1/4/16/32/64 owned workers,
+1/4/11 hooks, five warm-ups and 200 samples per workload; clang-cl stress uses
+50 samples. Nine operations and bounded resource observations are recorded.
+The additional retirement checks perform extra teardown work. Different context
+relocation/original-pointer contracts and unsafe-none are not safety-equivalent,
+and timings do not establish universal superiority or continuous high-water
+resource bounds. Results from earlier candidate revisions are historical.
