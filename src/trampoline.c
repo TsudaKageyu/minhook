@@ -215,7 +215,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
         }
         else if ((hs.opcode & 0xF0) == 0x70
             || (hs.opcode & 0xFC) == 0xE0
-            || (hs.opcode2 & 0xF0) == 0x80)
+            || (hs.opcode == 0x0F && (hs.opcode2 & 0xF0) == 0x80))
         {
             // Direct relative Jcc
             ULONG_PTR dest = pOldInst + hs.len;
@@ -259,6 +259,11 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
             // Complete the function if not in a branch.
             finished = (pOldInst >= jmpDest);
+        }
+        else if (hs.flags & F_RELATIVE)
+        {
+            // Other relative instructions, such as XBEGIN, are not supported.
+            return FALSE;
         }
 
         // Can't alter the instruction length in a branch.
