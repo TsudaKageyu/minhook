@@ -69,7 +69,7 @@ typedef struct _HOOK_ENTRY
     UINT8  isEnabled   : 1;     // Enabled.
     UINT8  queueEnable : 1;     // Queued for enabling/disabling when != isEnabled.
 
-    UINT   nIP : 4;             // Count of the instruction boundaries.
+    UINT   nIP;             // Count of the instruction boundaries.
     UINT8  oldIPs[8];           // Instruction boundaries of the target function.
     UINT8  newIPs[8];           // Instruction boundaries of the trampoline function.
 } HOOK_ENTRY, *PHOOK_ENTRY;
