@@ -27,6 +27,7 @@
  */
 
 #include <windows.h>
+#include <winternl.h>
 #include <tlhelp32.h>
 #include <limits.h>
 
@@ -332,6 +333,15 @@ static MH_STATUS Freeze(PFROZEN_THREADS pThreads, UINT pos, UINT action)
     pThreads->pItems   = NULL;
     pThreads->capacity = 0;
     pThreads->size     = 0;
+
+#if defined(_M_X64) || defined(__x86_64__)
+    PCRITICAL_SECTION pLoaderLock = *(PCRITICAL_SECTION*)((PBYTE)NtCurrentTeb()->ProcessEnvironmentBlock + 0x110); // +0x110 LoaderLock Ptr64 _RTL_CRITICAL_SECTION
+#else
+    PCRITICAL_SECTION pLoaderLock = *(PCRITICAL_SECTION*)((PBYTE)NtCurrentTeb()->ProcessEnvironmentBlock + 0xA0); // +0x0a0 LoaderLock Ptr32 _RTL_CRITICAL_SECTION
+#endif
+
+    // Prevent new threads execution (context switch after thread snapshot)
+    EnterCriticalSection(pLoaderLock);
     if (!EnumerateThreads(pThreads))
     {
         status = MH_ERROR_MEMORY_ALLOC;
@@ -361,6 +371,7 @@ static MH_STATUS Freeze(PFROZEN_THREADS pThreads, UINT pos, UINT action)
             }
         }
     }
+    LeaveCriticalSection(pLoaderLock);
 
     return status;
 }
